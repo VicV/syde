@@ -7,4 +7,4 @@
         android:fromYDelta="100%p"
         android:toYDelta="0" />
 
-</set><!-- From: file:/Users/Adam/AndroidStudioProjects/JaroneTest/Lib/DJI-SDK-LIB/res/anim/core_push_up_in.xml --><!-- From: file:/Users/Adam/AndroidStudioProjects/JaroneTest/Demo/SDK-DEMO/build/intermediates/exploded-aar/JaroneTest.Lib/DJI-SDK-LIB/unspecified/res/anim/core_push_up_in.xml -->
+</set><!-- From: file:/Users/vic/work/syde/Android/Lib/DJI-SDK-LIB/res/anim/core_push_up_in.xml --><!-- From: file:/Users/vic/work/syde/Android/Demo/SDK-DEMO/build/intermediates/exploded-aar/Android.Lib/DJI-SDK-LIB/unspecified/res/anim/core_push_up_in.xml -->
