@@ -38,6 +38,11 @@ public class MainActivity extends DJIBaseActivity {
         super.onDestroy();
     }
 
+    private void initSDK() {
+        DJIDrone.initWithType(getApplicationContext(), DJIDroneTypeDef.DJIDroneType.DJIDrone_Vision);
+    }
+
+
     private void activateDJI() {
         new Thread() {
             public void run() {
@@ -65,9 +70,6 @@ public class MainActivity extends DJIBaseActivity {
         }.start();
     }
 
-    private void initSDK() {
-        DJIDrone.initWithType(getApplicationContext(), DJIDroneTypeDef.DJIDroneType.DJIDrone_Vision);
-    }
 
     private void registerCamera() {
         mDjiGLSurfaceView = (DjiGLSurfaceView) findViewById(R.id.DjiSurfaceView_02);
