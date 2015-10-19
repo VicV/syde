@@ -27,17 +27,7 @@ public class MainActivity extends DJIBaseActivity {
         initSDK();
         DJIDrone.connectToDrone();
 
-        mDjiGLSurfaceView = (DjiGLSurfaceView) findViewById(R.id.DjiSurfaceView_02);
-        mDjiGLSurfaceView.start();
-
-        DJIReceivedVideoDataCallBack mReceivedVideoDataCallBack = new DJIReceivedVideoDataCallBack() {
-            @Override
-            public void onResult(byte[] videoBuffer, int size) {
-                visionProcessor.processFrame(videoBuffer, size);
-                mDjiGLSurfaceView.setDataToDecoder(videoBuffer, size);
-            }
-        };
-        DJIDrone.getDjiCamera().setReceivedVideoDataCallBack(mReceivedVideoDataCallBack);
+        registerCamera();
     }
 
     @Override
@@ -77,6 +67,20 @@ public class MainActivity extends DJIBaseActivity {
 
     private void initSDK() {
         DJIDrone.initWithType(getApplicationContext(), DJIDroneTypeDef.DJIDroneType.DJIDrone_Vision);
+    }
+
+    private void registerCamera() {
+        mDjiGLSurfaceView = (DjiGLSurfaceView) findViewById(R.id.DjiSurfaceView_02);
+        mDjiGLSurfaceView.start();
+
+        DJIReceivedVideoDataCallBack mReceivedVideoDataCallBack = new DJIReceivedVideoDataCallBack() {
+            @Override
+            public void onResult(byte[] videoBuffer, int size) {
+                visionProcessor.processFrame(videoBuffer, size);
+                mDjiGLSurfaceView.setDataToDecoder(videoBuffer, size);
+            }
+        };
+        DJIDrone.getDjiCamera().setReceivedVideoDataCallBack(mReceivedVideoDataCallBack);
     }
 
 }
