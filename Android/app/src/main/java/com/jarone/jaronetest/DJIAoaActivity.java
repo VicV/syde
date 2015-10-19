@@ -24,16 +24,20 @@ public class DJIAoaActivity extends Activity {
         connectAoa();
     }
 
+    //TODO: Just put in main onResume
     private void connectAoa() {
-        if (isStarted) {
-            //Do nothing
-        } else {
+
+        if (!isStarted) {
             isStarted = true;
             ServiceManager.getInstance();
             UsbAccessoryService.registerAoaReceiver(this);
             Intent intent = new Intent(DJIAoaActivity.this, MainActivity.class);
             startActivity(intent);
+        } else {
+            //Do nothing
         }
+
+
 
         Intent aoaIntent = getIntent();
         if (aoaIntent != null) {
