@@ -5,4 +5,4 @@
     <item android:state_checked="false" android:drawable="@drawable/radio_unchecked"></item>
 
 </selector>
-<!-- From: file:/Users/Adam/AndroidStudioProjects/JaroneTest/Lib/DJI-SDK-LIB/res/drawable/btn_radio_selector.xml -->
+<!-- From: file:/Users/vic/work/syde/Android/Lib/DJI-SDK-LIB/res/drawable/btn_radio_selector.xml -->

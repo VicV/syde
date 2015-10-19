@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <!-- From: file:/Users/Adam/AndroidStudioProjects/JaroneTest/Demo/SDK-DEMO/res/values/strings.xml -->
+    <!-- From: file:/Users/vic/work/syde/Android/Demo/SDK-DEMO/res/values/strings.xml -->
     <eat-comment/>
     <string-array name="antiflickerValues">
         <item>Auto</item>
@@ -99,7 +99,7 @@
         <item>Cloudy</item>
         <item>Indoor</item>
     </string-array>
-    <!-- From: file:/Users/Adam/AndroidStudioProjects/JaroneTest/Demo/SDK-DEMO/res/values/colors.xml -->
+    <!-- From: file:/Users/vic/work/syde/Android/Demo/SDK-DEMO/res/values/colors.xml -->
     <eat-comment/>
     <color name="black_overlay">#66000000</color>
     <color name="blue">#0000FF</color>
@@ -107,10 +107,10 @@
     <color name="button_press">#5086BFFF</color>
     <color name="dark">#000000</color>
     <color name="gray">#818181</color>
-    <!-- From: file:/Users/Adam/AndroidStudioProjects/JaroneTest/Demo/SDK-DEMO/build/intermediates/exploded-aar/JaroneTest.Lib/DJI-SDK-LIB/unspecified/res/values/values.xml -->
+    <!-- From: file:/Users/vic/work/syde/Android/Demo/SDK-DEMO/build/intermediates/exploded-aar/Android.Lib/DJI-SDK-LIB/unspecified/res/values/values.xml -->
     <eat-comment/>
     <color name="midware_white_half">#77ffffff</color>
-    <!-- From: file:/Users/Adam/AndroidStudioProjects/JaroneTest/Demo/SDK-DEMO/res/values/colors.xml -->
+    <!-- From: file:/Users/vic/work/syde/Android/Demo/SDK-DEMO/res/values/colors.xml -->
     <eat-comment/>
     <color name="red">#FF0000</color>
     <color name="title_dark">#212121</color>
@@ -120,17 +120,17 @@
     <declare-styleable name="DJITextView"><attr name="djiTextFace"><enum name="demi" value="0"/><enum name="nlight" value="1"/><enum name="nbold" value="2"/><enum name="bold" value="3"/></attr></declare-styleable>
     <declare-styleable name="OnScreenJoystick"><attr format="reference" name="knob"/></declare-styleable>
     <declare-styleable name="SeekCircle"><attr format="integer" name="max" value="100"/><attr format="integer" name="progress" value="0"/></declare-styleable>
-    <!-- From: file:/Users/Adam/AndroidStudioProjects/JaroneTest/Demo/SDK-DEMO/res/values/dimens.xml -->
+    <!-- From: file:/Users/vic/work/syde/Android/Demo/SDK-DEMO/res/values/dimens.xml -->
     <eat-comment/>
     <dimen name="activity_horizontal_margin">16dp</dimen>
     <dimen name="activity_vertical_margin">16dp</dimen>
-    <!-- From: file:/Users/Adam/AndroidStudioProjects/JaroneTest/Demo/SDK-DEMO/res/values/strings.xml -->
+    <!-- From: file:/Users/vic/work/syde/Android/Demo/SDK-DEMO/res/values/strings.xml -->
     <eat-comment/>
     <string name="Bind">Bind</string>
     <string name="Bind_Failed">Bind Failed</string>
     <string name="Bind_Success">Bind Success</string>
     <string name="Current_Binded">Current Binded</string>
-    <!-- From: file:/Users/Adam/AndroidStudioProjects/JaroneTest/Demo/SDK-DEMO/build/intermediates/exploded-aar/JaroneTest.Lib/DJI-SDK-LIB/unspecified/res/values/values.xml -->
+    <!-- From: file:/Users/vic/work/syde/Android/Demo/SDK-DEMO/build/intermediates/exploded-aar/Android.Lib/DJI-SDK-LIB/unspecified/res/values/values.xml -->
     <eat-comment/>
     <string name="DESCRIPTION_RESULT_OK">OK</string>
     <string name="DetailCheckPermissionSuccess">Check permission successful</string>
@@ -196,7 +196,7 @@
     <string name="ErrorDetailCheckPermissionServerUnknown">Server unkown error</string>
     <string name="ErrorDetailCheckPermissionServerWriteError">Server data abnormal</string>
     <string name="ErrorDetailCheckPermissionUnsportAesEncrypt">AES 256 encrypt unsupport</string>
-    <!-- From: file:/Users/Adam/AndroidStudioProjects/JaroneTest/Demo/SDK-DEMO/res/values/strings.xml -->
+    <!-- From: file:/Users/vic/work/syde/Android/Demo/SDK-DEMO/res/values/strings.xml -->
     <eat-comment/>
     <string name="Info">Info</string>
     <string name="MAC">MAC:</string>
@@ -464,7 +464,7 @@
     <string name="title_activity_preview">PreviewActivity</string>
     <string name="title_activity_range_extender">RangeExtenderDemoActivity</string>
     <string name="title_activity_select_drone">SelectDroneTypeActivity</string>
-    <!-- From: file:/Users/Adam/AndroidStudioProjects/JaroneTest/Demo/SDK-DEMO/res/values/styles.xml -->
+    <!-- From: file:/Users/vic/work/syde/Android/Demo/SDK-DEMO/res/values/styles.xml -->
     <eat-comment/>
     <style name="AppBaseTheme" parent="android:Theme.Light">
         <!--
@@ -504,12 +504,12 @@
         <item name="android:windowTitleBackgroundStyle">@style/CustomWindowTitleBackground</item>
         
     </style>
-    <!-- From: file:/Users/Adam/AndroidStudioProjects/JaroneTest/Demo/SDK-DEMO/build/intermediates/exploded-aar/JaroneTest.Lib/DJI-SDK-LIB/unspecified/res/values/values.xml -->
+    <!-- From: file:/Users/vic/work/syde/Android/Demo/SDK-DEMO/build/intermediates/exploded-aar/Android.Lib/DJI-SDK-LIB/unspecified/res/values/values.xml -->
     <eat-comment/>
     <style name="DialogTheme" parent="android:Theme.Dialog">
         <item name="android:windowNoTitle">true</item>
     </style>
-    <!-- From: file:/Users/Adam/AndroidStudioProjects/JaroneTest/Demo/SDK-DEMO/res/values/styles.xml -->
+    <!-- From: file:/Users/vic/work/syde/Android/Demo/SDK-DEMO/res/values/styles.xml -->
     <eat-comment/>
     <style name="FullscreenTheme" parent="@android:style/Theme.Light.NoTitleBar">
         <item name="android:windowContentOverlay">@null</item>
@@ -518,7 +518,7 @@
         <item name="metaButtonBarStyle">@style/ButtonBar</item>
         <item name="metaButtonBarButtonStyle">@style/ButtonBarButton</item>
     </style>
-    <!-- From: file:/Users/Adam/AndroidStudioProjects/JaroneTest/Demo/SDK-DEMO/build/intermediates/exploded-aar/JaroneTest.Lib/DJI-SDK-LIB/unspecified/res/values/values.xml -->
+    <!-- From: file:/Users/vic/work/syde/Android/Demo/SDK-DEMO/build/intermediates/exploded-aar/Android.Lib/DJI-SDK-LIB/unspecified/res/values/values.xml -->
     <eat-comment/>
     <style name="LogDialog" parent="@android:style/Theme.Dialog">
         <item name="android:windowBackground">@android:color/transparent</item>
@@ -528,7 +528,7 @@
         <item name="android:windowNoTitle">true</item>
         <item name="android:windowFrame">@null</item>
     </style>
-    <!-- From: file:/Users/Adam/AndroidStudioProjects/JaroneTest/Demo/SDK-DEMO/res/values/styles.xml -->
+    <!-- From: file:/Users/vic/work/syde/Android/Demo/SDK-DEMO/res/values/styles.xml -->
     <eat-comment/>
     <style name="LoginFormContainer">
         <item name="android:layout_width">match_parent</item>

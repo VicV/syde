@@ -7,6 +7,8 @@ import android.os.Bundle;
 import android.view.Menu;
 import android.view.MenuItem;
 
+import java.util.Objects;
+
 import dji.midware.data.manager.P3.ServiceManager;
 import dji.midware.usb.P3.DJIUsbAccessoryReceiver;
 import dji.midware.usb.P3.UsbAccessoryService;
@@ -22,29 +24,7 @@ public class DJIAoaActivity extends Activity {
         connectAoa();
     }
 
-    @Override
-    public boolean onCreateOptionsMenu(Menu menu) {
-        // Inflate the menu; this adds items to the action bar if it is present.
-        getMenuInflater().inflate(R.menu.menu_djiaoa, menu);
-        return true;
-    }
-
-    @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-        // Handle action bar item clicks here. The action bar will
-        // automatically handle clicks on the Home/Up button, so long
-        // as you specify a parent activity in AndroidManifest.xml.
-        int id = item.getItemId();
-
-        //noinspection SimplifiableIfStatement
-        if (id == R.id.action_settings) {
-            return true;
-        }
-
-        return super.onOptionsItemSelected(item);
-    }
-
-    private void connectAoa(){
+    private void connectAoa() {
         if (isStarted) {
             //Do nothing
         } else {
@@ -56,9 +36,9 @@ public class DJIAoaActivity extends Activity {
         }
 
         Intent aoaIntent = getIntent();
-        if(aoaIntent != null) {
+        if (aoaIntent != null) {
             String action = aoaIntent.getAction();
-            if (action == UsbManager.ACTION_USB_ACCESSORY_ATTACHED || action == Intent.ACTION_MAIN){
+            if (action.equals(UsbManager.ACTION_USB_ACCESSORY_ATTACHED) || action.equals(Intent.ACTION_MAIN)) {
                 Intent attachedIntent = new Intent();
                 attachedIntent.setAction(DJIUsbAccessoryReceiver.ACTION_USB_ACCESSORY_ATTACHED);
                 sendBroadcast(attachedIntent);

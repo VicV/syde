@@ -28,4 +28,4 @@
           android:layout_height="wrap_content"   
           android:layout_below="@id/select_drone_title_rl"
           />  
-</RelativeLayout><!-- From: file:/Users/Adam/AndroidStudioProjects/JaroneTest/Demo/SDK-DEMO/res/layout/activity_select_drone_type.xml -->
+</RelativeLayout><!-- From: file:/Users/vic/work/syde/Android/Demo/SDK-DEMO/res/layout/activity_select_drone_type.xml -->
