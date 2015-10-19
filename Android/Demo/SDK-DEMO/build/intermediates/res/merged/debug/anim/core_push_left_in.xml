@@ -7,4 +7,4 @@
         android:fromXDelta="100%p"
         android:toXDelta="0" />
 
-</set><!-- From: file:/Users/Adam/AndroidStudioProjects/JaroneTest/Lib/DJI-SDK-LIB/res/anim/core_push_left_in.xml --><!-- From: file:/Users/Adam/AndroidStudioProjects/JaroneTest/Demo/SDK-DEMO/build/intermediates/exploded-aar/JaroneTest.Lib/DJI-SDK-LIB/unspecified/res/anim/core_push_left_in.xml -->
+</set><!-- From: file:/Users/vic/work/syde/Android/Lib/DJI-SDK-LIB/res/anim/core_push_left_in.xml --><!-- From: file:/Users/vic/work/syde/Android/Demo/SDK-DEMO/build/intermediates/exploded-aar/Android.Lib/DJI-SDK-LIB/unspecified/res/anim/core_push_left_in.xml -->

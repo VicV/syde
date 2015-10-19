@@ -4,4 +4,4 @@
     <item android:drawable="@drawable/back_button_press" android:state_pressed="true"></item>   
     <item android:drawable="@drawable/back_button_disable" android:state_enabled="false" ></item>  
 
- </selector><!-- From: file:/Users/Adam/AndroidStudioProjects/JaroneTest/Demo/SDK-DEMO/res/drawable/selector_back_button.xml -->
+ </selector><!-- From: file:/Users/vic/work/syde/Android/Demo/SDK-DEMO/res/drawable/selector_back_button.xml -->

@@ -5,4 +5,4 @@
      <item android:drawable="@drawable/pickerbutton_normal" android:state_pressed="false"></item>
      <item android:drawable="@drawable/pickerbutton_pressed" android:state_pressed="true"></item>
    <item android:drawable="@drawable/pickerbutton_normal" android:state_enabled="false"></item>
- </selector><!-- From: file:/Users/Adam/AndroidStudioProjects/JaroneTest/Demo/SDK-DEMO/res/drawable/selector_picker_btn.xml -->
+ </selector><!-- From: file:/Users/vic/work/syde/Android/Demo/SDK-DEMO/res/drawable/selector_picker_btn.xml -->
