@@ -28,5 +28,4 @@ dependencies {
     compile project(':Lib:DJI-SDK-LIB')
     compile 'com.google.android.gms:play-services-maps:8.1.0'
     compile 'com.google.android.gms:play-services-location:8.1.0'
-
 }
