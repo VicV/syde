@@ -42,6 +42,7 @@ public class DroneState {
     private static double velocityY = 0;
     private static double velocityZ = 0;
 
+    private static double battery = 0;
 
     private static double homeLatitude;
     private static double homeLongitude;
@@ -49,11 +50,12 @@ public class DroneState {
     private static boolean connected = false;
     public static boolean hasTask = false;
 
+    private static DJIMainControllerSystemState state;
     private static final String TAG = DroneState.class.toString();
 
     private static DJIMcuUpdateStateCallBack mMcuUpdateStateCallBack;
 
-    public void updateDroneLocation() {
+    public void updateDroneState() {
         mMcuUpdateStateCallBack = new DJIMcuUpdateStateCallBack() {
 
             @Override
@@ -62,27 +64,27 @@ public class DroneState {
                 longitude = state.droneLocationLongitude;
                 homeLatitude = state.homeLocationLatitude;
                 homeLongitude = state.homeLocationLongitude;
-
                 altitude = state.altitude;
                 speed = state.speed;
-
+                battery = state.powerLevel;
                 velocityX = state.velocityX;
                 velocityY = state.velocityY;
                 velocityZ = state.velocityZ;
                 pitch = state.pitch;
                 roll = state.roll;
                 yaw = state.yaw;
+                DroneState.state = state;
             }
         };
         Log.e(TAG, "setMcuUpdateState");
         DJIDrone.getDjiMC().setMcuUpdateStateCallBack(mMcuUpdateStateCallBack);
     }
 
-    public double getLatitude() {
+    public static double getLatitude() {
         return latitude;
     }
 
-    public double getLongitude() {
+    public static double getLongitude() {
         return longitude;
     }
 
