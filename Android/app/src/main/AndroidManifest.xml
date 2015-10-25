@@ -25,7 +25,7 @@
             android:value="AIzaSyAc7Gp1S0Mk-YUoerQsATUPGQ2dg_qQEs4" />
 
         <activity
-            android:name="com.jarone.litterary.DJIAoaActivity"
+            android:name=".activities.DJIAoaActivity"
             android:label="@string/title_activity_djiaoa">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -42,10 +42,10 @@
                 android:resource="@xml/accessory_filter" />
         </activity>
         <activity
-            android:name="com.jarone.litterary.DJIBaseActivity"
+            android:name=".activities.DJIBaseActivity"
             android:label="@string/title_activity_djiconnection_manager" />
         <activity
-            android:name="com.jarone.litterary.MainActivity"
+            android:name=".activities.MainActivity"
             android:label="@string/app_name" />
     </application>
 
