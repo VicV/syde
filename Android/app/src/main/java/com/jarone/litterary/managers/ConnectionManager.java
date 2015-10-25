@@ -7,6 +7,8 @@ import com.jarone.litterary.promises.Promise;
  */
 public class ConnectionManager {
 
+    //Persistent knowledge of connection I guess
+    boolean isConnected;
 
     //Reasoning for this being a singleton will be made apparent later.
 
@@ -23,14 +25,12 @@ public class ConnectionManager {
 
     public void isConnected(Promise promise) {
 
-        if (someConnectionCheck()) {
+        if (isConnected) {
             promise.finish();
+        } else {
+            // connect and then finish promise in callbacks
         }
 
 
-    }
-
-    private boolean someConnectionCheck() {
-        return true;
     }
 }
