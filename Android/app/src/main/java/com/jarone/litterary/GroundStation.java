@@ -108,7 +108,7 @@ public class GroundStation {
                 //DO STUFF
             }
         });
-        ConnectionManager.getInstance().isConnected(someConnection);
+        DroneState.getInstance().isConnected(someConnection);
     }
 
     public DJIGroundStationTask getTask() {
