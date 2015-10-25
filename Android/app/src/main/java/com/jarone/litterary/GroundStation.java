@@ -82,11 +82,14 @@ public class GroundStation {
         DJIDrone.getDjiGroundStation().pauseGroundStationTask(new DJIGroundStationExecuteCallBack() {
             @Override
             public void onResult(DJIGroundStationTypeDef.GroundStationResult groundStationResult) {
+                DJIDrone.getDjiGroundStation().setAircraftJoystick(0, 0, 0, 0, new DJIGroundStationExecuteCallBack() {
+                    @Override
+                    public void onResult(DJIGroundStationTypeDef.GroundStationResult groundStationResult) {
 
+                    }
+                });
             }
         });
-
-        DJIDrone.getDjiGroundStation().setAircraftJoystick();
     }
     public DJIGroundStationTask getTask() {
         return groundTask;
