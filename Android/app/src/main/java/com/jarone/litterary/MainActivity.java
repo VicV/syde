@@ -13,10 +13,12 @@ import dji.sdk.widget.DjiGLSurfaceView;
 
 public class MainActivity extends DJIBaseActivity {
 
-    private static final String TAG = "Literary";
+    private static final String TAG = "Litterary";
 
     private DjiGLSurfaceView mDjiGLSurfaceView;
+
     private VisionProcessor visionProcessor = new VisionProcessor();
+    public DroneState droneState = new DroneState();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -26,9 +28,9 @@ public class MainActivity extends DJIBaseActivity {
         activateDJI();
 
         initSDK();
-        //DJIDrone.connectToDrone();
+        DJIDrone.connectToDrone();
 
-        //registerCamera();
+        registerCamera();
     }
 
     @Override
@@ -56,9 +58,7 @@ public class MainActivity extends DJIBaseActivity {
                                 Log.e(TAG, "onGetPermissionResult =" + result);
                                 Log.e(TAG,
                                         "onGetPermissionResultDescription=" + DJIError.getCheckPermissionErrorDescription(result));
-                                Log.e(TAG, "DONE");
-                                DJIDrone.connectToDrone();
-
+                                droneState.updateDroneLocation();
                             } else {
                                 // show errors
                                 Log.e(TAG, "onGetPermissionResult =" + result);
@@ -76,14 +76,14 @@ public class MainActivity extends DJIBaseActivity {
 
 
     private void registerCamera() {
-        //mDjiGLSurfaceView = (DjiGLSurfaceView) findViewById(R.id.DjiSurfaceView_02);
-        //mDjiGLSurfaceView.start();
+        mDjiGLSurfaceView = (DjiGLSurfaceView) findViewById(R.id.DjiSurfaceView_02);
+        mDjiGLSurfaceView.start();
 
         DJIReceivedVideoDataCallBack mReceivedVideoDataCallBack = new DJIReceivedVideoDataCallBack() {
             @Override
             public void onResult(byte[] videoBuffer, int size) {
                 visionProcessor.processFrame(videoBuffer, size);
-                //mDjiGLSurfaceView.setDataToDecoder(videoBuffer, size);
+                mDjiGLSurfaceView.setDataToDecoder(videoBuffer, size);
             }
         };
         DJIDrone.getDjiCamera().setReceivedVideoDataCallBack(mReceivedVideoDataCallBack);
