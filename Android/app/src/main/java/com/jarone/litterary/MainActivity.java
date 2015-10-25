@@ -19,6 +19,7 @@ public class MainActivity extends DJIBaseActivity {
 
     private VisionProcessor visionProcessor = new VisionProcessor();
     public DroneState droneState = new DroneState();
+    public GroundStation groundStation = new GroundStation();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -31,6 +32,18 @@ public class MainActivity extends DJIBaseActivity {
         DJIDrone.connectToDrone();
 
         registerCamera();
+    }
+
+    public void testPlan() {
+        groundStation.newTask();
+        groundStation.defaultAltitude = 20;
+        groundStation.defaultSpeed = 1;
+        groundStation.addPoint(10, 10);
+        groundStation.addPoint(10, 10);
+        groundStation.addPoint(10, 10);
+        groundStation.addPoint(10, 10);
+        groundStation.uploadAndExecuteTask();
+        groundStation.executeTask();
     }
 
     @Override
