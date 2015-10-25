@@ -16,8 +16,6 @@ public class DroneState {
     //Persistent knowledge of connection I guess
     boolean isConnected;
 
-    //Reasoning for this being a singleton will be made apparent later.
-
     private static DroneState instance;
 
     public static DroneState getInstance() {
@@ -28,19 +26,6 @@ public class DroneState {
         }
         return instance;
     }
-
-
-    public void isConnected(Promise promise) {
-
-        if (isConnected) {
-            promise.finish();
-        } else {
-            // connect and then finish promise in callbacks
-        }
-
-
-    }
-
     // Update the drone location based on states from MCU.
 
     private static double latitude = 0;
@@ -100,4 +85,17 @@ public class DroneState {
     public double getLongitude() {
         return longitude;
     }
+
+
+    public void isConnected(Promise promise) {
+
+        if (isConnected) {
+            promise.finish();
+        } else {
+            // connect and then finish promise in callbacks
+        }
+
+
+    }
+
 }
