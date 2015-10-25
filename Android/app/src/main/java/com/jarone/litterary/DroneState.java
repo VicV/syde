@@ -2,6 +2,8 @@ package com.jarone.litterary;
 
 import android.util.Log;
 
+import com.jarone.litterary.promises.Promise;
+
 import dji.sdk.api.DJIDrone;
 import dji.sdk.api.MainController.DJIMainControllerSystemState;
 import dji.sdk.interfaces.DJIMcuUpdateStateCallBack;
@@ -10,6 +12,20 @@ import dji.sdk.interfaces.DJIMcuUpdateStateCallBack;
  * Created by Adam on 2015-10-24.
  */
 public class DroneState {
+
+    //Persistent knowledge of connection I guess
+    boolean isConnected;
+
+    private static DroneState instance;
+
+    public static DroneState getInstance() {
+        if (instance != null) {
+            return instance;
+        } else {
+            instance = new DroneState();
+        }
+        return instance;
+    }
     // Update the drone location based on states from MCU.
 
     private static double latitude = 0;
@@ -37,8 +53,8 @@ public class DroneState {
 
     private static DJIMcuUpdateStateCallBack mMcuUpdateStateCallBack;
 
-    public static void updateDroneLocation(){
-        mMcuUpdateStateCallBack = new DJIMcuUpdateStateCallBack(){
+    public void updateDroneLocation() {
+        mMcuUpdateStateCallBack = new DJIMcuUpdateStateCallBack() {
 
             @Override
             public void onResult(DJIMainControllerSystemState state) {
@@ -58,14 +74,28 @@ public class DroneState {
                 yaw = state.yaw;
             }
         };
-        Log.e(TAG,"setMcuUpdateState");
+        Log.e(TAG, "setMcuUpdateState");
         DJIDrone.getDjiMC().setMcuUpdateStateCallBack(mMcuUpdateStateCallBack);
     }
 
-    public static double getLatitude() {
+    public double getLatitude() {
         return latitude;
     }
-    public static double getLongitude() {
+
+    public double getLongitude() {
         return longitude;
     }
+
+
+    public void isConnected(Promise promise) {
+
+        if (isConnected) {
+            promise.finish();
+        } else {
+            // connect and then finish promise in callbacks
+        }
+
+
+    }
+
 }
