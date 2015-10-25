@@ -1,8 +1,11 @@
 package com.jarone.litterary;
 
-import com.jarone.litterary.managers.ConnectionManager;
+import android.util.Log;
+
 import com.jarone.litterary.promises.Promise;
 import com.jarone.litterary.promises.PromiseListener;
+
+import java.util.concurrent.Callable;
 
 import dji.sdk.api.DJIDrone;
 import dji.sdk.api.GroundStation.DJIGroundStationTask;
@@ -15,27 +18,44 @@ import dji.sdk.interfaces.DJIGroundStationExecuteCallBack;
  */
 public class GroundStation {
 
-    private DJIGroundStationTask groundTask;
+    public static final String TAG = GroundStation.class.toString();
 
-    public float defaultAltitude;
-    public float defaultSpeed;
+    private static DJIGroundStationTask groundTask;
 
-    public void newTask() {
+    public static float defaultAltitude;
+    public static float defaultSpeed;
+
+    public static void newTask() {
         groundTask = new DJIGroundStationTask();
     }
 
-    public void addPoint(double latitude, double longitude) {
+    public static void addPoint(double latitude, double longitude) {
         addPoint(latitude, longitude, defaultSpeed, defaultAltitude);
     }
 
-    public void addPoint(double latitude, double longitude, float speed, float altitude) {
+    public static void addPoint(double latitude, double longitude, float speed, float altitude) {
         DJIGroundStationWaypoint point = new DJIGroundStationWaypoint(latitude, longitude);
         point.speed = speed;
         point.altitude = altitude;
         groundTask.addWaypoint(point);
     }
 
-    public void uploadAndExecuteTask() {
+    public static void withConnection(final Callable<Void> onSuccess) {
+        DJIDrone.getDjiGroundStation().openGroundStation(new DJIGroundStationExecuteCallBack() {
+            @Override
+            public void onResult(DJIGroundStationTypeDef.GroundStationResult result) {
+
+                if (result == DJIGroundStationTypeDef.GroundStationResult.GS_Result_Success) {
+                    try {
+                        onSuccess.call();
+                    } catch(Exception e){
+                        Log.e(TAG, e.toString());
+                    }
+                }
+            }
+        });
+    }
+    public static void uploadAndExecuteTask() {
         DJIDrone.getDjiGroundStation().openGroundStation(new DJIGroundStationExecuteCallBack() {
 
             @Override
@@ -63,7 +83,7 @@ public class GroundStation {
         });
     }
 
-    public void executeTask() {
+    public static void executeTask() {
         //NOTE: ground station must be open before this is called
         DJIDrone.getDjiGroundStation().startGroundStationTask(new DJIGroundStationExecuteCallBack() {
 
@@ -76,13 +96,13 @@ public class GroundStation {
         });
     }
 
-    public void setAltitude(float altitude) {
+    public static void setAltitude(float altitude) {
         newTask();
         addPoint(DroneState.getLatitude(), DroneState.getLongitude(), 0, altitude);
         uploadAndExecuteTask();
     }
 
-    public void engageJoystick() {
+    public static void engageJoystick() {
         DJIDrone.getDjiGroundStation().pauseGroundStationTask(new DJIGroundStationExecuteCallBack() {
             @Override
             public void onResult(DJIGroundStationTypeDef.GroundStationResult groundStationResult) {
@@ -94,9 +114,6 @@ public class GroundStation {
                 });
             }
         });
-
-        DJIDrone.getDjiGroundStation().setAircraftJoystick();
-
 
         //SOME EXAMPLE:
         Promise someConnection = new Promise();
@@ -110,7 +127,7 @@ public class GroundStation {
         DroneState.getInstance().isConnected(someConnection);
     }
 
-    public DJIGroundStationTask getTask() {
+    public static DJIGroundStationTask getTask() {
         return groundTask;
     }
 

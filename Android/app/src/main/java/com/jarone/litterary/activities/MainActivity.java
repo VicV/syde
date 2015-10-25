@@ -7,7 +7,6 @@ import com.jarone.litterary.DroneState;
 import com.jarone.litterary.GroundStation;
 import com.jarone.litterary.R;
 import com.jarone.litterary.VisionProcessor;
-import com.jarone.litterary.activities.DJIBaseActivity;
 
 import dji.sdk.api.DJIDrone;
 import dji.sdk.api.DJIDroneTypeDef;
@@ -79,7 +78,7 @@ public class MainActivity extends DJIBaseActivity {
                                 Log.e(TAG, "onGetPermissionResult =" + result);
                                 Log.e(TAG,
                                         "onGetPermissionResultDescription=" + DJIError.getCheckPermissionErrorDescription(result));
-                                droneState.updateDroneLocation();
+                                droneState.updateDroneState();
                             } else {
                                 // show errors
                                 Log.e(TAG, "onGetPermissionResult =" + result);
