@@ -10,23 +10,11 @@ import dji.sdk.interfaces.DJIMcuUpdateStateCallBack;
 
 /**
  * Created by Adam on 2015-10-24.
+ * <p/>
+ * Static class containing information about the current state of the Drone.
  */
 public class DroneState {
 
-    //Persistent knowledge of connection I guess
-    boolean isConnected;
-
-    private static DroneState instance;
-
-    public static DroneState getInstance() {
-        if (instance != null) {
-            return instance;
-        } else {
-            instance = new DroneState();
-        }
-        return instance;
-    }
-    // Update the drone location based on states from MCU.
 
     private static double latitude = 0;
     private static double longitude = 0;
@@ -44,7 +32,14 @@ public class DroneState {
 
     private static double battery = 0;
 
+    /**
+     * Latitude of the home station
+     */
     private static double homeLatitude;
+
+    /**
+     * Longitude of the home station
+     */
     private static double homeLongitude;
 
     private static boolean connected = false;
@@ -55,6 +50,9 @@ public class DroneState {
 
     private static DJIMcuUpdateStateCallBack mMcuUpdateStateCallBack;
 
+    /**
+     * Update the current state of the drone.
+     */
     public void updateDroneState() {
         mMcuUpdateStateCallBack = new DJIMcuUpdateStateCallBack() {
 
@@ -76,7 +74,7 @@ public class DroneState {
                 DroneState.state = state;
             }
         };
-        Log.e(TAG, "setMcuUpdateState");
+        Log.d(TAG, "setMcuUpdateState");
         DJIDrone.getDjiMC().setMcuUpdateStateCallBack(mMcuUpdateStateCallBack);
     }
 
@@ -86,18 +84,6 @@ public class DroneState {
 
     public static double getLongitude() {
         return longitude;
-    }
-
-
-    public void isConnected(Promise promise) {
-
-        if (isConnected) {
-            promise.finish();
-        } else {
-            // connect and then finish promise in callbacks
-        }
-
-
     }
 
 }
