@@ -18,6 +18,9 @@ import dji.sdk.widget.DjiGLSurfaceView;
 
 public class MainActivity extends DJIBaseActivity {
 
+    /**
+     * The log tag
+     **/
     private static final String TAG = "Litterary";
 
     private DjiGLSurfaceView mDjiGLSurfaceView;
@@ -26,6 +29,8 @@ public class MainActivity extends DJIBaseActivity {
     public DroneState droneState = new DroneState();
     public GroundStation groundStation = new GroundStation();
 
+
+    //Activity is starting.
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -37,20 +42,19 @@ public class MainActivity extends DJIBaseActivity {
         DJIDrone.connectToDrone();
 
 
-
         registerCamera();
     }
 
     public void testPlan() {
-        groundStation.newTask();
-        groundStation.defaultAltitude = 20;
-        groundStation.defaultSpeed = 1;
-        groundStation.addPoint(10, 10);
-        groundStation.addPoint(10, 10);
-        groundStation.addPoint(10, 10);
-        groundStation.addPoint(10, 10);
-        groundStation.uploadAndExecuteTask();
-        groundStation.executeTask();
+        GroundStation.newTask();
+        GroundStation.defaultAltitude = 20;
+        GroundStation.defaultSpeed = 1;
+        GroundStation.addPoint(10, 10);
+        GroundStation.addPoint(10, 10);
+        GroundStation.addPoint(10, 10);
+        GroundStation.addPoint(10, 10);
+        GroundStation.uploadAndExecuteTask();
+        GroundStation.executeTask();
     }
 
     @Override
@@ -93,7 +97,6 @@ public class MainActivity extends DJIBaseActivity {
             }
         }.start();
     }
-
 
     private void registerCamera() {
         mDjiGLSurfaceView = (DjiGLSurfaceView) findViewById(R.id.DjiSurfaceView_02);
