@@ -1,5 +1,9 @@
 package com.jarone.litterary;
 
+import com.jarone.litterary.managers.ConnectionManager;
+import com.jarone.litterary.promises.Promise;
+import com.jarone.litterary.promises.PromiseListener;
+
 import dji.sdk.api.DJIDrone;
 import dji.sdk.api.GroundStation.DJIGroundStationTask;
 import dji.sdk.api.GroundStation.DJIGroundStationTypeDef;
@@ -90,7 +94,23 @@ public class GroundStation {
                 });
             }
         });
+
+
+        DJIDrone.getDjiGroundStation().setAircraftJoystick();
+
+
+        //SOME EXAMPLE:
+        Promise someConnection = new Promise();
+        someConnection.add(new PromiseListener() {
+            @Override
+            public void succeeded() {
+                super.succeeded();
+                //DO STUFF
+            }
+        });
+        ConnectionManager.getInstance().isConnected(someConnection);
     }
+
     public DJIGroundStationTask getTask() {
         return groundTask;
     }

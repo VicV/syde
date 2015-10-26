@@ -1,6 +1,10 @@
 <menu xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
-    tools:context="com.jarone.jaronetest.DJIAoaActivity">
+<<<<<<< HEAD
+    tools:context="com.jarone.jaronetest.activities.DJIAoaActivity">
+=======
+    tools:context="com.jarone.litterary.activities.DJIAoaActivity">
+>>>>>>> c038f07... lalalala
     <item
         android:id="@+id/action_settings"
         android:orderInCategory="100"

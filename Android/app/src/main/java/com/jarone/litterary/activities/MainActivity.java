@@ -1,10 +1,13 @@
-package com.jarone.jaronetest;
+package com.jarone.litterary.activities;
 
 import android.os.Bundle;
 import android.util.Log;
 
 import com.jarone.litterary.DroneState;
 import com.jarone.litterary.GroundStation;
+import com.jarone.litterary.R;
+import com.jarone.litterary.VisionProcessor;
+import com.jarone.litterary.activities.DJIBaseActivity;
 
 import dji.sdk.api.DJIDrone;
 import dji.sdk.api.DJIDroneTypeDef;
@@ -21,7 +24,6 @@ public class MainActivity extends DJIBaseActivity {
     private DjiGLSurfaceView mDjiGLSurfaceView;
 
     private VisionProcessor visionProcessor = new VisionProcessor();
-
     public DroneState droneState = new DroneState();
     public GroundStation groundStation = new GroundStation();
 
@@ -31,8 +33,11 @@ public class MainActivity extends DJIBaseActivity {
         setContentView(R.layout.activity_main);
 
         activateDJI();
+
         initSDK();
         DJIDrone.connectToDrone();
+
+
 
         registerCamera();
     }
@@ -58,7 +63,7 @@ public class MainActivity extends DJIBaseActivity {
     }
 
     private void initSDK() {
-        DJIDrone.initWithType(getApplicationContext(), DJIDroneTypeDef.DJIDroneType.DJIDrone_Vision);
+        DJIDrone.initWithType(this.getApplicationContext(), DJIDroneTypeDef.DJIDroneType.DJIDrone_Vision);
     }
 
 
@@ -74,6 +79,7 @@ public class MainActivity extends DJIBaseActivity {
                                 Log.e(TAG, "onGetPermissionResult =" + result);
                                 Log.e(TAG,
                                         "onGetPermissionResultDescription=" + DJIError.getCheckPermissionErrorDescription(result));
+                                droneState.updateDroneLocation();
                             } else {
                                 // show errors
                                 Log.e(TAG, "onGetPermissionResult =" + result);
