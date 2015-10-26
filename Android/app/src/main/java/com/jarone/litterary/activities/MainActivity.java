@@ -1,6 +1,8 @@
 package com.jarone.litterary.activities;
 
-import android.graphics.BitmapFactory;
+
+import android.graphics.Bitmap;
+import android.graphics.Canvas;
 import android.os.Bundle;
 import android.util.Log;
 
@@ -8,6 +10,8 @@ import com.jarone.litterary.DroneState;
 import com.jarone.litterary.GroundStation;
 import com.jarone.litterary.R;
 import com.jarone.litterary.VisionProcessor;
+
+import java.util.concurrent.Callable;
 
 import dji.sdk.api.DJIDrone;
 import dji.sdk.api.DJIDroneTypeDef;
@@ -40,7 +44,7 @@ public class MainActivity extends DJIBaseActivity {
         activateDJI();
 
         initSDK();
-        DJIDrone.connectToDrone();
+        DroneState.droneConnected = DJIDrone.connectToDrone();
 
 
         registerCamera();
@@ -54,8 +58,13 @@ public class MainActivity extends DJIBaseActivity {
         GroundStation.addPoint(10, 10);
         GroundStation.addPoint(10, 10);
         GroundStation.addPoint(10, 10);
-        GroundStation.uploadAndExecuteTask();
-        GroundStation.executeTask();
+
+        GroundStation.withConnection(new Runnable() {
+            @Override
+            public void run() {
+                GroundStation.uploadAndExecuteTask();
+            }
+        });
     }
 
     @Override
@@ -99,6 +108,14 @@ public class MainActivity extends DJIBaseActivity {
         }.start();
     }
 
+    protected Bitmap viewToBitmap(DjiGLSurfaceView view) {
+        Bitmap b = Bitmap.createBitmap(view.getLayoutParams().width, view.getLayoutParams().height, Bitmap.Config.ARGB_8888);
+        Canvas c = new Canvas(b);
+        view.layout(view.getLeft(), view.getTop(), view.getRight(), view.getBottom());
+        view.draw(c);
+        return b;
+    }
+
     private void registerCamera() {
         mDjiGLSurfaceView = (DjiGLSurfaceView) findViewById(R.id.DjiSurfaceView_02);
         mDjiGLSurfaceView.start();
@@ -106,9 +123,7 @@ public class MainActivity extends DJIBaseActivity {
         DJIReceivedVideoDataCallBack mReceivedVideoDataCallBack = new DJIReceivedVideoDataCallBack() {
             @Override
             public void onResult(byte[] videoBuffer, int size) {
-                visionProcessor.processFrame(videoBuffer, size);
                 mDjiGLSurfaceView.setDataToDecoder(videoBuffer, size);
-
             }
         };
         DJIDrone.getDjiCamera().setReceivedVideoDataCallBack(mReceivedVideoDataCallBack);
