@@ -61,13 +61,14 @@ public class GroundStation {
      * openGroundStation and executing the callable in case of success
      */
     public static void withConnection(final Runnable run) {
+        final Handler handler = new Handler();
         DJIDrone.getDjiGroundStation().openGroundStation(new DJIGroundStationExecuteCallBack() {
             @Override
             public void onResult(DJIGroundStationTypeDef.GroundStationResult result) {
                 if (result == DJIGroundStationTypeDef.GroundStationResult.GS_Result_Success) {
                     DroneState.groundStationConnected = true;
                     try {
-                        new Handler().post(run);
+                        handler.post(run);
                     } catch (Exception e) {
                         Log.e(TAG, e.toString());
                     }
