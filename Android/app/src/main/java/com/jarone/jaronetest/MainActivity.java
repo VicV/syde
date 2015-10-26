@@ -3,6 +3,9 @@ package com.jarone.jaronetest;
 import android.os.Bundle;
 import android.util.Log;
 
+import com.jarone.litterary.DroneState;
+import com.jarone.litterary.GroundStation;
+
 import dji.sdk.api.DJIDrone;
 import dji.sdk.api.DJIDroneTypeDef;
 import dji.sdk.api.DJIError;
@@ -19,6 +22,9 @@ public class MainActivity extends DJIBaseActivity {
 
     private VisionProcessor visionProcessor = new VisionProcessor();
 
+    public DroneState droneState = new DroneState();
+    public GroundStation groundStation = new GroundStation();
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -29,6 +35,18 @@ public class MainActivity extends DJIBaseActivity {
         DJIDrone.connectToDrone();
 
         registerCamera();
+    }
+
+    public void testPlan() {
+        groundStation.newTask();
+        groundStation.defaultAltitude = 20;
+        groundStation.defaultSpeed = 1;
+        groundStation.addPoint(10, 10);
+        groundStation.addPoint(10, 10);
+        groundStation.addPoint(10, 10);
+        groundStation.addPoint(10, 10);
+        groundStation.uploadAndExecuteTask();
+        groundStation.executeTask();
     }
 
     @Override
