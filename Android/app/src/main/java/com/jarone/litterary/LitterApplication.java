@@ -25,9 +25,7 @@ public class LitterApplication extends Application {
     @Override
     public void onCreate() {
         super.onCreate();
-
         activateDJI();
-
         initSDK();
         DroneState.droneConnected = DJIDrone.connectToDrone();
     }
