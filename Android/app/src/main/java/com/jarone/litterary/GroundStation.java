@@ -31,7 +31,7 @@ public class GroundStation {
         groundTask.addWaypoint(point);
     }
 
-    public void uploadTask() {
+    public void uploadAndExecuteTask() {
         DJIDrone.getDjiGroundStation().openGroundStation(new DJIGroundStationExecuteCallBack() {
 
             @Override
@@ -46,6 +46,9 @@ public class GroundStation {
                         @Override
                         public void onResult(DJIGroundStationTypeDef.GroundStationResult result) {
                             // TODO Auto-generated method stub
+                            if (result == DJIGroundStationTypeDef.GroundStationResult.GS_Result_Success) {
+                                executeTask();
+                            }
                             String ResultsString = "return code =" + result.toString();
                             //handler.sendMessage(handler.obtainMessage(SHOWTOAST, ResultsString));
                         }
@@ -57,7 +60,8 @@ public class GroundStation {
     }
 
     public void executeTask() {
-        DJIDrone.getDjiGroundStation().startGroundStationTask(new DJIGroundStationExecuteCallBack(){
+        //NOTE: ground station must be open before this is called
+        DJIDrone.getDjiGroundStation().startGroundStationTask(new DJIGroundStationExecuteCallBack() {
 
             @Override
             public void onResult(DJIGroundStationTypeDef.GroundStationResult result) {
@@ -68,6 +72,22 @@ public class GroundStation {
         });
     }
 
+    public void setAltitude(float altitude) {
+        newTask();
+        addPoint(DroneState.getLatitude(), DroneState.getLongitude(), 0, altitude);
+        uploadAndExecuteTask();
+    }
+
+    public void engageJoystick() {
+        DJIDrone.getDjiGroundStation().pauseGroundStationTask(new DJIGroundStationExecuteCallBack() {
+            @Override
+            public void onResult(DJIGroundStationTypeDef.GroundStationResult groundStationResult) {
+
+            }
+        });
+
+        DJIDrone.getDjiGroundStation().setAircraftJoystick();
+    }
     public DJIGroundStationTask getTask() {
         return groundTask;
     }
