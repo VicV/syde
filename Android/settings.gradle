@@ -1,1 +1,1 @@
-include ':app', ':Demo:SDK-DEMO', ':Lib:DJI-SDK-LIB'
+include ':app', ':Demo:SDK-DEMO', ':Lib:DJI-SDK-LIB', ':Demo'
