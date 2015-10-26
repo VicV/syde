@@ -53,18 +53,23 @@ public class GroundStation {
         groundTask.addWaypoint(point);
     }
 
-    //TODO: Comment.
+    /**
+     * Used to call methods that require a connection to ground station by first calling
+     * openGroundStation and executing the callable in case of success
+     */
     public static void withConnection(final Callable<Void> onSuccess) {
         DJIDrone.getDjiGroundStation().openGroundStation(new DJIGroundStationExecuteCallBack() {
             @Override
             public void onResult(DJIGroundStationTypeDef.GroundStationResult result) {
-
                 if (result == DJIGroundStationTypeDef.GroundStationResult.GS_Result_Success) {
+                    DroneState.groundStationConnected = true;
                     try {
                         onSuccess.call();
                     } catch (Exception e) {
                         Log.e(TAG, e.toString());
                     }
+                } else {
+                    DroneState.groundStationConnected = false;
                 }
             }
         });
@@ -74,27 +79,13 @@ public class GroundStation {
      * Gives the queued task to the Drone and then executes it.
      */
     public static void uploadAndExecuteTask() {
-        DJIDrone.getDjiGroundStation().openGroundStation(new DJIGroundStationExecuteCallBack() {
-
+        DJIDrone.getDjiGroundStation().uploadGroundStationTask(groundTask, new DJIGroundStationExecuteCallBack() {
             @Override
             public void onResult(DJIGroundStationTypeDef.GroundStationResult result) {
-                String ResultsString = "return code =" + result.toString();
-                //handler.sendMessage(handler.obtainMessage(SHOWTOAST, ResultsString));
-
                 if (result == DJIGroundStationTypeDef.GroundStationResult.GS_Result_Success) {
-                    DJIDrone.getDjiGroundStation().uploadGroundStationTask(groundTask, new DJIGroundStationExecuteCallBack() {
-
-                        @Override
-                        public void onResult(DJIGroundStationTypeDef.GroundStationResult result) {
-                            if (result == DJIGroundStationTypeDef.GroundStationResult.GS_Result_Success) {
-                                executeTask();
-                            }
-                            String ResultsString = "return code =" + result.toString();
-                            //handler.sendMessage(handler.obtainMessage(SHOWTOAST, ResultsString));
-                        }
-
-                    });
+                    executeTask();
                 }
+                String ResultsString = "return code =" + result.toString();
             }
         });
     }
@@ -124,7 +115,11 @@ public class GroundStation {
         uploadAndExecuteTask();
     }
 
-    //TODO: Explain this.
+    /***
+     * Switches from ground station GPS control to direct angular (pitch, yaw, roll) control.
+     * Must pause current waypoint task before this can happen.
+     * Result should be the drone holding its current position until new commands are issued
+     */
     public static void engageJoystick() {
         DJIDrone.getDjiGroundStation().pauseGroundStationTask(new DJIGroundStationExecuteCallBack() {
             @Override
@@ -147,7 +142,7 @@ public class GroundStation {
                 //DO STUFF
             }
         });
-        DroneState.getInstance().isConnected(someConnection);
+
     }
 
     public static DJIGroundStationTask getTask() {
