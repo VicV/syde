@@ -138,16 +138,6 @@ public class GroundStation {
             }
         });
 
-        //SOME EXAMPLE:
-        Promise someConnection = new Promise();
-        someConnection.add(new PromiseListener() {
-            @Override
-            public void succeeded() {
-                super.succeeded();
-                //DO STUFF
-            }
-        });
-        DroneState.getInstance().isConnected(someConnection);
     }
 
     public static DJIGroundStationTask getTask() {

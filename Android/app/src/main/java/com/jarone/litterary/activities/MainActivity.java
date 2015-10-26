@@ -1,5 +1,6 @@
 package com.jarone.litterary.activities;
 
+import android.graphics.BitmapFactory;
 import android.os.Bundle;
 import android.util.Log;
 
@@ -107,6 +108,7 @@ public class MainActivity extends DJIBaseActivity {
             public void onResult(byte[] videoBuffer, int size) {
                 visionProcessor.processFrame(videoBuffer, size);
                 mDjiGLSurfaceView.setDataToDecoder(videoBuffer, size);
+
             }
         };
         DJIDrone.getDjiCamera().setReceivedVideoDataCallBack(mReceivedVideoDataCallBack);
