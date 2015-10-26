@@ -57,7 +57,7 @@ public class GroundStation {
      * Used to call methods that require a connection to ground station by first calling
      * openGroundStation and executing the callable in case of success
      */
-    public static void withConnection(final Callable<Void> onSuccess) {
+    public static void withConnection(final Callable onSuccess) {
         DJIDrone.getDjiGroundStation().openGroundStation(new DJIGroundStationExecuteCallBack() {
             @Override
             public void onResult(DJIGroundStationTypeDef.GroundStationResult result) {

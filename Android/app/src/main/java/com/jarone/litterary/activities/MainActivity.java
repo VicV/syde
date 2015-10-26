@@ -58,9 +58,9 @@ public class MainActivity extends DJIBaseActivity {
         GroundStation.addPoint(10, 10);
         GroundStation.addPoint(10, 10);
 
-        GroundStation.withConnection(new Callable<Void>() {
+        GroundStation.withConnection(new Callable() {
             @Override
-            public Void call() throws Exception {
+            public Object call() throws Exception {
                 GroundStation.uploadAndExecuteTask();
                 return null;
             }
