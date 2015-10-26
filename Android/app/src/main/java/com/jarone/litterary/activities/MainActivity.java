@@ -108,12 +108,14 @@ public class MainActivity extends DJIBaseActivity {
         }.start();
     }
 
-    private void viewToBitmap(DjiGLSurfaceView view) {
+    private Bitmap viewToBitmap(DjiGLSurfaceView view) {
         Bitmap b = Bitmap.createBitmap(view.getLayoutParams().width, view.getLayoutParams().height, Bitmap.Config.ARGB_8888);
         Canvas c = new Canvas(b);
-
-
+        view.layout(view.getLeft(), view.getTop(), view.getRight(), view.getBottom());
+        view.draw(c);
+        return b;
     }
+
     private void registerCamera() {
         mDjiGLSurfaceView = (DjiGLSurfaceView) findViewById(R.id.DjiSurfaceView_02);
         mDjiGLSurfaceView.start();
@@ -121,9 +123,8 @@ public class MainActivity extends DJIBaseActivity {
         DJIReceivedVideoDataCallBack mReceivedVideoDataCallBack = new DJIReceivedVideoDataCallBack() {
             @Override
             public void onResult(byte[] videoBuffer, int size) {
-                visionProcessor.processFrame(videoBuffer, size);
                 mDjiGLSurfaceView.setDataToDecoder(videoBuffer, size);
-
+                visionProcessor.processFrame(viewToBitmap(mDjiGLSurfaceView));
             }
         };
         DJIDrone.getDjiCamera().setReceivedVideoDataCallBack(mReceivedVideoDataCallBack);
