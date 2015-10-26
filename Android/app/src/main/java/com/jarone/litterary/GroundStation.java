@@ -1,5 +1,6 @@
 package com.jarone.litterary;
 
+import android.os.Handler;
 import android.util.Log;
 
 import com.jarone.litterary.promises.Promise;
@@ -12,11 +13,13 @@ import dji.sdk.api.GroundStation.DJIGroundStationTask;
 import dji.sdk.api.GroundStation.DJIGroundStationTypeDef;
 import dji.sdk.api.GroundStation.DJIGroundStationWaypoint;
 import dji.sdk.interfaces.DJIGroundStationExecuteCallBack;
+import dji.sdk.util.WifiStateUtil;
 
 /**
  * Created by Adam on 2015-10-24.
  */
 public class GroundStation {
+
 
     public static final String TAG = GroundStation.class.toString();
 
@@ -57,14 +60,14 @@ public class GroundStation {
      * Used to call methods that require a connection to ground station by first calling
      * openGroundStation and executing the callable in case of success
      */
-    public static void withConnection(final Callable onSuccess) {
+    public static void withConnection(final Runnable run) {
         DJIDrone.getDjiGroundStation().openGroundStation(new DJIGroundStationExecuteCallBack() {
             @Override
             public void onResult(DJIGroundStationTypeDef.GroundStationResult result) {
                 if (result == DJIGroundStationTypeDef.GroundStationResult.GS_Result_Success) {
                     DroneState.groundStationConnected = true;
                     try {
-                        onSuccess.call();
+                        new Handler().post(run);
                     } catch (Exception e) {
                         Log.e(TAG, e.toString());
                     }
@@ -132,17 +135,6 @@ public class GroundStation {
                 });
             }
         });
-
-        //SOME EXAMPLE:
-        Promise someConnection = new Promise();
-        someConnection.add(new PromiseListener() {
-            @Override
-            public void succeeded() {
-                super.succeeded();
-                //DO STUFF
-            }
-        });
-
     }
 
     public static DJIGroundStationTask getTask() {
