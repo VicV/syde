@@ -1,13 +1,11 @@
-package com.jarone.jaronetest;
+package com.jarone.litterary.activities;
 
 import android.app.Activity;
 import android.content.Intent;
 import android.hardware.usb.UsbManager;
 import android.os.Bundle;
-import android.view.Menu;
-import android.view.MenuItem;
 
-import java.util.Objects;
+import com.jarone.litterary.R;
 
 import dji.midware.data.manager.P3.ServiceManager;
 import dji.midware.usb.P3.DJIUsbAccessoryReceiver;
