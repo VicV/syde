@@ -7,4 +7,5 @@ public class VisionProcessor {
 
     public void processFrame(byte[] videoBuffer, int size) {
     }
+
 }
