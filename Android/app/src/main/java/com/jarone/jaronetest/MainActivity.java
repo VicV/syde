@@ -13,9 +13,10 @@ import dji.sdk.widget.DjiGLSurfaceView;
 
 public class MainActivity extends DJIBaseActivity {
 
-    private static final String TAG = "Literary";
+    private static final String TAG = "Litterary";
 
     private DjiGLSurfaceView mDjiGLSurfaceView;
+
     private VisionProcessor visionProcessor = new VisionProcessor();
 
     @Override
