@@ -1,5 +1,6 @@
 package com.jarone.litterary.activities;
 
+
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.os.Bundle;
@@ -58,11 +59,10 @@ public class MainActivity extends DJIBaseActivity {
         GroundStation.addPoint(10, 10);
         GroundStation.addPoint(10, 10);
 
-        GroundStation.withConnection(new Callable() {
+        GroundStation.withConnection(new Runnable() {
             @Override
-            public Object call() throws Exception {
+            public void run() {
                 GroundStation.uploadAndExecuteTask();
-                return null;
             }
         });
     }
@@ -108,7 +108,7 @@ public class MainActivity extends DJIBaseActivity {
         }.start();
     }
 
-    private Bitmap viewToBitmap(DjiGLSurfaceView view) {
+    protected Bitmap viewToBitmap(DjiGLSurfaceView view) {
         Bitmap b = Bitmap.createBitmap(view.getLayoutParams().width, view.getLayoutParams().height, Bitmap.Config.ARGB_8888);
         Canvas c = new Canvas(b);
         view.layout(view.getLeft(), view.getTop(), view.getRight(), view.getBottom());
@@ -124,7 +124,6 @@ public class MainActivity extends DJIBaseActivity {
             @Override
             public void onResult(byte[] videoBuffer, int size) {
                 mDjiGLSurfaceView.setDataToDecoder(videoBuffer, size);
-                visionProcessor.processFrame(viewToBitmap(mDjiGLSurfaceView));
             }
         };
         DJIDrone.getDjiCamera().setReceivedVideoDataCallBack(mReceivedVideoDataCallBack);
