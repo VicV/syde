@@ -23,7 +23,6 @@ public class MainActivity extends DJIBaseActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-
         registerCamera();
     }
 
@@ -44,15 +43,6 @@ public class MainActivity extends DJIBaseActivity {
         });
     }
 
-    @Override
-    protected void onDestroy() {
-        if (DJIDrone.getDjiCamera() != null) {
-            DJIDrone.getDjiCamera().setReceivedVideoDataCallBack(null);
-        }
-        super.onDestroy();
-    }
-
-
     protected Bitmap viewToBitmap(DjiGLSurfaceView view) {
         Bitmap b = Bitmap.createBitmap(view.getLayoutParams().width, view.getLayoutParams().height, Bitmap.Config.ARGB_8888);
         Canvas c = new Canvas(b);
@@ -72,6 +62,16 @@ public class MainActivity extends DJIBaseActivity {
             }
         };
         DJIDrone.getDjiCamera().setReceivedVideoDataCallBack(mReceivedVideoDataCallBack);
+    }
+
+
+
+    @Override
+    protected void onDestroy() {
+        if (DJIDrone.getDjiCamera() != null) {
+            DJIDrone.getDjiCamera().setReceivedVideoDataCallBack(null);
+        }
+        super.onDestroy();
     }
 
 }
