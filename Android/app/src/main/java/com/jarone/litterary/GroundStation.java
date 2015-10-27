@@ -1,5 +1,6 @@
 package com.jarone.litterary;
 
+import android.os.Handler;
 import android.util.Log;
 
 import com.jarone.litterary.promises.Promise;
@@ -57,14 +58,16 @@ public class GroundStation {
      * Used to call methods that require a connection to ground station by first calling
      * openGroundStation and executing the callable in case of success
      */
-    public static void withConnection(final Callable<Void> onSuccess) {
+    static void withConnection(final Runnable run) {
+        final Handler handler = new Handler();
+
         DJIDrone.getDjiGroundStation().openGroundStation(new DJIGroundStationExecuteCallBack() {
             @Override
             public void onResult(DJIGroundStationTypeDef.GroundStationResult result) {
                 if (result == DJIGroundStationTypeDef.GroundStationResult.GS_Result_Success) {
                     DroneState.groundStationConnected = true;
                     try {
-                        onSuccess.call();
+                        handler.post(run);
                     } catch (Exception e) {
                         Log.e(TAG, e.toString());
                     }
