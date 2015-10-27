@@ -3,16 +3,12 @@ package com.jarone.litterary;
 import android.os.Handler;
 import android.util.Log;
 
-import com.jarone.litterary.promises.Promise;
-import com.jarone.litterary.promises.PromiseListener;
-
-import java.util.concurrent.Callable;
-
 import dji.sdk.api.DJIDrone;
 import dji.sdk.api.GroundStation.DJIGroundStationTask;
 import dji.sdk.api.GroundStation.DJIGroundStationTypeDef;
 import dji.sdk.api.GroundStation.DJIGroundStationWaypoint;
 import dji.sdk.interfaces.DJIGroundStationExecuteCallBack;
+
 
 /**
  * Created by Adam on 2015-10-24.

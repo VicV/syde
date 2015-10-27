@@ -11,6 +11,7 @@
         android:text="HELLO JENNY :O"
         android:textAppearance="?android:attr/textAppearanceLarge" />
 
+
     <dji.sdk.widget.DjiGLSurfaceView
         android:id="@+id/DjiSurfaceView_02"
         android:layout_width="fill_parent"

@@ -42,9 +42,6 @@
                 android:name="android.hardware.usb.action.USB_ACCESSORY_ATTACHED"
                 android:resource="@xml/accessory_filter" />
         </activity>
-        <activity
-            android:name=".activities.MainActivity"
-            android:label="@string/title_activity_djiconnection_manager" />
 
     </application>
 
