@@ -60,7 +60,6 @@ public class GroundStation {
      */
     static void withConnection(final Runnable run) {
         final Handler handler = new Handler();
-
         DJIDrone.getDjiGroundStation().openGroundStation(new DJIGroundStationExecuteCallBack() {
             @Override
             public void onResult(DJIGroundStationTypeDef.GroundStationResult result) {
