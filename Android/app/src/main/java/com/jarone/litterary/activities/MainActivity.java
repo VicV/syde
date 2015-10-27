@@ -17,12 +17,13 @@ public class MainActivity extends DJIBaseActivity {
 
     private DjiGLSurfaceView mDjiGLSurfaceView;
 
+    VisionProcessor visionProcessor = new VisionProcessor();
+
     //Activity is starting.
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-
         registerCamera();
     }
 
@@ -35,31 +36,26 @@ public class MainActivity extends DJIBaseActivity {
         GroundStation.addPoint(10, 10);
         GroundStation.addPoint(10, 10);
 
-        GroundStation.withConnection(new Callable() {
+        GroundStation.withConnection(new Runnable() {
             @Override
-            public Object call() throws Exception {
+            public void run() {
                 GroundStation.uploadAndExecuteTask();
-                return null;
             }
         });
     }
 
-    @Override
-    protected void onDestroy() {
-        if (DJIDrone.getDjiCamera() != null) {
-            DJIDrone.getDjiCamera().setReceivedVideoDataCallBack(null);
-        }
-        super.onDestroy();
-    }
-
 
     private Bitmap viewToBitmap(DjiGLSurfaceView view) {
+
+
         Bitmap b = Bitmap.createBitmap(view.getLayoutParams().width, view.getLayoutParams().height, Bitmap.Config.ARGB_8888);
         Canvas c = new Canvas(b);
         view.layout(view.getLeft(), view.getTop(), view.getRight(), view.getBottom());
         view.draw(c);
         return b;
+
     }
+
 
     private void registerCamera() {
         mDjiGLSurfaceView = (DjiGLSurfaceView) findViewById(R.id.DjiSurfaceView_02);
@@ -73,6 +69,15 @@ public class MainActivity extends DJIBaseActivity {
             }
         };
         DJIDrone.getDjiCamera().setReceivedVideoDataCallBack(mReceivedVideoDataCallBack);
+    }
+
+
+    @Override
+    protected void onDestroy() {
+        if (DJIDrone.getDjiCamera() != null) {
+            DJIDrone.getDjiCamera().setReceivedVideoDataCallBack(null);
+        }
+        super.onDestroy();
     }
 
 }
