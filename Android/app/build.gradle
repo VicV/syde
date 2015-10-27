@@ -5,7 +5,7 @@ android {
     buildToolsVersion "23.0.1"
 
     defaultConfig {
-        applicationId "com.jarone.jaronetest"
+        applicationId "com.jarone.litterary"
         minSdkVersion 22
         targetSdkVersion 23
         versionCode 1
@@ -17,9 +17,16 @@ android {
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
     }
+    sourceSets {
+        main {
+            jniLibs.srcDirs = ['..\\Lib\\DJI-SDK-LIB\\libs']
+        }
+    }
 }
 
 dependencies {
     compile project(':Lib:DJI-SDK-LIB')
-//    compile 'com.google.android.gms:play-services:8.1.0'
+
+    compile 'com.google.android.gms:play-services-maps:8.1.0'
+    compile 'com.google.android.gms:play-services-location:8.1.0'
 }

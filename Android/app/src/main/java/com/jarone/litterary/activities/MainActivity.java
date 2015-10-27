@@ -6,7 +6,6 @@ import android.os.Bundle;
 
 import com.jarone.litterary.GroundStation;
 import com.jarone.litterary.R;
-import com.jarone.litterary.VisionProcessor;
 
 import dji.sdk.api.DJIDrone;
 import dji.sdk.interfaces.DJIReceivedVideoDataCallBack;
@@ -17,7 +16,6 @@ public class MainActivity extends DJIBaseActivity {
 
     private DjiGLSurfaceView mDjiGLSurfaceView;
 
-    VisionProcessor visionProcessor = new VisionProcessor();
 
     //Activity is starting.
     @Override
@@ -48,15 +46,12 @@ public class MainActivity extends DJIBaseActivity {
     private Bitmap viewToBitmap(DjiGLSurfaceView view) {
 
 
-        Bitmap b = Bitmap.createBitmap(view.getLayoutParams().width, view.getLayoutParams().height, Bitmap.Config.ARGB_8888);
-        Canvas c = new Canvas(b);
-        view.layout(view.getLeft(), view.getTop(), view.getRight(), view.getBottom());
-        view.draw(c);
-        return b;
-
-    }
-
-
+            Bitmap b = Bitmap.createBitmap(view.getLayoutParams().width, view.getLayoutParams().height, Bitmap.Config.ARGB_8888);
+            Canvas c = new Canvas(b);
+            view.layout(view.getLeft(), view.getTop(), view.getRight(), view.getBottom());
+            view.draw(c);
+            return b;
+        }
     private void registerCamera() {
         mDjiGLSurfaceView = (DjiGLSurfaceView) findViewById(R.id.DjiSurfaceView_02);
         mDjiGLSurfaceView.start();
@@ -65,12 +60,11 @@ public class MainActivity extends DJIBaseActivity {
             @Override
             public void onResult(byte[] videoBuffer, int size) {
                 mDjiGLSurfaceView.setDataToDecoder(videoBuffer, size);
-                visionProcessor.processFrame(viewToBitmap(mDjiGLSurfaceView));
+
             }
         };
         DJIDrone.getDjiCamera().setReceivedVideoDataCallBack(mReceivedVideoDataCallBack);
     }
-
 
     @Override
     protected void onDestroy() {
