@@ -2,8 +2,6 @@ package com.jarone.litterary;
 
 import android.util.Log;
 
-import com.jarone.litterary.promises.Promise;
-
 import dji.sdk.api.DJIDrone;
 import dji.sdk.api.MainController.DJIMainControllerSystemState;
 import dji.sdk.interfaces.DJIMcuUpdateStateCallBack;
@@ -42,7 +40,8 @@ public class DroneState {
      */
     private static double homeLongitude;
 
-    private static boolean connected = false;
+    public static boolean droneConnected = false;
+    public static boolean groundStationConnected = false;
     public static boolean hasTask = false;
 
     private static DJIMainControllerSystemState state;
