@@ -4,10 +4,6 @@
     <modules>
       <module fileurl="file://$PROJECT_DIR$/Android.iml" filepath="$PROJECT_DIR$/Android.iml" />
       <module fileurl="file://$PROJECT_DIR$/Lib/DJI-SDK-LIB/DJI-SDK-LIB.iml" filepath="$PROJECT_DIR$/Lib/DJI-SDK-LIB/DJI-SDK-LIB.iml" />
-<<<<<<< HEAD
-      <module fileurl="file://$PROJECT_DIR$/Demo/Demo.iml" filepath="$PROJECT_DIR$/Demo/Demo.iml" />
-=======
->>>>>>> fd87b2baf8203605fbb750b3ebf3fe444e901695
       <module fileurl="file://$PROJECT_DIR$/Lib/Lib.iml" filepath="$PROJECT_DIR$/Lib/Lib.iml" />
       <module fileurl="file://$PROJECT_DIR$/app/app.iml" filepath="$PROJECT_DIR$/app/app.iml" />
     </modules>

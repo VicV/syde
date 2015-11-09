@@ -56,6 +56,7 @@ public class GroundStation {
      */
     public static void withConnection(final Runnable run) {
         final Handler handler = new Handler();
+        Log.d(TAG, "withConnection RUNNING");
         DJIDrone.getDjiGroundStation().openGroundStation(new DJIGroundStationExecuteCallBack() {
             @Override
             public void onResult(DJIGroundStationTypeDef.GroundStationResult result) {
@@ -64,10 +65,12 @@ public class GroundStation {
                     try {
                         handler.post(run);
                     } catch (Exception e) {
-                        Log.e(TAG, e.toString());
+                        Log.e(TAG, "withConnection: " + e.toString());
                     }
+                    Log.d(TAG, "withConnection: SUCCESS");
                 } else {
                     DroneState.groundStationConnected = false;
+                    Log.d(TAG, "withConnection: FAILURE");
                 }
             }
         });
@@ -83,7 +86,8 @@ public class GroundStation {
                 if (result == DJIGroundStationTypeDef.GroundStationResult.GS_Result_Success) {
                     executeTask();
                 }
-                String ResultsString = "return code =" + result.toString();
+                String ResultsString = "upload task =" + result.toString();
+                Log.d(TAG, ResultsString);
             }
         });
     }
@@ -98,7 +102,8 @@ public class GroundStation {
             @Override
             public void onResult(DJIGroundStationTypeDef.GroundStationResult result) {
                 // TODO Auto-generated method stub
-                String ResultsString = "return code =" + result.toString();
+                String ResultsString = "execute task =" + result.toString();
+                Log.d(TAG, ResultsString);
                 //handler.sendMessage(handler.obtainMessage(SHOWTOAST, ResultsString));
             }
         });
