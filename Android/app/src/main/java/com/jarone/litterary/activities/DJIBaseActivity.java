@@ -32,5 +32,11 @@ public class DJIBaseActivity extends FragmentActivity {
         ServiceManager.getInstance().pauseService(true); // Pause the service
     }
 
-
+    @Override
+    protected void onDestroy() {
+        if (DJIDrone.getDjiCamera() != null) {
+            DJIDrone.getDjiCamera().setReceivedVideoDataCallBack(null);
+        }
+        super.onDestroy();
+    }
 }
