@@ -71,3 +71,6 @@ build/
 
 #NDK
 obj/
+
+#Api Keys
+/*/keys.xml
