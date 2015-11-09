@@ -1,6 +1,7 @@
 package com.jarone.litterary;
 
 import android.app.Application;
+import android.content.Context;
 import android.util.Log;
 
 import dji.sdk.api.DJIDrone;
@@ -13,6 +14,16 @@ import dji.sdk.interfaces.DJIGeneralListener;
  */
 public class LitterApplication extends Application {
 
+
+    private static LitterApplication instance;
+
+    public LitterApplication() {
+        instance = this;
+    }
+
+    public static Context getContext() {
+        return instance;
+    }
 
     /**
      * The log tag

@@ -1,12 +1,141 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:id="@+id/main_layout"
     android:layout_width="match_parent"
-    android:layout_height="match_parent">
+    android:layout_height="match_parent"
+    android:orientation="vertical">
 
 
     <dji.sdk.widget.DjiGLSurfaceView
         android:id="@+id/DjiSurfaceView_02"
         android:layout_width="fill_parent"
-        android:layout_height="263dp" />
+        android:layout_height="212dp"
+        android:elevation="5dp" />
+
+    <RelativeLayout
+        android:layout_width="fill_parent"
+        android:layout_height="fill_parent"
+        android:background="#222">
+
+
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentTop="true"
+            android:layout_centerHorizontal="true"
+            android:orientation="horizontal">
+
+            <EditText
+                android:id="@+id/editText"
+                android:layout_width="150dp"
+                android:layout_height="30dp"
+                android:layout_marginRight="10dp"
+                android:layout_marginTop="15dp"
+                android:background="#ebebeb"
+                android:ems="10"
+                android:inputType="number" />
+
+            <Button
+                android:id="@+id/button"
+                android:layout_width="100dp"
+                android:layout_height="30dp"
+                android:layout_gravity="bottom"
+                android:layout_marginRight="1dp"
+                android:background="#ebebeb"
+                android:text="Set Altitude"
+                android:textSize="10sp" />
+
+        </LinearLayout>
+
+        <RelativeLayout
+            android:id="@+id/nav_layout"
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content"
+            android:layout_centerInParent="true">
+
+            <Button
+                android:id="@+id/button_up"
+                android:layout_width="70dp"
+                android:layout_height="70dp"
+                android:layout_alignParentTop="true"
+                android:layout_centerHorizontal="true"
+                android:layout_marginBottom="10dp"
+                android:background="@drawable/button_up_state" />
+
+            <Button
+                android:id="@+id/button_left"
+                android:layout_width="70dp"
+                android:layout_height="70dp"
+                android:layout_below="@+id/button_up"
+                android:layout_marginEnd="10dp"
+                android:layout_toStartOf="@+id/button_up"
+                android:background="@drawable/button_left_state" />
+
+            <Button
+                android:id="@+id/button_right"
+                android:layout_width="70dp"
+                android:layout_height="70dp"
+                android:layout_alignTop="@+id/button_left"
+                android:layout_marginStart="10dp"
+                android:layout_toEndOf="@+id/button_up"
+                android:background="@drawable/button_right_state" />
+
+            <Button
+                android:id="@+id/button_down"
+                android:layout_width="70dp"
+                android:layout_height="70dp"
+                android:layout_below="@+id/button_left"
+                android:layout_centerHorizontal="true"
+                android:layout_marginTop="10dp"
+                android:background="@drawable/button_down_state" />
+
+            <TextView
+                android:id="@+id/textView"
+                android:layout_width="50dp"
+                android:layout_height="50dp"
+                android:layout_below="@+id/button_up"
+                android:layout_centerHorizontal="true"
+                android:layout_marginTop="5dp"
+                android:background="@drawable/x"
+                android:gravity="center"
+                android:text="STOP"
+                android:textColor="#ebebeb"
+                android:textSize="10sp" />
+        </RelativeLayout>
+
+        <LinearLayout
+            android:id="@+id/home_layout"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentBottom="true"
+            android:layout_centerHorizontal="true"
+            android:layout_centerInParent="true"
+            android:layout_marginBottom="10dp"
+            android:orientation="horizontal">
+
+            <Button
+                android:id="@+id/button_set_home"
+                android:layout_width="100dp"
+                android:layout_height="wrap_content"
+                android:background="#ebebeb"
+                android:elevation="5dp"
+                android:padding="10dp"
+                android:text="Set Home" />
+
+            <android.widget.Space
+                android:layout_width="150dp"
+                android:layout_height="0dp" />
+
+            <Button
+                android:id="@+id/button2"
+                android:layout_width="100dp"
+                android:layout_height="wrap_content"
+                android:background="#ebebeb"
+                android:elevation="5dp"
+                android:padding="10dp"
+                android:text="Go Home" />
+        </LinearLayout>
+
+
+    </RelativeLayout>
 
 </LinearLayout>
