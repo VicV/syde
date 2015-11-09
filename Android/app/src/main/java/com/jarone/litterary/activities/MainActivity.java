@@ -50,14 +50,13 @@ public class MainActivity extends DJIBaseActivity {
 
 
     private Bitmap viewToBitmap(DjiGLSurfaceView view) {
-
-
             Bitmap b = Bitmap.createBitmap(view.getLayoutParams().width, view.getLayoutParams().height, Bitmap.Config.ARGB_8888);
             Canvas c = new Canvas(b);
             view.layout(view.getLeft(), view.getTop(), view.getRight(), view.getBottom());
             view.draw(c);
             return b;
-        }
+    }
+
     private void registerCamera() {
         mDjiGLSurfaceView = (DjiGLSurfaceView) findViewById(R.id.DjiSurfaceView_02);
         mDjiGLSurfaceView.start();

@@ -3,6 +3,8 @@ package com.jarone.litterary;
 import android.os.Handler;
 import android.util.Log;
 
+import com.jarone.litterary.handlers.MessageHandler;
+
 import dji.sdk.api.DJIDrone;
 import dji.sdk.api.GroundStation.DJIGroundStationTask;
 import dji.sdk.api.GroundStation.DJIGroundStationTypeDef;
@@ -105,6 +107,20 @@ public class GroundStation {
                 String ResultsString = "execute task =" + result.toString();
                 Log.d(TAG, ResultsString);
                 //handler.sendMessage(handler.obtainMessage(SHOWTOAST, ResultsString));
+            }
+        });
+    }
+
+    public static void stopTask() {
+        withConnection(new Runnable() {
+            @Override
+            public void run() {
+                DJIDrone.getDjiGroundStation().cancelGroundStationTask(new DJIGroundStationExecuteCallBack() {
+                    @Override
+                    public void onResult(DJIGroundStationTypeDef.GroundStationResult groundStationResult) {
+                        MessageHandler.d(groundStationResult.toString());
+                    }
+                });
             }
         });
     }
