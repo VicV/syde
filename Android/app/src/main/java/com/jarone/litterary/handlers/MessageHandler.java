@@ -7,7 +7,7 @@ import com.jarone.litterary.LitterApplication;
 /**
  * Created by Adam on 2015-11-03.
  */
-public class ErrorHandler {
+public class MessageHandler {
 
     public static void d (String message) {
         Toast toast = Toast.makeText(LitterApplication.getContext(), message, Toast.LENGTH_SHORT);
