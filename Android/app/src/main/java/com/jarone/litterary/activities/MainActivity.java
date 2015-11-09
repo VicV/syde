@@ -16,13 +16,19 @@ public class MainActivity extends DJIBaseActivity {
 
     private DjiGLSurfaceView mDjiGLSurfaceView;
 
-
+    private static final String TAG = MainActivity.class.toString();
     //Activity is starting.
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         registerCamera();
+        GroundStation.withConnection(new Runnable() {
+            @Override
+            public void run() {
+                GroundStation.setAltitude(2);
+            }
+        });
     }
 
     public void testPlan() {
