@@ -1,6 +1,6 @@
 package com.jarone.litterary;
 
-import android.util.Log;
+import com.jarone.litterary.handlers.MessageHandler;
 
 import dji.sdk.api.DJIDrone;
 import dji.sdk.api.MainController.DJIMainControllerSystemState;
@@ -52,7 +52,7 @@ public class DroneState {
     /**
      * Update the current state of the drone.
      */
-    public void updateDroneState() {
+    public static void updateDroneState() {
         mMcuUpdateStateCallBack = new DJIMcuUpdateStateCallBack() {
 
             @Override
@@ -73,7 +73,7 @@ public class DroneState {
                 DroneState.state = state;
             }
         };
-        Log.d(TAG, "setMcuUpdateState");
+        MessageHandler.d("setMcuUpdateState");
         DJIDrone.getDjiMC().setMcuUpdateStateCallBack(mMcuUpdateStateCallBack);
     }
 
@@ -83,6 +83,10 @@ public class DroneState {
 
     public static double getLongitude() {
         return longitude;
+    }
+
+    public static boolean hasValidLocation() {
+        return (getLongitude() != 0.0 && getLatitude() != 0.0);
     }
 
 }
