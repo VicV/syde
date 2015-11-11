@@ -20,10 +20,10 @@
 
         <meta-data
             android:name="com.dji.sdk.API_KEY"
-            android:value="5c478d6e5a717f9d4f8b7839" />
+            android:value="@string/djiApiKey" />
         <meta-data
             android:name="com.google.android.geo.API_KEY"
-            android:value="AIzaSyAc7Gp1S0Mk-YUoerQsATUPGQ2dg_qQEs4" />
+            android:value="@string/geoApiKey" />
 
         <activity
             android:name=".activities.MainActivity"

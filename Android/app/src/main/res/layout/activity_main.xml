@@ -48,6 +48,7 @@
 
         <RelativeLayout
             android:id="@+id/nav_layout"
+            android:paddingTop="20dp"
             android:layout_width="fill_parent"
             android:layout_height="wrap_content"
             android:layout_centerInParent="true">
