@@ -71,3 +71,6 @@ build/
 
 #NDK
 obj/
+
+#SDK Keys
+Android/app/src/main/res/values/keys.xml
