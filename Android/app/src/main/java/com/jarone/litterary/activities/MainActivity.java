@@ -4,9 +4,11 @@ import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.os.Bundle;
 import android.view.View;
+import android.widget.EditText;
 
 import com.jarone.litterary.GroundStation;
 import com.jarone.litterary.R;
+import com.jarone.litterary.handlers.MessageHandler;
 
 import dji.sdk.api.DJIDrone;
 import dji.sdk.interfaces.DJIReceivedVideoDataCallBack;
@@ -28,12 +30,6 @@ public class MainActivity extends DJIBaseActivity {
 
         registerCamera();
 
-        GroundStation.withConnection(new Runnable() {
-            @Override
-            public void run() {
-                GroundStation.setAltitude(2);
-            }
-        });
     }
 
 
@@ -65,10 +61,10 @@ public class MainActivity extends DJIBaseActivity {
             public void onClick(View v) {
                 switch (v.getId()) {
                     case R.id.button_go_home:
-                        //TODO: Go Home Code
+                        GroundStation.goHome();
                         break;
                     case R.id.button_set_home:
-                        //TODO: Set Home Code
+                        GroundStation.setHomePoint();
                         break;
                 }
             }
@@ -79,7 +75,13 @@ public class MainActivity extends DJIBaseActivity {
         return new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                //TODO: Set Altitude Code
+                EditText text = (EditText)findViewById(R.id.editText);
+                float altitude = Float.parseFloat(text.getText().toString());
+                if (altitude < 100) {
+                    GroundStation.setAltitude(altitude);
+                } else {
+                    MessageHandler.d("Please choose altitude <100 m");
+                }
             }
         };
     }
@@ -106,7 +108,7 @@ public class MainActivity extends DJIBaseActivity {
         findViewById(R.id.button_up).setOnClickListener(getDirectionalListener());
         findViewById(R.id.button_go_home).setOnClickListener(getHomeButtonListener());
         findViewById(R.id.button_set_home).setOnClickListener(getHomeButtonListener());
-        findViewById(R.id.button_set_altitude).setOnClickListener(getHomeButtonListener());
+        findViewById(R.id.button_set_altitude).setOnClickListener(setAltitudeListener());
 
     }
 

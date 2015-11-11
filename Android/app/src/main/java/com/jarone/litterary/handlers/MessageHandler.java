@@ -1,5 +1,6 @@
 package com.jarone.litterary.handlers;
 
+import android.util.Log;
 import android.widget.Toast;
 
 import com.jarone.litterary.LitterApplication;
@@ -12,5 +13,6 @@ public class MessageHandler {
     public static void d (String message) {
         Toast toast = Toast.makeText(LitterApplication.getContext(), message, Toast.LENGTH_SHORT);
         toast.show();
+        Log.d("MessageHandler", message);
     }
 }

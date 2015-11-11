@@ -1,14 +1,15 @@
 package com.jarone.litterary;
 
 import android.os.Handler;
-import android.util.Log;
 
 import com.jarone.litterary.handlers.MessageHandler;
 
 import dji.sdk.api.DJIDrone;
+import dji.sdk.api.DJIError;
 import dji.sdk.api.GroundStation.DJIGroundStationTask;
 import dji.sdk.api.GroundStation.DJIGroundStationTypeDef;
 import dji.sdk.api.GroundStation.DJIGroundStationWaypoint;
+import dji.sdk.interfaces.DJIExecuteResultCallback;
 import dji.sdk.interfaces.DJIGroundStationExecuteCallBack;
 
 
@@ -58,7 +59,7 @@ public class GroundStation {
      */
     public static void withConnection(final Runnable run) {
         final Handler handler = new Handler();
-        Log.d(TAG, "withConnection RUNNING");
+        MessageHandler.d("withConnection RUNNING");
         DJIDrone.getDjiGroundStation().openGroundStation(new DJIGroundStationExecuteCallBack() {
             @Override
             public void onResult(DJIGroundStationTypeDef.GroundStationResult result) {
@@ -67,12 +68,12 @@ public class GroundStation {
                     try {
                         handler.post(run);
                     } catch (Exception e) {
-                        Log.e(TAG, "withConnection: " + e.toString());
+                        MessageHandler.d("withConnection: " + e.toString());
                     }
-                    Log.d(TAG, "withConnection: SUCCESS");
+                    MessageHandler.d("withConnection: SUCCESS");
                 } else {
                     DroneState.groundStationConnected = false;
-                    Log.d(TAG, "withConnection: FAILURE");
+                    MessageHandler.d("withConnection: FAILURE");
                 }
             }
         });
@@ -89,7 +90,7 @@ public class GroundStation {
                     executeTask();
                 }
                 String ResultsString = "upload task =" + result.toString();
-                Log.d(TAG, ResultsString);
+                MessageHandler.d(ResultsString);
             }
         });
     }
@@ -105,7 +106,7 @@ public class GroundStation {
             public void onResult(DJIGroundStationTypeDef.GroundStationResult result) {
                 // TODO Auto-generated method stub
                 String ResultsString = "execute task =" + result.toString();
-                Log.d(TAG, ResultsString);
+                MessageHandler.d(ResultsString);
                 //handler.sendMessage(handler.obtainMessage(SHOWTOAST, ResultsString));
             }
         });
@@ -129,11 +130,47 @@ public class GroundStation {
      * Set a new altitude for the drone. Simply calls {@link #addPoint(double, double, float, float)} with old values and the new altitude.
      */
     public static void setAltitude(float altitude) {
+        if (!DroneState.hasValidLocation()) {
+            MessageHandler.d("Invalid GPS Coordinates");
+            return;
+        }
         newTask();
         addPoint(DroneState.getLatitude(), DroneState.getLongitude(), 0, altitude);
         uploadAndExecuteTask();
     }
 
+    public static void setHomePoint() {
+        if (!DroneState.hasValidLocation()) {
+            MessageHandler.d("Invalid GPS Coordinates");
+            return;
+        }
+        withConnection(new Runnable() {
+            @Override
+            public void run() {
+                DJIDrone.getDjiMainController().setAircraftHomeGpsLocation(DroneState.getLatitude(), DroneState.getLongitude(), new DJIExecuteResultCallback() {
+                    @Override
+                    public void onResult(DJIError djiError) {
+                        MessageHandler.d("Set Home: " + djiError.errorDescription);
+                        MessageHandler.d("Home Point Set To: " + String.valueOf(DroneState.getLatitude()) + " " + String.valueOf(DroneState.getLongitude()));
+                    }
+                });
+            }
+        });
+    }
+
+    public static void goHome() {
+        withConnection(new Runnable() {
+            @Override
+            public void run() {
+                DJIDrone.getDjiGroundStation().goHome(new DJIGroundStationExecuteCallBack() {
+                    @Override
+                    public void onResult(DJIGroundStationTypeDef.GroundStationResult groundStationResult) {
+                        MessageHandler.d("Go Home: " + groundStationResult.toString());
+                    }
+                });
+            }
+        });
+    }
     /***
      * Switches from ground station GPS control to direct angular (pitch, yaw, roll) control.
      * Must pause current waypoint task before this can happen.

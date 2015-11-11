@@ -4,6 +4,8 @@ import android.app.Application;
 import android.content.Context;
 import android.util.Log;
 
+import com.jarone.litterary.handlers.MessageHandler;
+
 import dji.sdk.api.DJIDrone;
 import dji.sdk.api.DJIDroneTypeDef;
 import dji.sdk.api.DJIError;
@@ -56,10 +58,10 @@ public class LitterApplication extends Application {
                         public void onGetPermissionResult(int result) {
                             if (result == 0) {
                                 // show success
-                                Log.e(TAG, "onGetPermissionResult =" + result);
-                                Log.e(TAG,
+                                MessageHandler.d("onGetPermissionResult =" + result);
+                                MessageHandler.d(
                                         "onGetPermissionResultDescription=" + DJIError.getCheckPermissionErrorDescription(result));
-                                droneState.updateDroneState();
+                                DroneState.updateDroneState();
                             } else {
                                 // show errors
                                 Log.e(TAG, "onGetPermissionResult =" + result);
