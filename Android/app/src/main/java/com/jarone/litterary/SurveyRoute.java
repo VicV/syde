@@ -22,14 +22,12 @@ public class SurveyRoute {
      * index
      */
     public void executeRoute() {
-        GroundStation.newTask();
-        GroundStation.addPoint(route[index].latitude, route[index].longitude);
-        index++;
+        if (index <= route.length - 1) {
 
-        if (index > route.length - 1) {
-            MessageHandler.d("Survey Route Complete!");
-            stopRoute();
-        } else {
+            GroundStation.newTask();
+            GroundStation.addPoint(route[index].latitude, route[index].longitude);
+            index++;
+
             GroundStation.taskDoneCallback = new Runnable() {
                 @Override
                 public void run() {
@@ -42,15 +40,25 @@ public class SurveyRoute {
                     Camera.takePhoto();
                 }
             };
+            GroundStation.uploadAndExecuteTask();
+
+        } else {
+            MessageHandler.d("Survey Route Complete!");
+            stopRoute();
         }
 
-        GroundStation.uploadAndExecuteTask();
     }
 
     public void stopRoute() {
         GroundStation.taskDoneCallback = new Runnable() {
             @Override
             public void run() {}
+        };
+        Camera.photoCallback = new Runnable() {
+            @Override
+            public void run() {
+
+            }
         };
         GroundStation.stopTask();
     }

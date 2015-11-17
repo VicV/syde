@@ -254,7 +254,7 @@ public class GroundStation {
         return result == DJIGroundStationTypeDef.GroundStationResult.GS_Result_Success;
     }
 
-    public static void setMissionCallback() {
+    public static void registerMissionCallback() {
         DJIDrone.getDjiGroundStation().setGroundStationMissionPushInfoCallBack(new DJIGroundStationMissionPushInfoCallBack() {
             @Override
             public void onResult(DJIGroundStationMissionPushInfo djiGroundStationMissionPushInfo) {

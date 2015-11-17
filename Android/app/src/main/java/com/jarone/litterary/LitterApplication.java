@@ -41,7 +41,7 @@ public class LitterApplication extends Application {
         activateDJI();
         initSDK();
         DroneState.droneConnected = DJIDrone.connectToDrone();
-        GroundStation.setMissionCallback();
+        GroundStation.registerMissionCallback();
     }
 
 
