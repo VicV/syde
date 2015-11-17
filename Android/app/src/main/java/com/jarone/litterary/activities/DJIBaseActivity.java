@@ -3,6 +3,8 @@ package com.jarone.litterary.activities;
 import android.os.Bundle;
 import android.support.v4.app.FragmentActivity;
 
+import com.jarone.litterary.DroneState;
+
 import dji.midware.data.manager.P3.ServiceManager;
 import dji.sdk.api.DJIDrone;
 
@@ -11,10 +13,7 @@ public class DJIBaseActivity extends FragmentActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        DJIDrone.getDjiMC().startUpdateTimer(1000);
-
-        DJIDrone.getDjiGroundStation().startUpdateTimer(1000);
-        ServiceManager.getInstance().pauseService(false); // Resume the service
+        DroneState.updateDroneState();
     }
 
     @Override

@@ -32,7 +32,8 @@
                 android:layout_marginTop="15dp"
                 android:background="#ebebeb"
                 android:ems="10"
-                android:inputType="number" />
+                android:inputType="number"
+                />
 
             <Button
                 android:id="@+id/button_set_altitude"

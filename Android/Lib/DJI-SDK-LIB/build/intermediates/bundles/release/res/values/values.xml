@@ -72,7 +72,7 @@
     <string name="ErrorDetailCheckPermissionUnsportAesEncrypt">AES 256 encrypt unsupport</string>
     <!-- From: file:/Users/Adam/AndroidStudioProjects/Litterary/Android/Lib/DJI-SDK-LIB/res/values/styles.xml -->
     <eat-comment/>
-    <style name="AppBaseTheme" parent="android:Theme.Light">
+    <style name="AppBaseTheme" parent="android:Theme.Light.NoTitleBar">
         <!--
             Theme customizations available in newer API levels can go in
             res/values-vXX/styles.xml, while customizations related to

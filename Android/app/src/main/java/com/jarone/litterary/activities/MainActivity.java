@@ -6,6 +6,7 @@ import android.os.Bundle;
 import android.view.View;
 import android.widget.EditText;
 
+import com.jarone.litterary.DroneState;
 import com.jarone.litterary.GroundStation;
 import com.jarone.litterary.R;
 import com.jarone.litterary.handlers.MessageHandler;
@@ -40,15 +41,27 @@ public class MainActivity extends DJIBaseActivity {
                 switch (v.getId()) {
                     case R.id.button_up:
                         //TODO: Up Code
+                        if (DroneState.getMode() == DroneState.DIRECT_MODE) {
+
+                        }
                         break;
                     case R.id.button_down:
                         //TODO: Down Code
+                        if (DroneState.getMode() == DroneState.DIRECT_MODE) {
+
+                        }
                         break;
                     case R.id.button_left:
                         //TODO: Left Code
+                        if (DroneState.getMode() == DroneState.DIRECT_MODE) {
+
+                        }
                         break;
                     case R.id.button_right:
                         //TODO: Right Code
+                        if (DroneState.getMode() == DroneState.DIRECT_MODE) {
+
+                        }
                         break;
                 }
             }
@@ -76,11 +89,15 @@ public class MainActivity extends DJIBaseActivity {
             @Override
             public void onClick(View v) {
                 EditText text = (EditText)findViewById(R.id.editText);
-                float altitude = Float.parseFloat(text.getText().toString());
-                if (altitude < 100) {
-                    GroundStation.setAltitude(altitude);
-                } else {
-                    MessageHandler.d("Please choose altitude <100 m");
+                try {
+                    float altitude = Float.parseFloat(text.getText().toString());
+                    if (altitude < 100) {
+                        GroundStation.setAltitude(altitude);
+                    } else {
+                        MessageHandler.d("Please choose altitude <100 m");
+                    }
+                } catch (NumberFormatException e) {
+                    return;
                 }
             }
         };

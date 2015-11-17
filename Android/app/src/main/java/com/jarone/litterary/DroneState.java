@@ -1,7 +1,5 @@
 package com.jarone.litterary;
 
-import com.jarone.litterary.handlers.MessageHandler;
-
 import dji.sdk.api.DJIDrone;
 import dji.sdk.api.MainController.DJIMainControllerSystemState;
 import dji.sdk.interfaces.DJIMcuUpdateStateCallBack;
@@ -13,6 +11,8 @@ import dji.sdk.interfaces.DJIMcuUpdateStateCallBack;
  */
 public class DroneState {
 
+    public static final int WAYPOINT_MODE = 0;
+    public static final int DIRECT_MODE = 1;
 
     private static double latitude = 0;
     private static double longitude = 0;
@@ -29,6 +29,7 @@ public class DroneState {
     private static double velocityZ = 0;
 
     private static double battery = 0;
+    private static int mode;
 
     /**
      * Latitude of the home station
@@ -73,7 +74,6 @@ public class DroneState {
                 DroneState.state = state;
             }
         };
-        MessageHandler.d("setMcuUpdateState");
         DJIDrone.getDjiMC().setMcuUpdateStateCallBack(mMcuUpdateStateCallBack);
     }
 
@@ -89,4 +89,11 @@ public class DroneState {
         return (getLongitude() != 0.0 && getLatitude() != 0.0);
     }
 
+    public static void setMode(int newMode) {
+        mode = newMode;
+    }
+
+    public static int getMode() {
+        return mode;
+    }
 }

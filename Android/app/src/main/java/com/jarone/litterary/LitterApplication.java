@@ -41,6 +41,7 @@ public class LitterApplication extends Application {
         activateDJI();
         initSDK();
         DroneState.droneConnected = DJIDrone.connectToDrone();
+        GroundStation.setMissionCallback();
     }
 
 
@@ -61,7 +62,6 @@ public class LitterApplication extends Application {
                                 MessageHandler.d("onGetPermissionResult =" + result);
                                 MessageHandler.d(
                                         "onGetPermissionResultDescription=" + DJIError.getCheckPermissionErrorDescription(result));
-                                DroneState.updateDroneState();
                             } else {
                                 // show errors
                                 Log.e(TAG, "onGetPermissionResult =" + result);

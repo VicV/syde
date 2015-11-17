@@ -6,11 +6,13 @@ import com.jarone.litterary.handlers.MessageHandler;
 
 import dji.sdk.api.DJIDrone;
 import dji.sdk.api.DJIError;
+import dji.sdk.api.GroundStation.DJIGroundStationMissionPushInfo;
 import dji.sdk.api.GroundStation.DJIGroundStationTask;
 import dji.sdk.api.GroundStation.DJIGroundStationTypeDef;
 import dji.sdk.api.GroundStation.DJIGroundStationWaypoint;
 import dji.sdk.interfaces.DJIExecuteResultCallback;
 import dji.sdk.interfaces.DJIGroundStationExecuteCallBack;
+import dji.sdk.interfaces.DJIGroundStationMissionPushInfoCallBack;
 
 
 /**
@@ -31,6 +33,18 @@ public class GroundStation {
      * Default speed of the drone. Will be used when no speed is provided in navigation.
      **/
     public static float defaultSpeed;
+
+    public enum MissionStatusCodes {
+        INITIALIZING, MOVING, ROTATING, EXECUTING_ACTION, REACHED_WAYPOINT_PENDING_ACTION,
+        REACHED_WAYPOINT_FINISHED_ACTION
+    }
+
+    public static Runnable taskDoneCallback = new Runnable() {
+        @Override
+        public void run() {
+
+        }
+    };
 
     public static void newTask() {
         groundTask = new DJIGroundStationTask();
@@ -59,11 +73,10 @@ public class GroundStation {
      */
     public static void withConnection(final Runnable run) {
         final Handler handler = new Handler();
-        MessageHandler.d("withConnection RUNNING");
         DJIDrone.getDjiGroundStation().openGroundStation(new DJIGroundStationExecuteCallBack() {
             @Override
             public void onResult(DJIGroundStationTypeDef.GroundStationResult result) {
-                if (result == DJIGroundStationTypeDef.GroundStationResult.GS_Result_Success) {
+                if (resultSuccess(result)) {
                     DroneState.groundStationConnected = true;
                     try {
                         handler.post(run);
@@ -86,11 +99,12 @@ public class GroundStation {
         DJIDrone.getDjiGroundStation().uploadGroundStationTask(groundTask, new DJIGroundStationExecuteCallBack() {
             @Override
             public void onResult(DJIGroundStationTypeDef.GroundStationResult result) {
-                if (result == DJIGroundStationTypeDef.GroundStationResult.GS_Result_Success) {
+                if (resultSuccess(result)) {
                     executeTask();
                 }
                 String ResultsString = "upload task =" + result.toString();
                 MessageHandler.d(ResultsString);
+
             }
         });
     }
@@ -104,7 +118,9 @@ public class GroundStation {
 
             @Override
             public void onResult(DJIGroundStationTypeDef.GroundStationResult result) {
-                // TODO Auto-generated method stub
+                if (resultSuccess(result)) {
+                    DroneState.setMode(DroneState.WAYPOINT_MODE);
+                }
                 String ResultsString = "execute task =" + result.toString();
                 MessageHandler.d(ResultsString);
                 //handler.sendMessage(handler.obtainMessage(SHOWTOAST, ResultsString));
@@ -130,8 +146,13 @@ public class GroundStation {
      * Set a new altitude for the drone. Simply calls {@link #addPoint(double, double, float, float)} with old values and the new altitude.
      */
     public static void setAltitude(float altitude) {
+        DroneState.updateDroneState();
         if (!DroneState.hasValidLocation()) {
             MessageHandler.d("Invalid GPS Coordinates");
+            return;
+        }
+        if (altitude > 100) {
+            MessageHandler.d("Cannot exceed 100 m!");
             return;
         }
         newTask();
@@ -165,6 +186,9 @@ public class GroundStation {
                 DJIDrone.getDjiGroundStation().goHome(new DJIGroundStationExecuteCallBack() {
                     @Override
                     public void onResult(DJIGroundStationTypeDef.GroundStationResult groundStationResult) {
+                        if (resultSuccess(groundStationResult)) {
+                            DroneState.setMode(DroneState.WAYPOINT_MODE);
+                        }
                         MessageHandler.d("Go Home: " + groundStationResult.toString());
                     }
                 });
@@ -177,13 +201,45 @@ public class GroundStation {
      * Result should be the drone holding its current position until new commands are issued
      */
     public static void engageJoystick() {
-        DJIDrone.getDjiGroundStation().pauseGroundStationTask(new DJIGroundStationExecuteCallBack() {
+        withConnection(new Runnable() {
             @Override
-            public void onResult(DJIGroundStationTypeDef.GroundStationResult groundStationResult) {
-                DJIDrone.getDjiGroundStation().setAircraftJoystick(0, 0, 0, 0, new DJIGroundStationExecuteCallBack() {
+            public void run() {
+                DJIDrone.getDjiGroundStation().pauseGroundStationTask(new DJIGroundStationExecuteCallBack() {
                     @Override
                     public void onResult(DJIGroundStationTypeDef.GroundStationResult groundStationResult) {
+                        DJIDrone.getDjiGroundStation().setYawControlMode(DJIGroundStationTypeDef.DJINavigationFlightControlYawControlMode.Navigation_Flight_Control_Yaw_Control_Angle);
+                        DJIDrone.getDjiGroundStation().setAircraftJoystick(0, 0, 0, 0, new DJIGroundStationExecuteCallBack() {
+                            @Override
+                            public void onResult(DJIGroundStationTypeDef.GroundStationResult groundStationResult) {
+                                MessageHandler.d("Engage Joystick: " + groundStationResult.toString());
+                                if (resultSuccess(groundStationResult)) {
+                                    DroneState.setMode(DroneState.DIRECT_MODE);
+                                }
+                            }
+                        });
+                    }
+                });
+            }
+        });
 
+    }
+
+    public static void setAngles(final int pitch, final int yaw, final int roll) {
+        withConnection(new Runnable() {
+            @Override
+            public void run() {
+                DJIDrone.getDjiGroundStation().pauseGroundStationTask(new DJIGroundStationExecuteCallBack() {
+                    @Override
+                    public void onResult(DJIGroundStationTypeDef.GroundStationResult groundStationResult) {
+                        DJIDrone.getDjiGroundStation().setAircraftJoystick(yaw, pitch, roll, 0, new DJIGroundStationExecuteCallBack() {
+                            @Override
+                            public void onResult(DJIGroundStationTypeDef.GroundStationResult groundStationResult) {
+                                MessageHandler.d("Engage Joystick: " + groundStationResult.toString());
+                                if (resultSuccess(groundStationResult)) {
+                                    DroneState.setMode(DroneState.DIRECT_MODE);
+                                }
+                            }
+                        });
                     }
                 });
             }
@@ -194,5 +250,18 @@ public class GroundStation {
         return groundTask;
     }
 
+    private static boolean resultSuccess(DJIGroundStationTypeDef.GroundStationResult result) {
+        return result == DJIGroundStationTypeDef.GroundStationResult.GS_Result_Success;
+    }
 
+    public static void setMissionCallback() {
+        DJIDrone.getDjiGroundStation().setGroundStationMissionPushInfoCallBack(new DJIGroundStationMissionPushInfoCallBack() {
+            @Override
+            public void onResult(DJIGroundStationMissionPushInfo djiGroundStationMissionPushInfo) {
+                if (djiGroundStationMissionPushInfo.currState == MissionStatusCodes.REACHED_WAYPOINT_FINISHED_ACTION.ordinal()) {
+                    GroundStation.taskDoneCallback.run();
+                }
+            }
+        });
+    }
 }
