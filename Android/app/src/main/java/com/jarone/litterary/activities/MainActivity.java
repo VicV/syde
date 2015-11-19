@@ -1,11 +1,14 @@
 package com.jarone.litterary.activities;
 
+import android.content.Context;
+import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.EditText;
 
+import com.google.android.gms.location.LocationResult;
 import com.jarone.litterary.DroneState;
 import com.jarone.litterary.GroundStation;
 import com.jarone.litterary.R;
@@ -22,14 +25,18 @@ public class MainActivity extends DJIBaseActivity {
 
     private static final String TAG = MainActivity.class.toString();
 
+    private Context mainActivity;
+
     //Activity is starting.
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        mainActivity = this;
         setOnClickListeners();
 
         registerCamera();
+
 
     }
 
@@ -88,7 +95,7 @@ public class MainActivity extends DJIBaseActivity {
         return new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                EditText text = (EditText)findViewById(R.id.editText);
+                EditText text = (EditText) findViewById(R.id.editText);
                 try {
                     float altitude = Float.parseFloat(text.getText().toString());
                     if (altitude < 100) {
@@ -126,6 +133,7 @@ public class MainActivity extends DJIBaseActivity {
         findViewById(R.id.button_go_home).setOnClickListener(getHomeButtonListener());
         findViewById(R.id.button_set_home).setOnClickListener(getHomeButtonListener());
         findViewById(R.id.button_set_altitude).setOnClickListener(setAltitudeListener());
+        findViewById(R.id.button_set_region).setOnClickListener(setRegionClickListener());
 
     }
 
@@ -135,26 +143,18 @@ public class MainActivity extends DJIBaseActivity {
         Canvas c = new Canvas(b);
         view.layout(view.getLeft(), view.getTop(), view.getRight(), view.getBottom());
         view.draw(c);
+
         return b;
     }
 
 
-//    public void testPlan() {
-//        GroundStation.newTask();
-//        GroundStation.defaultAltitude = 20;
-//        GroundStation.defaultSpeed = 1;
-//        GroundStation.addPoint(10, 10);
-//        GroundStation.addPoint(10, 10);
-//        GroundStation.addPoint(10, 10);
-//        GroundStation.addPoint(10, 10);
-//
-//        GroundStation.withConnection(new Runnable() {
-//            @Override
-//            public void run() {
-//                GroundStation.uploadAndExecuteTask();
-//            }
-//        });
-//    }
-
+    private View.OnClickListener setRegionClickListener() {
+        return new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                startActivity(new Intent(mainActivity, MapActivity.class));
+            }
+        };
+    }
 
 }
