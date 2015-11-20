@@ -9,6 +9,18 @@
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
 
+    <uses-feature
+        android:glEsVersion="0x00020000"
+        android:required="true" />
+
+
+    <uses-feature
+        android:name="android.hardware.usb.accessory"
+        android:required="false" />
+
+    <uses-feature
+        android:name="android.hardware.usb.host"
+        android:required="false" />
 
     <application
         android:name=".LitterApplication"
@@ -43,19 +55,10 @@
                 android:resource="@xml/accessory_filter" />
         </activity>
 
+
+        <activity android:name=".activities.MapActivity" />
+
     </application>
 
-
-    <uses-feature
-        android:glEsVersion="0x00020000"
-        android:required="true" />
-
-    <uses-feature
-        android:name="android.hardware.usb.accessory"
-        android:required="false" />
-
-    <uses-feature
-        android:name="android.hardware.usb.host"
-        android:required="false" />
 
 </manifest>
