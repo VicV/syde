@@ -7,10 +7,10 @@ import android.view.View;
 
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
-import com.google.android.gms.maps.MapFragment;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.LatLng;
+import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.gms.maps.model.Polygon;
 import com.google.android.gms.maps.model.PolygonOptions;
@@ -28,8 +28,8 @@ public class MapActivity extends FragmentActivity implements OnMapReadyCallback 
     private GoogleMap droneMap;
     private Polygon currentPolygon;
     private ArrayList polyPoints = new ArrayList();
-    PolygonOptions rectOptions = new PolygonOptions().strokeWidth(2).fillColor(Color.parseColor("#80FF0000"));
-
+    private ArrayList markers = new ArrayList();
+    PolygonOptions rectOptions = new PolygonOptions().strokeWidth(15).fillColor(Color.parseColor("#90FF0000")).strokeColor(Color.parseColor("#90FF0000"));
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -43,40 +43,66 @@ public class MapActivity extends FragmentActivity implements OnMapReadyCallback 
         findViewById(R.id.button_undo).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                polyPoints.remove(polyPoints.size() - 1);
+                if (polyPoints.size() > 0) {
+                    polyPoints.remove(polyPoints.size() - 1);
+                    ((Marker) markers.get(markers.size() - 1)).remove();
+                    markers.remove(markers.size() - 1);
+                }
                 currentPolygon.setPoints(polyPoints);
             }
         });
-
-
     }
 
     @Override
     public void onMapReady(final GoogleMap map) {
         this.droneMap = map;
-        LatLng sydney = new LatLng(-33.867, 151.206);
+        LatLng defaultLocation = new LatLng(43.472, -80.54);
 
         droneMap.setMyLocationEnabled(true);
-        droneMap.moveCamera(CameraUpdateFactory.newLatLngZoom(sydney, 13));
-
-        droneMap.addMarker(new MarkerOptions()
-                .title("Sydney")
-                .snippet("The most populous city in Australia.")
-                .position(sydney));
-
+        droneMap.moveCamera(CameraUpdateFactory.newLatLngZoom(defaultLocation, 13));
 
         droneMap.setOnMapLongClickListener(new GoogleMap.OnMapLongClickListener() {
             @Override
             public void onMapLongClick(LatLng latLng) {
-                if (currentPolygon == null) {
-                    rectOptions.add(latLng);
-                    map.addPolygon(rectOptions);
-                } else {
-                    polyPoints.add(latLng);
-                    rectOptions.addAll(polyPoints);
+                if (currentPolygon != null) {
                     currentPolygon.remove();
-                    currentPolygon = map.addPolygon(rectOptions);
                 }
+                polyPoints.add(latLng);
+                currentPolygon = map.addPolygon(new PolygonOptions().strokeWidth(2).fillColor(Color.parseColor("#50FF0000")).addAll(polyPoints));
+                Marker marker = droneMap.addMarker(new MarkerOptions().position(latLng).draggable(true));
+                markers.add(marker);
+
+            }
+        });
+
+        map.setOnMarkerDragListener(new GoogleMap.OnMarkerDragListener() {
+            @Override
+            public void onMarkerDragStart(Marker marker) {
+
+                for (Object latLng : polyPoints) {
+                    LatLng point = (LatLng) latLng;
+
+                    if (marker.getPosition().equals(point)) {
+                        polyPoints.remove(point);
+                        markers.remove(marker);
+                        return;
+                    }
+
+                }
+                markers.remove(marker);
+            }
+
+            @Override
+            public void onMarkerDrag(Marker marker) {
+                currentPolygon.remove();
+                polyPoints.add(marker.getPosition());
+                currentPolygon = map.addPolygon(new PolygonOptions().strokeWidth(2).fillColor(Color.parseColor("#50FF0000")).addAll(polyPoints));
+            }
+
+            @Override
+            public void onMarkerDragEnd(Marker marker) {
+                markers.add(marker);
+
             }
         });
     }
