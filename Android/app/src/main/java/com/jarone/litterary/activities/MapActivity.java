@@ -1,6 +1,7 @@
 package com.jarone.litterary.activities;
 
 import android.graphics.Color;
+import android.location.Location;
 import android.os.Bundle;
 import android.support.v4.app.FragmentActivity;
 import android.view.View;
@@ -17,6 +18,7 @@ import com.google.android.gms.maps.model.PolygonOptions;
 import com.jarone.litterary.R;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 
 /**
  * Created by vic on 11/9/15.
@@ -27,7 +29,7 @@ public class MapActivity extends FragmentActivity implements OnMapReadyCallback 
 
     private GoogleMap droneMap;
     private Polygon currentPolygon;
-    private ArrayList polyPoints = new ArrayList();
+    private ArrayList polyPoints = new ArrayList<>();
     private ArrayList markers = new ArrayList();
     PolygonOptions rectOptions = new PolygonOptions().strokeWidth(15).fillColor(Color.parseColor("#90FF0000")).strokeColor(Color.parseColor("#90FF0000"));
 
@@ -47,8 +49,8 @@ public class MapActivity extends FragmentActivity implements OnMapReadyCallback 
                     polyPoints.remove(polyPoints.size() - 1);
                     ((Marker) markers.get(markers.size() - 1)).remove();
                     markers.remove(markers.size() - 1);
+                    currentPolygon.setPoints(polyPoints);
                 }
-                currentPolygon.setPoints(polyPoints);
             }
         });
     }
@@ -76,25 +78,36 @@ public class MapActivity extends FragmentActivity implements OnMapReadyCallback 
         });
 
         map.setOnMarkerDragListener(new GoogleMap.OnMarkerDragListener() {
+
+            boolean first = true;
+
             @Override
             public void onMarkerDragStart(Marker marker) {
 
+                LatLng thisPoint = null;
+                float lowest = -1;
                 for (Object latLng : polyPoints) {
                     LatLng point = (LatLng) latLng;
-
-                    if (marker.getPosition().equals(point)) {
-                        polyPoints.remove(point);
-                        markers.remove(marker);
-                        return;
+                    float[] results = new float[1];
+                    Location.distanceBetween(marker.getPosition().latitude, marker.getPosition().longitude, point.latitude, point.longitude, results);
+                    if (lowest == -1 || results[0] < lowest) {
+                        lowest = results[0];
+                        thisPoint = point;
                     }
 
                 }
+                polyPoints.remove(thisPoint);
                 markers.remove(marker);
             }
 
             @Override
             public void onMarkerDrag(Marker marker) {
                 currentPolygon.remove();
+                if (!first) {
+                    polyPoints.remove(polyPoints.size() - 1);
+                } else {
+                    first = false;
+                }
                 polyPoints.add(marker.getPosition());
                 currentPolygon = map.addPolygon(new PolygonOptions().strokeWidth(2).fillColor(Color.parseColor("#50FF0000")).addAll(polyPoints));
             }
@@ -102,7 +115,7 @@ public class MapActivity extends FragmentActivity implements OnMapReadyCallback 
             @Override
             public void onMarkerDragEnd(Marker marker) {
                 markers.add(marker);
-
+                first = true;
             }
         });
     }
