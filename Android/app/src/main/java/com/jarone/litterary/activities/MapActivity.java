@@ -1,8 +1,11 @@
 package com.jarone.litterary.activities;
 
+import android.app.Activity;
+import android.content.Intent;
 import android.graphics.Color;
 import android.location.Location;
 import android.os.Bundle;
+import android.os.Parcelable;
 import android.support.v4.app.FragmentActivity;
 import android.view.View;
 
@@ -27,11 +30,11 @@ import java.util.HashMap;
 
 public class MapActivity extends FragmentActivity implements OnMapReadyCallback {
 
+    private MapActivity mapActivity;
     private GoogleMap droneMap;
     private Polygon currentPolygon;
     private ArrayList polyPoints = new ArrayList<>();
     private ArrayList markers = new ArrayList();
-    PolygonOptions rectOptions = new PolygonOptions().strokeWidth(15).fillColor(Color.parseColor("#90FF0000")).strokeColor(Color.parseColor("#90FF0000"));
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -41,6 +44,7 @@ public class MapActivity extends FragmentActivity implements OnMapReadyCallback 
         SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager()
                 .findFragmentById(R.id.map);
         mapFragment.getMapAsync(this);
+        mapActivity = this;
 
         findViewById(R.id.button_undo).setOnClickListener(new View.OnClickListener() {
             @Override
@@ -51,6 +55,13 @@ public class MapActivity extends FragmentActivity implements OnMapReadyCallback 
                     markers.remove(markers.size() - 1);
                     currentPolygon.setPoints(polyPoints);
                 }
+            }
+        });
+
+        findViewById(R.id.button_set).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                finish();
             }
         });
     }
@@ -119,4 +130,23 @@ public class MapActivity extends FragmentActivity implements OnMapReadyCallback 
             }
         });
     }
+
+    @Override
+    public void finish() {
+        Intent data = new Intent();
+        LatLng[] p = new LatLng[markers.size()];
+
+        for (int i = 0; i < markers.size(); i++) {
+            Marker marker = ((Marker) markers.get(i));
+            p[i] = marker.getPosition();
+        }
+        data.putExtra("points", p);
+        if (getParent() == null) {
+            setResult(MainActivity.POINTS_RESULT_CODE, data);
+        } else {
+            getParent().setResult(MainActivity.POINTS_RESULT_CODE, data);
+        }
+        super.finish();
+    }
+
 }
