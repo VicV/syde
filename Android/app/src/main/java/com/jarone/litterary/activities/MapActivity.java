@@ -30,10 +30,25 @@ import java.util.HashMap;
 
 public class MapActivity extends FragmentActivity implements OnMapReadyCallback {
 
-    private MapActivity mapActivity;
+
+    /**
+     * The actual instance of the map
+     **/
     private GoogleMap droneMap;
+
+    /**
+     * The polygon area
+     **/
     private Polygon currentPolygon;
+
+    /**
+     * A list of all the lat long points that are the verticies of the polygon
+     **/
     private ArrayList polyPoints = new ArrayList<>();
+
+    /**
+     * A list of all the markers which lie on the verticies of the polygon
+     **/
     private ArrayList markers = new ArrayList();
 
     @Override
@@ -41,16 +56,22 @@ public class MapActivity extends FragmentActivity implements OnMapReadyCallback 
         super.onCreate(savedInstanceState);
         setContentView(R.layout.map_activity_layout);
 
+        //Gets the map loaded.
         SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager()
                 .findFragmentById(R.id.map);
         mapFragment.getMapAsync(this);
-        mapActivity = this;
+
+
+        // Undo -- removes the last point and marker.
+        // TODO: Undo drags
 
         findViewById(R.id.button_undo).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+
                 if (polyPoints.size() > 0) {
                     polyPoints.remove(polyPoints.size() - 1);
+                    //Remove the marker from the map and then from our array.
                     ((Marker) markers.get(markers.size() - 1)).remove();
                     markers.remove(markers.size() - 1);
                     currentPolygon.setPoints(polyPoints);
@@ -58,6 +79,7 @@ public class MapActivity extends FragmentActivity implements OnMapReadyCallback 
             }
         });
 
+        //The set button finishes the activity.
         findViewById(R.id.button_set).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -66,30 +88,42 @@ public class MapActivity extends FragmentActivity implements OnMapReadyCallback 
         });
     }
 
+    //This is when the map loads
     @Override
     public void onMapReady(final GoogleMap map) {
         this.droneMap = map;
+
+        //Default map location is to be E5
         LatLng defaultLocation = new LatLng(43.472, -80.54);
 
         droneMap.setMyLocationEnabled(true);
-        droneMap.moveCamera(CameraUpdateFactory.newLatLngZoom(defaultLocation, 13));
+        droneMap.moveCamera(CameraUpdateFactory.newLatLngZoom(defaultLocation, 14));
 
+        //This is the pin placing mechanic.
         droneMap.setOnMapLongClickListener(new GoogleMap.OnMapLongClickListener() {
             @Override
             public void onMapLongClick(LatLng latLng) {
+                //Erase the polygon because its about to be redrawn.
                 if (currentPolygon != null) {
                     currentPolygon.remove();
                 }
+
+                //Add a point at the location of the finger.
                 polyPoints.add(latLng);
+                //Redraw the map
                 currentPolygon = map.addPolygon(new PolygonOptions().strokeWidth(2).fillColor(Color.parseColor("#50FF0000")).addAll(polyPoints));
+                //Put a draggable marker at this vertex
                 Marker marker = droneMap.addMarker(new MarkerOptions().position(latLng).draggable(true));
+                //Store our marker.
                 markers.add(marker);
 
             }
         });
 
+        //Dragging mechanic of the polygons.
         map.setOnMarkerDragListener(new GoogleMap.OnMarkerDragListener() {
 
+            //Tracks if its the FIRST pass of the drag loop.
             boolean first = true;
 
             @Override
@@ -97,6 +131,10 @@ public class MapActivity extends FragmentActivity implements OnMapReadyCallback 
 
                 LatLng thisPoint = null;
                 float lowest = -1;
+
+                //There's no nice mechanic to finding what point is being dragged.
+                //This iterates through all of our known points until it finds the closest one to the marker.
+                //Then, it deletes that point, and then the related marker.
                 for (Object latLng : polyPoints) {
                     LatLng point = (LatLng) latLng;
                     float[] results = new float[1];
@@ -113,12 +151,16 @@ public class MapActivity extends FragmentActivity implements OnMapReadyCallback 
 
             @Override
             public void onMarkerDrag(Marker marker) {
+                //Erase the polygon because its about to be redrawn.
                 currentPolygon.remove();
+                //If its not the first pass, remove the last added point.
                 if (!first) {
                     polyPoints.remove(polyPoints.size() - 1);
                 } else {
                     first = false;
                 }
+
+                //Add our new point!
                 polyPoints.add(marker.getPosition());
                 currentPolygon = map.addPolygon(new PolygonOptions().strokeWidth(2).fillColor(Color.parseColor("#50FF0000")).addAll(polyPoints));
             }
@@ -133,6 +175,8 @@ public class MapActivity extends FragmentActivity implements OnMapReadyCallback 
 
     @Override
     public void finish() {
+        //LatLng is parcelable. So just put all the points into an array and send it back to the calling activity.
+        //TODO: Store these.
         Intent data = new Intent();
         LatLng[] p = new LatLng[markers.size()];
 
