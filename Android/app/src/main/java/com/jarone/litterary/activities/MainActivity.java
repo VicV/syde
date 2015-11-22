@@ -5,10 +5,12 @@ import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.os.Bundle;
+import android.os.Parcelable;
 import android.view.View;
 import android.widget.EditText;
 
 import com.google.android.gms.location.LocationResult;
+import com.google.android.gms.maps.model.LatLng;
 import com.jarone.litterary.DroneState;
 import com.jarone.litterary.GroundStation;
 import com.jarone.litterary.R;
@@ -20,6 +22,9 @@ import dji.sdk.widget.DjiGLSurfaceView;
 
 
 public class MainActivity extends DJIBaseActivity {
+
+    public static final int POINTS_REQUEST_CODE = 130;
+    public static final int POINTS_RESULT_CODE = 230;
 
     private DjiGLSurfaceView mDjiGLSurfaceView;
 
@@ -152,9 +157,17 @@ public class MainActivity extends DJIBaseActivity {
         return new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                startActivity(new Intent(mainActivity, MapActivity.class));
+                startActivityForResult(new Intent(mainActivity, MapActivity.class), POINTS_REQUEST_CODE);
             }
         };
     }
 
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        if (requestCode == POINTS_REQUEST_CODE && resultCode == POINTS_RESULT_CODE) {
+            LatLng[] parcel = (LatLng[]) data.getParcelableArrayExtra("points");
+
+        }
+    }
 }
