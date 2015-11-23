@@ -1,5 +1,6 @@
 package com.jarone.litterary;
 
+import com.google.android.gms.maps.model.LatLng;
 import com.jarone.litterary.handlers.MessageHandler;
 
 /**
@@ -7,12 +8,17 @@ import com.jarone.litterary.handlers.MessageHandler;
  * Class responsible for handling the execution of survey routes
  */
 public class SurveyRoute {
-    Location[] route;
-    int index;
+    private LatLng[] route;
+    private int index;
+    private float surveyAltitude;
+    private final int SPEED = 5;
+    private boolean finished;
 
-    public SurveyRoute(Location[] route){
+    public SurveyRoute(LatLng[] route, float altitude){
         this.route = route;
+        this.surveyAltitude = altitude;
         index = 0;
+        finished = false;
     }
 
     /**
@@ -25,15 +31,17 @@ public class SurveyRoute {
         if (index <= route.length - 1) {
 
             GroundStation.newTask();
-            GroundStation.addPoint(route[index].latitude, route[index].longitude);
+            GroundStation.addPoint(route[index].latitude, route[index].longitude, SPEED, surveyAltitude);
             index++;
 
+            //set the callbacks to take a photo when the point is reached
             GroundStation.taskDoneCallback = new Runnable() {
                 @Override
                 public void run() {
                     Camera.photoCallback = new Runnable() {
                         @Override
                         public void run() {
+                            //call this function again with the incremented index after photo taken
                             executeRoute();
                         }
                     };
@@ -44,6 +52,7 @@ public class SurveyRoute {
 
         } else {
             MessageHandler.d("Survey Route Complete!");
+            finished = true;
             stopRoute();
         }
 
@@ -61,5 +70,9 @@ public class SurveyRoute {
             }
         };
         GroundStation.stopTask();
+    }
+
+    public boolean isFinished() {
+        return finished;
     }
 }

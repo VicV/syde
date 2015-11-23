@@ -5,11 +5,9 @@ import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.os.Bundle;
-import android.os.Parcelable;
 import android.view.View;
 import android.widget.EditText;
 
-import com.google.android.gms.location.LocationResult;
 import com.google.android.gms.maps.model.LatLng;
 import com.jarone.litterary.DroneState;
 import com.jarone.litterary.GroundStation;
@@ -54,25 +52,32 @@ public class MainActivity extends DJIBaseActivity {
                     case R.id.button_up:
                         //TODO: Up Code
                         if (DroneState.getMode() == DroneState.DIRECT_MODE) {
-
+                            GroundStation.setAngles(DroneState.getPitch() + 5, DroneState.getYaw(), DroneState.getRoll());
                         }
                         break;
                     case R.id.button_down:
                         //TODO: Down Code
                         if (DroneState.getMode() == DroneState.DIRECT_MODE) {
-
+                            GroundStation.setAngles(DroneState.getPitch() - 5, DroneState.getYaw(), DroneState.getRoll());
                         }
                         break;
                     case R.id.button_left:
                         //TODO: Left Code
                         if (DroneState.getMode() == DroneState.DIRECT_MODE) {
-
+                            GroundStation.setAngles(DroneState.getPitch(), DroneState.getYaw(), DroneState.getRoll() - 5);
                         }
                         break;
                     case R.id.button_right:
                         //TODO: Right Code
                         if (DroneState.getMode() == DroneState.DIRECT_MODE) {
-
+                            GroundStation.setAngles(DroneState.getPitch() + 5, DroneState.getYaw(), DroneState.getRoll() + 5);
+                        }
+                        break;
+                    case R.id.button_stop:
+                        if (DroneState.getMode() == DroneState.DIRECT_MODE) {
+                            GroundStation.setAngles(0, 0, 0);
+                        } else {
+                            GroundStation.stopTask();
                         }
                         break;
                 }
@@ -100,17 +105,23 @@ public class MainActivity extends DJIBaseActivity {
         return new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                EditText text = (EditText) findViewById(R.id.editText);
-                try {
-                    float altitude = Float.parseFloat(text.getText().toString());
-                    if (altitude < 100) {
-                        GroundStation.setAltitude(altitude);
-                    } else {
-                        MessageHandler.d("Please choose altitude <100 m");
-                    }
-                } catch (NumberFormatException e) {
-                    return;
+                float altitude = getAltitudeValue();
+                if (altitude == -1) {
+                    MessageHandler.d("Please enter a valid number");
+                } else if (altitude < 100) {
+                    GroundStation.setAltitude(altitude);
+                } else {
+                    MessageHandler.d("Please choose valid altitude <100 m");
                 }
+            }
+        };
+    }
+
+    public View.OnClickListener getStartSurveyListener() {
+        return new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                GroundStation.startSurveyRoute();
             }
         };
     }
@@ -135,10 +146,12 @@ public class MainActivity extends DJIBaseActivity {
         findViewById(R.id.button_left).setOnClickListener(getDirectionalListener());
         findViewById(R.id.button_right).setOnClickListener(getDirectionalListener());
         findViewById(R.id.button_up).setOnClickListener(getDirectionalListener());
+        findViewById(R.id.button_stop).setOnClickListener(getDirectionalListener());
         findViewById(R.id.button_go_home).setOnClickListener(getHomeButtonListener());
         findViewById(R.id.button_set_home).setOnClickListener(getHomeButtonListener());
         findViewById(R.id.button_set_altitude).setOnClickListener(setAltitudeListener());
         findViewById(R.id.button_set_region).setOnClickListener(setRegionClickListener());
+        findViewById(R.id.button_start_survey).setOnClickListener(getStartSurveyListener());
 
     }
 
@@ -162,12 +175,22 @@ public class MainActivity extends DJIBaseActivity {
         };
     }
 
+    public float getAltitudeValue() {
+        EditText text = (EditText) findViewById(R.id.editText);
+        try {
+            return Float.parseFloat(text.getText().toString());
+        } catch (NumberFormatException e) {
+            return -1;
+        }
+    }
+
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
         if (requestCode == POINTS_REQUEST_CODE && resultCode == POINTS_RESULT_CODE) {
             LatLng[] parcel = (LatLng[]) data.getParcelableArrayExtra("points");
 
+            GroundStation.initializeSurveyRoute(parcel, getAltitudeValue());
         }
     }
 }

@@ -50,6 +50,8 @@ public class DroneState {
 
     private static DJIMcuUpdateStateCallBack mMcuUpdateStateCallBack;
 
+    public static SurveyRoute currentSurveyRoute;
+
     /**
      * Update the current state of the drone.
      */
@@ -95,5 +97,17 @@ public class DroneState {
 
     public static int getMode() {
         return mode;
+    }
+
+    public static double getPitch() {
+        return pitch;
+    }
+
+    public static double getYaw() {
+        return yaw;
+    }
+
+    public static double getRoll() {
+        return roll;
     }
 }

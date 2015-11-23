@@ -51,10 +51,22 @@
                 android:id="@+id/button_set_region"
                 android:layout_width="78dp"
                 android:layout_height="30dp"
-                android:layout_gravity="bottom"
-                android:layout_marginLeft="60dp"
+                android:layout_gravity="left|bottom"
+                android:layout_marginLeft="20dp"
                 android:background="#ebebeb"
                 android:text="Set Region"
+                android:textSize="10sp"
+                android:layout_alignBottom="@+id/linearLayout"
+                android:layout_alignEnd="@+id/home_layout" />
+
+            <Button
+                android:id="@+id/button_start_survey"
+                android:layout_width="78dp"
+                android:layout_height="30dp"
+                android:layout_gravity="left|bottom"
+                android:layout_marginLeft="20dp"
+                android:background="#ebebeb"
+                android:text="Start Survey"
                 android:textSize="10sp"
                 android:layout_alignBottom="@+id/linearLayout"
                 android:layout_alignEnd="@+id/home_layout" />
@@ -105,7 +117,7 @@
                 android:background="@drawable/button_down_state" />
 
             <TextView
-                android:id="@+id/textView"
+                android:id="@+id/button_stop"
                 android:layout_width="50dp"
                 android:layout_height="50dp"
                 android:layout_below="@+id/button_up"

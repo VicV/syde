@@ -2,6 +2,7 @@ package com.jarone.litterary;
 
 import android.os.Handler;
 
+import com.google.android.gms.maps.model.LatLng;
 import com.jarone.litterary.handlers.MessageHandler;
 
 import dji.sdk.api.DJIDrone;
@@ -33,6 +34,9 @@ public class GroundStation {
      * Default speed of the drone. Will be used when no speed is provided in navigation.
      **/
     public static float defaultSpeed;
+
+
+    private static SurveyRoute currentSurveyRoute;
 
     public enum MissionStatusCodes {
         INITIALIZING, MOVING, ROTATING, EXECUTING_ACTION, REACHED_WAYPOINT_PENDING_ACTION,
@@ -123,7 +127,6 @@ public class GroundStation {
                 }
                 String ResultsString = "execute task =" + result.toString();
                 MessageHandler.d(ResultsString);
-                //handler.sendMessage(handler.obtainMessage(SHOWTOAST, ResultsString));
             }
         });
     }
@@ -195,6 +198,7 @@ public class GroundStation {
             }
         });
     }
+
     /***
      * Switches from ground station GPS control to direct angular (pitch, yaw, roll) control.
      * Must pause current waypoint task before this can happen.
@@ -224,26 +228,40 @@ public class GroundStation {
 
     }
 
-    public static void setAngles(final int pitch, final int yaw, final int roll) {
+    public static void setAngles(final double pitch, final double yaw, final double roll) {
+        if (DroneState.getMode() != DroneState.DIRECT_MODE) {
+            MessageHandler.d("Not in Direct Mode!");
+            return;
+        }
         withConnection(new Runnable() {
             @Override
             public void run() {
-                DJIDrone.getDjiGroundStation().pauseGroundStationTask(new DJIGroundStationExecuteCallBack() {
+                DJIDrone.getDjiGroundStation().setAircraftJoystick((int) yaw, (int) pitch, (int) roll, 0, new DJIGroundStationExecuteCallBack() {
                     @Override
                     public void onResult(DJIGroundStationTypeDef.GroundStationResult groundStationResult) {
-                        DJIDrone.getDjiGroundStation().setAircraftJoystick(yaw, pitch, roll, 0, new DJIGroundStationExecuteCallBack() {
-                            @Override
-                            public void onResult(DJIGroundStationTypeDef.GroundStationResult groundStationResult) {
-                                MessageHandler.d("Engage Joystick: " + groundStationResult.toString());
-                                if (resultSuccess(groundStationResult)) {
-                                    DroneState.setMode(DroneState.DIRECT_MODE);
-                                }
-                            }
-                        });
+                        MessageHandler.d("Engage Joystick: " + groundStationResult.toString());
+                        if (resultSuccess(groundStationResult)) {
+                            DroneState.setMode(DroneState.DIRECT_MODE);
+                        }
                     }
                 });
             }
         });
+    }
+
+    public static void initializeSurveyRoute(LatLng[] points, float altitude) {
+        GroundStation.currentSurveyRoute = new SurveyRoute(
+                RouteOptimization.createOptimizedSurveyRoute(points, altitude),
+                altitude
+        );
+    }
+
+    public static void startSurveyRoute() {
+        if (currentSurveyRoute != null && !currentSurveyRoute.isFinished()) {
+            currentSurveyRoute.executeRoute();
+        } else {
+            MessageHandler.d("No Survey Route is Ready!");
+        }
     }
 
     public static DJIGroundStationTask getTask() {
