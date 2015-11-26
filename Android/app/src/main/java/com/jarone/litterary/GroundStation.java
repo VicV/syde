@@ -23,6 +23,9 @@ public class GroundStation {
 
     public static final String TAG = GroundStation.class.toString();
 
+    /**
+     * Current task to be executed by the drone
+     */
     private static DJIGroundStationTask groundTask;
 
     /**
@@ -35,14 +38,33 @@ public class GroundStation {
      **/
     public static float defaultSpeed;
 
+    /**
+     * Radius of circular boundary around drone location where ground station is allowed to operate
+     * Measured in metres
+     */
+    public static final int BOUNDARY_RADIUS = 200;
 
+    /**
+     * Tracks the current survey route that has been initialized and/or is executing
+     */
     private static SurveyRoute currentSurveyRoute;
 
+    /**
+     * Current GPS waypoint target drone is navigating towards
+     */
+    private static LatLng currentTarget;
+
+    /**
+     * Enum of drone status codes sent by mission controller
+     */
     public enum MissionStatusCodes {
         INITIALIZING, MOVING, ROTATING, EXECUTING_ACTION, REACHED_WAYPOINT_PENDING_ACTION,
         REACHED_WAYPOINT_FINISHED_ACTION
     }
 
+    /**
+     * Callback to fire when drone reaches its target waypoint (ie. task completes)
+     */
     public static Runnable taskDoneCallback = new Runnable() {
         @Override
         public void run() {
@@ -50,6 +72,10 @@ public class GroundStation {
         }
     };
 
+    /**
+     * Creates a new task, replacing the value of the groundTask variable. Points can be added
+     * and then the task uploaded and executed by the drone
+     */
     public static void newTask() {
         groundTask = new DJIGroundStationTask();
     }
@@ -108,6 +134,10 @@ public class GroundStation {
         });
     }
 
+    /**
+     * Upload the current task, then execute it. Execute a callback when upload completes
+     * @param callback
+     */
     public static void uploadAndExecuteTask(final Runnable callback) {
         DJIDrone.getDjiGroundStation().uploadGroundStationTask(groundTask, new DJIGroundStationExecuteCallBack() {
             @Override
@@ -140,6 +170,9 @@ public class GroundStation {
         });
     }
 
+    /**
+     * Cancels the currently executing ground station task
+     */
     public static void stopTask() {
         withConnection(new Runnable() {
             @Override
@@ -172,6 +205,9 @@ public class GroundStation {
         uploadAndExecuteTask();
     }
 
+    /**
+     * Set the drone's home point which it will return to in emergencies or when commanded
+     */
     public static void setHomePoint() {
         if (!DroneState.hasValidLocation()) {
             MessageHandler.d("Invalid GPS Coordinates");
@@ -191,6 +227,9 @@ public class GroundStation {
         });
     }
 
+    /**
+     * Command the drone to return to its registered home point
+     */
     public static void goHome() {
         withConnection(new Runnable() {
             @Override
@@ -208,7 +247,7 @@ public class GroundStation {
         });
     }
 
-    /***
+    /**
      * Switches from ground station GPS control to direct angular (pitch, yaw, roll) control.
      * Must pause current waypoint task before this can happen.
      * Result should be the drone holding its current position until new commands are issued
@@ -237,6 +276,10 @@ public class GroundStation {
 
     }
 
+    /**
+     * Send a dummy route that comamnds the drone to its current location in order to switch back
+     * to ground station GPS nav mode
+     */
     public static void engageGroundStation() {
         withConnection(new Runnable() {
             @Override
@@ -248,7 +291,12 @@ public class GroundStation {
         });
     }
 
-
+    /**
+     * Set direct control mode angles for drone
+     * @param pitch
+     * @param yaw
+     * @param roll
+     */
     public static void setAngles(final double pitch, final double yaw, final double roll) {
         if (DroneState.getMode() != DroneState.DIRECT_MODE) {
             MessageHandler.d("Not in Direct Mode!");
@@ -270,15 +318,29 @@ public class GroundStation {
         });
     }
 
+    /**
+     * Generate the optimized survey route based on the boundary points and set it to the current
+     * survey route. Does not execute the route
+     * @param points
+     * @param altitude
+     */
     public static void initializeSurveyRoute(LatLng[] points, float altitude) {
+//        if (altitude < 0 || altitude > 100) {
+//            MessageHandler.d("Please Choose a Valid Altitude");
+//            return;
+//        }
         GroundStation.currentSurveyRoute = new SurveyRoute(
                 RouteOptimization.createOptimizedSurveyRoute(points, altitude),
                 altitude
         );
     }
 
+    /**
+     * Start the previously initialized survey route, or send a message if no route has been
+     * initialized. Also, check if route is already executing so we don't start again
+     */
     public static void startSurveyRoute() {
-        if (currentSurveyRoute != null && !currentSurveyRoute.isFinished()) {
+        if (currentSurveyRoute != null && !currentSurveyRoute.isFinished() && !currentSurveyRoute.isExecuting()) {
             currentSurveyRoute.executeRoute();
         } else {
             MessageHandler.d("No Survey Route is Ready!");
@@ -293,6 +355,11 @@ public class GroundStation {
         return result == DJIGroundStationTypeDef.GroundStationResult.GS_Result_Success;
     }
 
+    /**
+     * Register the callback for the drone mission controller's status updates. Calls the configured
+     * callback when the drone has reached the target waypoint. This method is called one time
+     * to set up callback path, but taskDoneCallback can be changed elsewhere to modify behaviour
+     */
     public static void registerMissionCallback() {
         DJIDrone.getDjiGroundStation().setGroundStationMissionPushInfoCallBack(new DJIGroundStationMissionPushInfoCallBack() {
             @Override
@@ -300,7 +367,17 @@ public class GroundStation {
                 if (djiGroundStationMissionPushInfo.currState == MissionStatusCodes.REACHED_WAYPOINT_FINISHED_ACTION.ordinal()) {
                     GroundStation.taskDoneCallback.run();
                 }
+                DJIGroundStationWaypoint wp = groundTask.getWaypointAtIndex(djiGroundStationMissionPushInfo.targetWayPointIndex);
+                currentTarget = new LatLng(wp.latitude, wp.longitude);
             }
         });
+    }
+
+    public static LatLng getCurrentTarget() {
+        if (currentTarget != null) {
+            return currentTarget;
+        } else {
+            return new LatLng(-1, -1);
+        }
     }
 }

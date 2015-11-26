@@ -78,7 +78,9 @@
             android:paddingTop="20dp"
             android:layout_width="fill_parent"
             android:layout_height="wrap_content"
-            android:layout_centerInParent="true">
+            android:layout_centerHorizontal="true"
+            android:layout_below="@+id/linearLayout"
+            android:layout_above="@+id/home_layout">
 
             <Button
                 android:id="@+id/button_up"
@@ -128,6 +130,7 @@
                 android:text="STOP"
                 android:textColor="#ebebeb"
                 android:textSize="10sp" />
+
         </RelativeLayout>
 
         <LinearLayout
@@ -174,9 +177,111 @@
                 android:elevation="5dp"
                 android:padding="10dp"
                 android:text="Go Home" />
+
+
         </LinearLayout>
 
+        <RelativeLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_alignParentEnd="true"
+            android:layout_alignParentStart="true"
+            android:background="#0F0F0F"
+            android:visibility="invisible"
+            android:id="@+id/infoLayout">
 
+            <TableLayout
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:layout_alignParentTop="true"
+                android:layout_centerHorizontal="true"
+                android:layout_marginLeft="100dp"
+                android:layout_marginTop="10dp">
+
+                <TableRow
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent">
+                    <TextView
+                        android:layout_column="1"
+                        android:textColor="#FFFFFF"
+                        android:text="GPS Location"
+                        android:layout_gravity="left"></TextView>
+
+                    <TextView
+                        android:textColor="#FFFFFF"
+                        android:text="0, 0"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:id="@+id/currentLocation"
+                        android:padding="3dip"
+                        android:layout_marginLeft="50dp"
+                        android:layout_gravity="right" />
+                </TableRow>
+
+                <TableRow
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent" >
+
+                    <TextView
+                        android:layout_column="1"
+                        android:textColor="#FFFFFF"
+                        android:text="Target Location"
+                        android:layout_gravity="left"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content" />
+
+                    <TextView
+                        android:textColor="#FFFFFF"
+                        android:text="0, 0"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:id="@+id/targetLocation"
+                        android:padding="3dip"
+                        android:layout_marginLeft="50dp"
+                        android:layout_gravity="right" />
+                </TableRow>
+
+                <TableRow
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent" >
+
+                    <TextView
+                        android:layout_column="1"
+                        android:textColor="#FFFFFF"
+                        android:text="Current Mode"
+                        android:layout_gravity="left"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content" />
+
+                    <TextView
+                        android:textColor="#FFFFFF"
+                        android:text="GPS"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:id="@+id/currentMode"
+                        android:padding="3dip"
+                        android:layout_marginLeft="50dp"
+                        android:layout_gravity="right" />
+                </TableRow>
+
+            </TableLayout>
+        </RelativeLayout>
+
+        <RelativeLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_alignRight="@+id/linearLayout"
+            android:layout_below="@+id/linearLayout">
+
+            <Button
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Status"
+                android:textSize="7pt"
+                android:id="@+id/button_info"
+                android:layout_alignParentEnd="true"
+                />
+        </RelativeLayout>
     </RelativeLayout>
 
 </LinearLayout>

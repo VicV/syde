@@ -1,5 +1,7 @@
 package com.jarone.litterary;
 
+import com.google.android.gms.maps.model.LatLng;
+
 import dji.sdk.api.DJIDrone;
 import dji.sdk.api.MainController.DJIMainControllerSystemState;
 import dji.sdk.interfaces.DJIMcuUpdateStateCallBack;
@@ -86,6 +88,8 @@ public class DroneState {
     public static double getLongitude() {
         return longitude;
     }
+
+    public static LatLng getLatLng() {return new LatLng(latitude, longitude);}
 
     public static boolean hasValidLocation() {
         return (getLongitude() != 0.0 && getLatitude() != 0.0);

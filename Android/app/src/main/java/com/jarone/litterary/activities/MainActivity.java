@@ -5,8 +5,10 @@ import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.os.Bundle;
+import android.os.Parcelable;
 import android.view.View;
 import android.widget.EditText;
+import android.widget.TextView;
 import android.widget.ToggleButton;
 
 import com.google.android.gms.maps.model.LatLng;
@@ -15,6 +17,7 @@ import com.jarone.litterary.GroundStation;
 import com.jarone.litterary.R;
 import com.jarone.litterary.handlers.MessageHandler;
 
+import java.util.Arrays;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
@@ -159,6 +162,20 @@ public class MainActivity extends DJIBaseActivity {
         };
     }
 
+    public View.OnClickListener getInfoButtonListener() {
+        return new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                View infoLayout = findViewById(R.id.infoLayout);
+                if (infoLayout.getVisibility() == View.INVISIBLE) {
+                    infoLayout.setVisibility(View.VISIBLE);
+                } else {
+                    infoLayout.setVisibility(View.INVISIBLE);
+                }
+            }
+        };
+    }
+
     private void registerCamera() {
         mDjiGLSurfaceView = (DjiGLSurfaceView) findViewById(R.id.DjiSurfaceView_02);
         mDjiGLSurfaceView.start();
@@ -186,6 +203,7 @@ public class MainActivity extends DJIBaseActivity {
         findViewById(R.id.button_set_region).setOnClickListener(setRegionClickListener());
         findViewById(R.id.button_start_survey).setOnClickListener(getStartSurveyListener());
         findViewById(R.id.button_switch_mode).setOnClickListener(getSwitchModeListener());
+        findViewById(R.id.button_info).setOnClickListener(getInfoButtonListener());
 
     }
 
@@ -222,7 +240,9 @@ public class MainActivity extends DJIBaseActivity {
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
         if (requestCode == POINTS_REQUEST_CODE && resultCode == POINTS_RESULT_CODE) {
-            LatLng[] parcel = (LatLng[]) data.getParcelableArrayExtra("points");
+            Parcelable[] parcelArray = data.getParcelableArrayExtra("points");
+            //can't cast parcelable to latlng array, need to copy it
+            LatLng[] parcel = Arrays.copyOf(parcelArray, parcelArray.length, LatLng[].class);
 
             GroundStation.initializeSurveyRoute(parcel, getAltitudeValue());
         }
@@ -235,9 +255,15 @@ public class MainActivity extends DJIBaseActivity {
                 ToggleButton modeButton = (ToggleButton) findViewById(R.id.button_switch_mode);
                 if (DroneState.getMode() == DroneState.DIRECT_MODE) {
                     modeButton.setChecked(true);
+                    ((TextView) findViewById(R.id.currentMode)).setText("DIRECT");
                 } else if (DroneState.getMode() == DroneState.WAYPOINT_MODE) {
                     modeButton.setChecked(false);
+                    ((TextView) findViewById(R.id.currentMode)).setText("GPS");
                 }
+                ((TextView) findViewById(R.id.currentLocation)).setText(
+                        DroneState.getLatitude() + ", " + DroneState.getLongitude());
+                ((TextView) findViewById(R.id.targetLocation)).setText(
+                        GroundStation.getCurrentTarget().latitude + ", " + GroundStation.getCurrentTarget().longitude);
             }
         });
     }

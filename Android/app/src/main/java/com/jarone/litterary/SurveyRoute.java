@@ -12,12 +12,14 @@ public class SurveyRoute {
     private int index;
     private float surveyAltitude;
     private final int SPEED = 5;
+    private boolean executing;
     private boolean finished;
 
     public SurveyRoute(LatLng[] route, float altitude){
         this.route = route;
         this.surveyAltitude = altitude;
         index = 0;
+        executing = false;
         finished = false;
     }
 
@@ -29,7 +31,8 @@ public class SurveyRoute {
      */
     public void executeRoute() {
         if (index <= route.length - 1) {
-
+            executing = true;
+            MessageHandler.d("Executing Survey Point " + index);
             GroundStation.newTask();
             GroundStation.addPoint(route[index].latitude, route[index].longitude, SPEED, surveyAltitude);
             index++;
@@ -53,6 +56,7 @@ public class SurveyRoute {
         } else {
             MessageHandler.d("Survey Route Complete!");
             finished = true;
+            executing = false;
             stopRoute();
         }
 
@@ -72,6 +76,7 @@ public class SurveyRoute {
         GroundStation.stopTask();
     }
 
+    public boolean isExecuting() { return executing; }
     public boolean isFinished() {
         return finished;
     }

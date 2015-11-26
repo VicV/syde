@@ -1,11 +1,8 @@
 package com.jarone.litterary.activities;
 
-import android.app.Activity;
 import android.content.Intent;
 import android.graphics.Color;
-import android.location.Location;
 import android.os.Bundle;
-import android.os.Parcelable;
 import android.support.v4.app.FragmentActivity;
 import android.view.View;
 
@@ -13,15 +10,20 @@ import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
+import com.google.android.gms.maps.model.BitmapDescriptorFactory;
+import com.google.android.gms.maps.model.CircleOptions;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.gms.maps.model.Polygon;
 import com.google.android.gms.maps.model.PolygonOptions;
+import com.jarone.litterary.DroneState;
+import com.jarone.litterary.GroundStation;
 import com.jarone.litterary.R;
+import com.jarone.litterary.handlers.MessageHandler;
+import com.jarone.litterary.helpers.LocationHelper;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 
 /**
  * Created by vic on 11/9/15.
@@ -50,6 +52,13 @@ public class MapActivity extends FragmentActivity implements OnMapReadyCallback 
      * A list of all the markers which lie on the verticies of the polygon
      **/
     private ArrayList markers = new ArrayList();
+
+    /**
+     * The center location of the circular boundary inside which points can be placed
+     */
+    private LatLng boundaryCenter;
+
+    private boolean returnWithResults = true;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -97,12 +106,35 @@ public class MapActivity extends FragmentActivity implements OnMapReadyCallback 
         LatLng defaultLocation = new LatLng(43.472, -80.54);
 
         droneMap.setMyLocationEnabled(true);
-        droneMap.moveCamera(CameraUpdateFactory.newLatLngZoom(defaultLocation, 14));
+        droneMap.moveCamera(CameraUpdateFactory.newLatLngZoom(defaultLocation, 16));
+
+        if (DroneState.getLatitude() != 0) {
+            boundaryCenter = DroneState.getLatLng();
+        } else {
+            boundaryCenter = defaultLocation;
+        }
+        droneMap.addCircle(new CircleOptions()
+                        .center(boundaryCenter)
+                        .radius(GroundStation.BOUNDARY_RADIUS)
+                        .fillColor(Color.argb(120, 10, 192, 192))
+                        .strokeWidth(2)
+        );
+        droneMap.addMarker(new MarkerOptions()
+                .position(boundaryCenter)
+                .icon(BitmapDescriptorFactory.fromAsset("drone.png"))
+                .anchor(0.5f, 0.5f)
+        );
 
         //This is the pin placing mechanic.
         droneMap.setOnMapLongClickListener(new GoogleMap.OnMapLongClickListener() {
             @Override
             public void onMapLongClick(LatLng latLng) {
+                //Check if the requested point is inside the boundary
+                if (LocationHelper.distanceBetween(latLng, boundaryCenter) > GroundStation.BOUNDARY_RADIUS) {
+                    MessageHandler.d("Choose a point inside the boundary circle");
+                    return;
+                }
+
                 //Erase the polygon because its about to be redrawn.
                 if (currentPolygon != null) {
                     currentPolygon.remove();
@@ -126,6 +158,8 @@ public class MapActivity extends FragmentActivity implements OnMapReadyCallback 
             //Tracks if its the FIRST pass of the drag loop.
             boolean first = true;
 
+            LatLng lastPosition = null;
+
             @Override
             public void onMarkerDragStart(Marker marker) {
 
@@ -137,40 +171,57 @@ public class MapActivity extends FragmentActivity implements OnMapReadyCallback 
                 //Then, it deletes that point, and then the related marker.
                 for (Object latLng : polyPoints) {
                     LatLng point = (LatLng) latLng;
-                    float[] results = new float[1];
-                    Location.distanceBetween(marker.getPosition().latitude, marker.getPosition().longitude, point.latitude, point.longitude, results);
-                    if (lowest == -1 || results[0] < lowest) {
-                        lowest = results[0];
+                    float distance = LocationHelper.distanceBetween(marker.getPosition(), point);
+                    if (lowest == -1 || distance < lowest) {
+                        lowest = distance;
                         thisPoint = point;
                     }
 
                 }
-                polyPoints.remove(thisPoint);
-                markers.remove(marker);
+                if (LocationHelper.distanceBetween(marker.getPosition(), boundaryCenter) < GroundStation.BOUNDARY_RADIUS) {
+                    polyPoints.remove(thisPoint);
+                    markers.remove(marker);
+                }
             }
 
             @Override
             public void onMarkerDrag(Marker marker) {
-                //Erase the polygon because its about to be redrawn.
-                currentPolygon.remove();
-                //If its not the first pass, remove the last added point.
-                if (!first) {
-                    polyPoints.remove(polyPoints.size() - 1);
-                } else {
-                    first = false;
-                }
+                if (LocationHelper.distanceBetween(marker.getPosition(), boundaryCenter) < GroundStation.BOUNDARY_RADIUS) {
+                    lastPosition = marker.getPosition();
+                    //Erase the polygon because its about to be redrawn.
+                    currentPolygon.remove();
+                    //If its not the first pass, remove the last added point.
+                    if (!first) {
+                        polyPoints.remove(polyPoints.size() - 1);
+                    } else {
+                        first = false;
+                    }
 
-                //Add our new point!
-                polyPoints.add(marker.getPosition());
-                currentPolygon = map.addPolygon(new PolygonOptions().strokeWidth(2).fillColor(Color.parseColor("#50FF0000")).addAll(polyPoints));
+                    //Add our new point!
+                    polyPoints.add(marker.getPosition());
+                    currentPolygon = map.addPolygon(new PolygonOptions().strokeWidth(2).fillColor(Color.parseColor("#50FF0000")).addAll(polyPoints));
+
+                } else {
+                    if (lastPosition != null) {
+                        marker.setPosition(lastPosition);
+                    }
+                }
             }
 
             @Override
             public void onMarkerDragEnd(Marker marker) {
-                markers.add(marker);
-                first = true;
+                if (LocationHelper.distanceBetween(marker.getPosition(), boundaryCenter) < GroundStation.BOUNDARY_RADIUS) {
+                    markers.add(marker);
+                    first = true;
+                }
             }
         });
+    }
+
+    @Override
+    public void onBackPressed() {
+        returnWithResults = false;
+        super.onBackPressed();
     }
 
     @Override
@@ -185,11 +236,15 @@ public class MapActivity extends FragmentActivity implements OnMapReadyCallback 
             p[i] = marker.getPosition();
         }
         data.putExtra("points", p);
-        if (getParent() == null) {
-            setResult(MainActivity.POINTS_RESULT_CODE, data);
-        } else {
-            getParent().setResult(MainActivity.POINTS_RESULT_CODE, data);
+
+        if (returnWithResults) {
+            if (getParent() == null) {
+                setResult(MainActivity.POINTS_RESULT_CODE, data);
+            } else {
+                getParent().setResult(MainActivity.POINTS_RESULT_CODE, data);
+            }
         }
+
         super.finish();
     }
 
