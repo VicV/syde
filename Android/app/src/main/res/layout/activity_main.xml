@@ -35,7 +35,7 @@
                 android:background="#ebebeb"
                 android:ems="10"
                 android:inputType="number"
-                />
+                android:layout_gravity="top|center|right" />
 
             <Button
                 android:id="@+id/button_set_altitude"
@@ -52,7 +52,7 @@
                 android:layout_width="78dp"
                 android:layout_height="30dp"
                 android:layout_gravity="left|bottom"
-                android:layout_marginLeft="20dp"
+                android:layout_marginLeft="10dp"
                 android:background="#ebebeb"
                 android:text="Set Region"
                 android:textSize="10sp"
@@ -64,7 +64,7 @@
                 android:layout_width="78dp"
                 android:layout_height="30dp"
                 android:layout_gravity="left|bottom"
-                android:layout_marginLeft="20dp"
+                android:layout_marginLeft="10dp"
                 android:background="#ebebeb"
                 android:text="Start Survey"
                 android:textSize="10sp"
@@ -138,7 +138,8 @@
             android:layout_centerHorizontal="true"
             android:layout_centerInParent="true"
             android:layout_marginBottom="10dp"
-            android:orientation="horizontal">
+            android:orientation="horizontal"
+            android:layout_marginTop="5dp">
 
             <Button
                 android:id="@+id/button_set_home"
@@ -146,12 +147,24 @@
                 android:layout_height="wrap_content"
                 android:background="#ebebeb"
                 android:elevation="5dp"
-                android:padding="10dp"
+                android:padding="2dp"
+                android:layout_marginRight="20dp"
                 android:text="Set Home" />
 
-            <android.widget.Space
-                android:layout_width="150dp"
-                android:layout_height="0dp" />
+            <ToggleButton
+                android:id="@+id/button_switch_mode"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="bottom"
+                android:background="#ebebeb"
+                android:elevation="5dp"
+                android:padding="7dp"
+                android:layout_marginRight="20dp"
+                android:text="Switch Mode"
+                android:checked="false"
+                android:textOn="Direct"
+                android:textOff="GPS" />
+
 
             <Button
                 android:id="@+id/button_go_home"

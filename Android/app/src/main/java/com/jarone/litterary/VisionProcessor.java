@@ -8,6 +8,7 @@ import android.graphics.Bitmap;
 public class VisionProcessor {
 
     public void processFrame(Bitmap frame) {
+        //TODO put Jacinta's code here
     }
 
 }

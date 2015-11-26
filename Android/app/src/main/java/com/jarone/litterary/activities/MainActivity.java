@@ -7,12 +7,17 @@ import android.graphics.Canvas;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.EditText;
+import android.widget.ToggleButton;
 
 import com.google.android.gms.maps.model.LatLng;
 import com.jarone.litterary.DroneState;
 import com.jarone.litterary.GroundStation;
 import com.jarone.litterary.R;
 import com.jarone.litterary.handlers.MessageHandler;
+
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 
 import dji.sdk.api.DJIDrone;
 import dji.sdk.interfaces.DJIReceivedVideoDataCallBack;
@@ -30,6 +35,8 @@ public class MainActivity extends DJIBaseActivity {
 
     private Context mainActivity;
 
+    private ScheduledExecutorService taskScheduler;
+
     //Activity is starting.
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -40,7 +47,18 @@ public class MainActivity extends DJIBaseActivity {
 
         registerCamera();
 
+        registerUpdateInterface();
 
+    }
+
+    private void registerUpdateInterface() {
+        taskScheduler = Executors.newSingleThreadScheduledExecutor();
+        taskScheduler.scheduleAtFixedRate(new Runnable() {
+            @Override
+            public void run() {
+                updateInterface();
+            }
+        }, 0, 1000, TimeUnit.MILLISECONDS);
     }
 
 
@@ -126,6 +144,21 @@ public class MainActivity extends DJIBaseActivity {
         };
     }
 
+    public View.OnClickListener getSwitchModeListener() {
+        return new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                ToggleButton button = (ToggleButton) v;
+                if (button.isChecked()) {
+                    GroundStation.engageJoystick();
+                } else {
+                    GroundStation.engageGroundStation();
+                }
+                button.setChecked(!button.isChecked());
+            }
+        };
+    }
+
     private void registerCamera() {
         mDjiGLSurfaceView = (DjiGLSurfaceView) findViewById(R.id.DjiSurfaceView_02);
         mDjiGLSurfaceView.start();
@@ -152,6 +185,7 @@ public class MainActivity extends DJIBaseActivity {
         findViewById(R.id.button_set_altitude).setOnClickListener(setAltitudeListener());
         findViewById(R.id.button_set_region).setOnClickListener(setRegionClickListener());
         findViewById(R.id.button_start_survey).setOnClickListener(getStartSurveyListener());
+        findViewById(R.id.button_switch_mode).setOnClickListener(getSwitchModeListener());
 
     }
 
@@ -192,5 +226,19 @@ public class MainActivity extends DJIBaseActivity {
 
             GroundStation.initializeSurveyRoute(parcel, getAltitudeValue());
         }
+    }
+
+    private void updateInterface() {
+        runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                ToggleButton modeButton = (ToggleButton) findViewById(R.id.button_switch_mode);
+                if (DroneState.getMode() == DroneState.DIRECT_MODE) {
+                    modeButton.setChecked(true);
+                } else if (DroneState.getMode() == DroneState.WAYPOINT_MODE) {
+                    modeButton.setChecked(false);
+                }
+            }
+        });
     }
 }

@@ -7,6 +7,7 @@ import com.google.android.gms.maps.model.LatLng;
  */
 public class RouteOptimization {
     public static LatLng[] createOptimizedSurveyRoute(LatLng[] points, float altitude) {
+        //TODO: put Jordan's code here
         LatLng[] route = new LatLng[20];
         return route;
     }

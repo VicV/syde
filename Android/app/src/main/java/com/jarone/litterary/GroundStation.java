@@ -100,6 +100,15 @@ public class GroundStation {
      * Gives the queued task to the Drone and then executes it.
      */
     public static void uploadAndExecuteTask() {
+        uploadAndExecuteTask(new Runnable() {
+            @Override
+            public void run() {
+
+            }
+        });
+    }
+
+    public static void uploadAndExecuteTask(final Runnable callback) {
         DJIDrone.getDjiGroundStation().uploadGroundStationTask(groundTask, new DJIGroundStationExecuteCallBack() {
             @Override
             public void onResult(DJIGroundStationTypeDef.GroundStationResult result) {
@@ -108,7 +117,7 @@ public class GroundStation {
                 }
                 String ResultsString = "upload task =" + result.toString();
                 MessageHandler.d(ResultsString);
-
+                callback.run();
             }
         });
     }
@@ -227,6 +236,18 @@ public class GroundStation {
         });
 
     }
+
+    public static void engageGroundStation() {
+        withConnection(new Runnable() {
+            @Override
+            public void run() {
+                newTask();
+                addPoint(DroneState.getLatitude(), DroneState.getLongitude());
+                uploadAndExecuteTask();
+            }
+        });
+    }
+
 
     public static void setAngles(final double pitch, final double yaw, final double roll) {
         if (DroneState.getMode() != DroneState.DIRECT_MODE) {
