@@ -106,7 +106,12 @@ public class MapActivity extends FragmentActivity implements OnMapReadyCallback 
         LatLng defaultLocation = new LatLng(43.472, -80.54);
 
         droneMap.setMyLocationEnabled(true);
-        droneMap.moveCamera(CameraUpdateFactory.newLatLngZoom(defaultLocation, 16));
+
+        if (DroneState.hasValidLocation()) {
+            droneMap.moveCamera(CameraUpdateFactory.newLatLngZoom(DroneState.getLatLng(), 16));
+        } else {
+            droneMap.moveCamera(CameraUpdateFactory.newLatLngZoom(defaultLocation, 16));
+        }
 
         if (DroneState.getLatitude() != 0) {
             boundaryCenter = DroneState.getLatLng();

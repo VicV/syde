@@ -12,10 +12,12 @@ import android.widget.TextView;
 import android.widget.ToggleButton;
 
 import com.google.android.gms.maps.model.LatLng;
+import com.jarone.litterary.Camera;
 import com.jarone.litterary.DroneState;
 import com.jarone.litterary.GroundStation;
 import com.jarone.litterary.R;
 import com.jarone.litterary.handlers.MessageHandler;
+import com.jarone.litterary.helpers.LocationHelper;
 
 import java.util.Arrays;
 import java.util.concurrent.Executors;
@@ -52,6 +54,10 @@ public class MainActivity extends DJIBaseActivity {
 
         registerUpdateInterface();
 
+        DroneState.registerConnectedTimer();
+        GroundStation.registerMissionCallback();
+        GroundStation.registerStatusCallback();
+        GroundStation.registerPhantom2Callback();
     }
 
     private void registerUpdateInterface() {
@@ -61,7 +67,7 @@ public class MainActivity extends DJIBaseActivity {
             public void run() {
                 updateInterface();
             }
-        }, 0, 1000, TimeUnit.MILLISECONDS);
+        }, 0, 200, TimeUnit.MILLISECONDS);
     }
 
 
@@ -73,25 +79,25 @@ public class MainActivity extends DJIBaseActivity {
                     case R.id.button_up:
                         //TODO: Up Code
                         if (DroneState.getMode() == DroneState.DIRECT_MODE) {
-                            GroundStation.setAngles(DroneState.getPitch() + 5, DroneState.getYaw(), DroneState.getRoll());
+                            GroundStation.setAngles(DroneState.getPitch() + 500, DroneState.getYaw(), DroneState.getRoll());
                         }
                         break;
                     case R.id.button_down:
                         //TODO: Down Code
                         if (DroneState.getMode() == DroneState.DIRECT_MODE) {
-                            GroundStation.setAngles(DroneState.getPitch() - 5, DroneState.getYaw(), DroneState.getRoll());
+                            GroundStation.setAngles(DroneState.getPitch() - 500, DroneState.getYaw(), DroneState.getRoll());
                         }
                         break;
                     case R.id.button_left:
                         //TODO: Left Code
                         if (DroneState.getMode() == DroneState.DIRECT_MODE) {
-                            GroundStation.setAngles(DroneState.getPitch(), DroneState.getYaw(), DroneState.getRoll() - 5);
+                            GroundStation.setAngles(DroneState.getPitch(), DroneState.getYaw(), DroneState.getRoll() - 500);
                         }
                         break;
                     case R.id.button_right:
                         //TODO: Right Code
                         if (DroneState.getMode() == DroneState.DIRECT_MODE) {
-                            GroundStation.setAngles(DroneState.getPitch() + 5, DroneState.getYaw(), DroneState.getRoll() + 5);
+                            GroundStation.setAngles(DroneState.getPitch(), DroneState.getYaw(), DroneState.getRoll() + 500);
                         }
                         break;
                     case R.id.button_stop:
@@ -157,6 +163,11 @@ public class MainActivity extends DJIBaseActivity {
                 } else {
                     GroundStation.engageGroundStation();
                 }
+                /**
+                 * Reset the button to its previous state because it can't actually change until
+                 * the drone itself changes modes. This will be taken care of in the updateInterface
+                 * calls
+                 */
                 button.setChecked(!button.isChecked());
             }
         };
@@ -169,9 +180,12 @@ public class MainActivity extends DJIBaseActivity {
                 View infoLayout = findViewById(R.id.infoLayout);
                 if (infoLayout.getVisibility() == View.INVISIBLE) {
                     infoLayout.setVisibility(View.VISIBLE);
+                    Camera.requestedGimbalAngle = 1000;
                 } else {
                     infoLayout.setVisibility(View.INVISIBLE);
+                    Camera.requestedGimbalAngle = 0;
                 }
+                //DroneState.updateDroneState();
             }
         };
     }
@@ -258,12 +272,18 @@ public class MainActivity extends DJIBaseActivity {
                     ((TextView) findViewById(R.id.currentMode)).setText("DIRECT");
                 } else if (DroneState.getMode() == DroneState.WAYPOINT_MODE) {
                     modeButton.setChecked(false);
-                    ((TextView) findViewById(R.id.currentMode)).setText("GPS");
+                    ((TextView) findViewById(R.id.currentMode)).setText(DroneState.flightMode.name());
                 }
                 ((TextView) findViewById(R.id.currentLocation)).setText(
-                        DroneState.getLatitude() + ", " + DroneState.getLongitude());
+                        LocationHelper.formatForDisplay(DroneState.getLatitude(), DroneState.getLongitude()));
+
                 ((TextView) findViewById(R.id.targetLocation)).setText(
-                        GroundStation.getCurrentTarget().latitude + ", " + GroundStation.getCurrentTarget().longitude);
+                        LocationHelper.formatForDisplay(
+                                GroundStation.getCurrentTarget().latitude,
+                                GroundStation.getCurrentTarget().longitude
+                        )
+                );
+                ((TextView) findViewById(R.id.droneConnected)).setText("" + DroneState.droneConnected);
             }
         });
     }

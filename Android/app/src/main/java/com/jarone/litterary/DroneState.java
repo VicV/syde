@@ -1,8 +1,16 @@
 package com.jarone.litterary;
 
+import android.util.Log;
+
 import com.google.android.gms.maps.model.LatLng;
 
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ScheduledFuture;
+import java.util.concurrent.TimeUnit;
+
 import dji.sdk.api.DJIDrone;
+import dji.sdk.api.GroundStation.DJIGroundStationTypeDef;
 import dji.sdk.api.MainController.DJIMainControllerSystemState;
 import dji.sdk.interfaces.DJIMcuUpdateStateCallBack;
 
@@ -33,6 +41,8 @@ public class DroneState {
     private static double battery = 0;
     private static int mode;
 
+    public static DJIGroundStationTypeDef.GroundStationFlightMode flightMode = DJIGroundStationTypeDef.GroundStationFlightMode.GS_Mode_Assited_Takeoff;
+
     /**
      * Latitude of the home station
      */
@@ -53,6 +63,19 @@ public class DroneState {
     private static DJIMcuUpdateStateCallBack mMcuUpdateStateCallBack;
 
     public static SurveyRoute currentSurveyRoute;
+
+    private static ScheduledExecutorService taskScheduler = Executors.newSingleThreadScheduledExecutor();
+
+    private static ScheduledFuture connectedTimer;
+
+    public static void registerConnectedTimer() {
+        connectedTimer = taskScheduler.scheduleAtFixedRate(new Runnable() {
+            @Override
+            public void run() {
+                droneConnected = false;
+            }
+        }, 5000, 5000, TimeUnit.MILLISECONDS);
+    }
 
     /**
      * Update the current state of the drone.
@@ -76,8 +99,16 @@ public class DroneState {
                 roll = state.roll;
                 yaw = state.yaw;
                 DroneState.state = state;
+                Camera.setGimbalPitch(Camera.requestedGimbalAngle);
+                droneConnected = true;
+                Log.d(TAG, "UPDATING");
+                if (connectedTimer != null) {
+                    connectedTimer.cancel(true);
+                    registerConnectedTimer();
+                }
             }
         };
+
         DJIDrone.getDjiMC().setMcuUpdateStateCallBack(mMcuUpdateStateCallBack);
     }
 

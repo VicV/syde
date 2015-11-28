@@ -2,7 +2,6 @@ package com.jarone.litterary;
 
 import android.app.Application;
 import android.content.Context;
-import android.util.Log;
 
 import com.jarone.litterary.handlers.MessageHandler;
 
@@ -41,7 +40,6 @@ public class LitterApplication extends Application {
         activateDJI();
         initSDK();
         DroneState.droneConnected = DJIDrone.connectToDrone();
-        GroundStation.registerMissionCallback();
     }
 
 
@@ -64,9 +62,10 @@ public class LitterApplication extends Application {
                                         "onGetPermissionResultDescription=" + DJIError.getCheckPermissionErrorDescription(result));
                             } else {
                                 // show errors
-                                Log.e(TAG, "onGetPermissionResult =" + result);
-                                Log.e(TAG,
-                                        "onGetPermissionResultDescription=" + DJIError.getCheckPermissionErrorDescription(result));
+                                MessageHandler.d("onGetPermissionResult =" + result);
+                                MessageHandler.d("onGetPermissionResultDescription="
+                                        + DJIError.getCheckPermissionErrorDescription(result)
+                                );
                             }
                         }
                     });

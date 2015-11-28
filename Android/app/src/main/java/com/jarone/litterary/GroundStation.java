@@ -7,12 +7,16 @@ import com.jarone.litterary.handlers.MessageHandler;
 
 import dji.sdk.api.DJIDrone;
 import dji.sdk.api.DJIError;
+import dji.sdk.api.GroundStation.DJIGroundStationExecutionPushInfo;
+import dji.sdk.api.GroundStation.DJIGroundStationFlyingInfo;
 import dji.sdk.api.GroundStation.DJIGroundStationMissionPushInfo;
 import dji.sdk.api.GroundStation.DJIGroundStationTask;
 import dji.sdk.api.GroundStation.DJIGroundStationTypeDef;
 import dji.sdk.api.GroundStation.DJIGroundStationWaypoint;
 import dji.sdk.interfaces.DJIExecuteResultCallback;
 import dji.sdk.interfaces.DJIGroundStationExecuteCallBack;
+import dji.sdk.interfaces.DJIGroundStationExecutionPushInfoCallBack;
+import dji.sdk.interfaces.DJIGroundStationFlyingInfoCallBack;
 import dji.sdk.interfaces.DJIGroundStationMissionPushInfoCallBack;
 
 
@@ -163,6 +167,8 @@ public class GroundStation {
             public void onResult(DJIGroundStationTypeDef.GroundStationResult result) {
                 if (resultSuccess(result)) {
                     DroneState.setMode(DroneState.WAYPOINT_MODE);
+                    DJIGroundStationWaypoint wp = groundTask.getWaypointAtIndex(groundTask.getStartWaypointIndex());
+                    currentTarget = new LatLng(wp.latitude, wp.longitude);
                 }
                 String ResultsString = "execute task =" + result.toString();
                 MessageHandler.d(ResultsString);
@@ -277,7 +283,7 @@ public class GroundStation {
     }
 
     /**
-     * Send a dummy route that comamnds the drone to its current location in order to switch back
+     * Send a dummy route that commands the drone to its current location in order to switch back
      * to ground station GPS nav mode
      */
     public static void engageGroundStation() {
@@ -364,14 +370,44 @@ public class GroundStation {
         DJIDrone.getDjiGroundStation().setGroundStationMissionPushInfoCallBack(new DJIGroundStationMissionPushInfoCallBack() {
             @Override
             public void onResult(DJIGroundStationMissionPushInfo djiGroundStationMissionPushInfo) {
+                MessageHandler.d("Mission Code" + djiGroundStationMissionPushInfo.currState);
                 if (djiGroundStationMissionPushInfo.currState == MissionStatusCodes.REACHED_WAYPOINT_FINISHED_ACTION.ordinal()) {
                     GroundStation.taskDoneCallback.run();
                 }
-                DJIGroundStationWaypoint wp = groundTask.getWaypointAtIndex(djiGroundStationMissionPushInfo.targetWayPointIndex);
-                currentTarget = new LatLng(wp.latitude, wp.longitude);
+//                DJIGroundStationWaypoint wp = groundTask.getWaypointAtIndex(djiGroundStationMissionPushInfo.targetWayPointIndex + 1);
+//                currentTarget = new LatLng(wp.latitude, wp.longitude);
             }
         });
     }
+
+    /*** TEST DIFFERENT CALLBACKS TO FIND THE ONE THAT WORKS */
+    public static void registerStatusCallback() {
+        DJIDrone.getDjiGroundStation().setGroundStationExecutionPushInfoCallBack(new DJIGroundStationExecutionPushInfoCallBack() {
+            @Override
+            public void onResult(DJIGroundStationExecutionPushInfo djiGroundStationExecutionPushInfo) {
+                MessageHandler.d("Ground Station Update");
+                if (djiGroundStationExecutionPushInfo.eventType == DJIGroundStationTypeDef.GroundStationExecutionPushType.Navi_Mission_Finish) {
+                    GroundStation.taskDoneCallback.run();
+                    currentTarget = new LatLng(-1, -1);
+                }
+            }
+        });
+    }
+
+    public static void registerPhantom2Callback() {
+        DJIDrone.getDjiGroundStation().setGroundStationFlyingInfoCallBack(new DJIGroundStationFlyingInfoCallBack() {
+            @Override
+            public void onResult(DJIGroundStationFlyingInfo djiGroundStationFlyingInfo) {
+                //MessageHandler.d("Phantom 2 Ground Station Update" + djiGroundStationFlyingInfo.targetWaypointIndex);
+                if (djiGroundStationFlyingInfo.flightMode == DJIGroundStationTypeDef.GroundStationFlightMode.GS_Mode_Waypoint) {
+                    GroundStation.taskDoneCallback.run();
+                }
+                DroneState.flightMode = djiGroundStationFlyingInfo.flightMode;
+            }
+        });
+    }
+
+    /*** END TEST */
 
     public static LatLng getCurrentTarget() {
         if (currentTarget != null) {
