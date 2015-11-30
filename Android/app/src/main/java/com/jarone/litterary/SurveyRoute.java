@@ -41,7 +41,7 @@ public class SurveyRoute {
             GroundStation.taskDoneCallback = new Runnable() {
                 @Override
                 public void run() {
-                    MessageHandler.d("Point Reached, Taking Photo");
+                    //MessageHandler.d("Point Reached, Taking Photo");
                     Camera.photoCallback = new Runnable() {
                         @Override
                         public void run() {
@@ -52,7 +52,6 @@ public class SurveyRoute {
                     Camera.takePhoto();
                 }
             };
-            GroundStation.registerMissionCallback();
             GroundStation.uploadAndExecuteTask();
 
         } else {
@@ -75,7 +74,6 @@ public class SurveyRoute {
 
             }
         };
-        GroundStation.registerMissionCallback();
         GroundStation.stopTask();
     }
 

@@ -60,6 +60,9 @@ public class MapActivity extends FragmentActivity implements OnMapReadyCallback 
 
     private boolean returnWithResults = true;
 
+    private int BOUNDARY_COLOUR = Color.argb(120, 10, 192, 192);
+
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -121,7 +124,7 @@ public class MapActivity extends FragmentActivity implements OnMapReadyCallback 
         droneMap.addCircle(new CircleOptions()
                         .center(boundaryCenter)
                         .radius(GroundStation.BOUNDARY_RADIUS)
-                        .fillColor(Color.argb(120, 10, 192, 192))
+                        .fillColor(BOUNDARY_COLOUR)
                         .strokeWidth(2)
         );
         droneMap.addMarker(new MarkerOptions()

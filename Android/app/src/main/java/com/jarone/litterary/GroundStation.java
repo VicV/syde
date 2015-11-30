@@ -1,23 +1,19 @@
 package com.jarone.litterary;
 
-import android.os.Handler;
+import android.util.Log;
 
 import com.google.android.gms.maps.model.LatLng;
 import com.jarone.litterary.handlers.MessageHandler;
 
 import dji.sdk.api.DJIDrone;
 import dji.sdk.api.DJIError;
-import dji.sdk.api.GroundStation.DJIGroundStationExecutionPushInfo;
 import dji.sdk.api.GroundStation.DJIGroundStationFlyingInfo;
-import dji.sdk.api.GroundStation.DJIGroundStationMissionPushInfo;
 import dji.sdk.api.GroundStation.DJIGroundStationTask;
 import dji.sdk.api.GroundStation.DJIGroundStationTypeDef;
 import dji.sdk.api.GroundStation.DJIGroundStationWaypoint;
 import dji.sdk.interfaces.DJIExecuteResultCallback;
 import dji.sdk.interfaces.DJIGroundStationExecuteCallBack;
-import dji.sdk.interfaces.DJIGroundStationExecutionPushInfoCallBack;
 import dji.sdk.interfaces.DJIGroundStationFlyingInfoCallBack;
-import dji.sdk.interfaces.DJIGroundStationMissionPushInfoCallBack;
 
 
 /**
@@ -59,6 +55,12 @@ public class GroundStation {
     private static LatLng currentTarget;
 
     /**
+     * Boolean stating whether some part of the app is waiting for the navigation mission finished
+     * callback
+     */
+    public static boolean waitingForCallback;
+
+    /**
      * Enum of drone status codes sent by mission controller
      */
     public enum MissionStatusCodes {
@@ -69,12 +71,7 @@ public class GroundStation {
     /**
      * Callback to fire when drone reaches its target waypoint (ie. task completes)
      */
-    public static Runnable taskDoneCallback = new Runnable() {
-        @Override
-        public void run() {
-
-        }
-    };
+    public static Runnable taskDoneCallback = null;
 
     /**
      * Creates a new task, replacing the value of the groundTask variable. Points can be added
@@ -106,14 +103,15 @@ public class GroundStation {
      * openGroundStation and executing the callable in case of success
      */
     public static void withConnection(final Runnable run) {
-        final Handler handler = new Handler();
+//        final Handler handler = new Handler();
         DJIDrone.getDjiGroundStation().openGroundStation(new DJIGroundStationExecuteCallBack() {
             @Override
             public void onResult(DJIGroundStationTypeDef.GroundStationResult result) {
                 if (resultSuccess(result)) {
                     DroneState.groundStationConnected = true;
                     try {
-                        handler.post(run);
+                        run.run();
+                         //handler.post(run);
                     } catch (Exception e) {
                         MessageHandler.d("withConnection: " + e.toString());
                     }
@@ -165,6 +163,9 @@ public class GroundStation {
 
             @Override
             public void onResult(DJIGroundStationTypeDef.GroundStationResult result) {
+                if (DroneState.flightMode == DJIGroundStationTypeDef.GroundStationFlightMode.GS_Mode_Atti) {
+                    MessageHandler.d("S1 switch is not in autonomous position!");
+                }
                 if (resultSuccess(result)) {
                     DroneState.setMode(DroneState.WAYPOINT_MODE);
                     DJIGroundStationWaypoint wp = groundTask.getWaypointAtIndex(groundTask.getStartWaypointIndex());
@@ -366,41 +367,43 @@ public class GroundStation {
      * callback when the drone has reached the target waypoint. This method is called one time
      * to set up callback path, but taskDoneCallback can be changed elsewhere to modify behaviour
      */
-    public static void registerMissionCallback() {
-        DJIDrone.getDjiGroundStation().setGroundStationMissionPushInfoCallBack(new DJIGroundStationMissionPushInfoCallBack() {
-            @Override
-            public void onResult(DJIGroundStationMissionPushInfo djiGroundStationMissionPushInfo) {
-                MessageHandler.d("Mission Code" + djiGroundStationMissionPushInfo.currState);
-                if (djiGroundStationMissionPushInfo.currState == MissionStatusCodes.REACHED_WAYPOINT_FINISHED_ACTION.ordinal()) {
-                    GroundStation.taskDoneCallback.run();
-                }
-//                DJIGroundStationWaypoint wp = groundTask.getWaypointAtIndex(djiGroundStationMissionPushInfo.targetWayPointIndex + 1);
-//                currentTarget = new LatLng(wp.latitude, wp.longitude);
-            }
-        });
-    }
-
-    /*** TEST DIFFERENT CALLBACKS TO FIND THE ONE THAT WORKS */
-    public static void registerStatusCallback() {
-        DJIDrone.getDjiGroundStation().setGroundStationExecutionPushInfoCallBack(new DJIGroundStationExecutionPushInfoCallBack() {
-            @Override
-            public void onResult(DJIGroundStationExecutionPushInfo djiGroundStationExecutionPushInfo) {
-                MessageHandler.d("Ground Station Update");
-                if (djiGroundStationExecutionPushInfo.eventType == DJIGroundStationTypeDef.GroundStationExecutionPushType.Navi_Mission_Finish) {
-                    GroundStation.taskDoneCallback.run();
-                    currentTarget = new LatLng(-1, -1);
-                }
-            }
-        });
-    }
+//    public static void registerMissionCallback() {
+//        DJIDrone.getDjiGroundStation().setGroundStationMissionPushInfoCallBack(new DJIGroundStationMissionPushInfoCallBack() {
+//            @Override
+//            public void onResult(DJIGroundStationMissionPushInfo djiGroundStationMissionPushInfo) {
+//                //MessageHandler.d("Mission Code" + djiGroundStationMissionPushInfo.currState);
+//                if (djiGroundStationMissionPushInfo.currState == MissionStatusCodes.REACHED_WAYPOINT_FINISHED_ACTION.ordinal()) {
+//                    GroundStation.taskDoneCallback.run();
+//                }
+////                DJIGroundStationWaypoint wp = groundTask.getWaypointAtIndex(djiGroundStationMissionPushInfo.targetWayPointIndex + 1);
+////                currentTarget = new LatLng(wp.latitude, wp.longitude);
+//            }
+//        });
+//    }
+//
+//    /*** TEST DIFFERENT CALLBACKS TO FIND THE ONE THAT WORKS */
+//    public static void registerStatusCallback() {
+//        DJIDrone.getDjiGroundStation().setGroundStationExecutionPushInfoCallBack(new DJIGroundStationExecutionPushInfoCallBack() {
+//            @Override
+//            public void onResult(DJIGroundStationExecutionPushInfo djiGroundStationExecutionPushInfo) {
+//                //MessageHandler.d("Ground Station Update");
+//                Log.d("EXECUTE GROUND STATION", djiGroundStationExecutionPushInfo.eventType.name());
+//                if (djiGroundStationExecutionPushInfo.eventType == DJIGroundStationTypeDef.GroundStationExecutionPushType.Navi_Mission_Finish) {
+//                    GroundStation.taskDoneCallback.run();
+//                    currentTarget = new LatLng(-1, -1);
+//                }
+//            }
+//        });
+//    }
 
     public static void registerPhantom2Callback() {
         DJIDrone.getDjiGroundStation().setGroundStationFlyingInfoCallBack(new DJIGroundStationFlyingInfoCallBack() {
             @Override
             public void onResult(DJIGroundStationFlyingInfo djiGroundStationFlyingInfo) {
-                //MessageHandler.d("Phantom 2 Ground Station Update" + djiGroundStationFlyingInfo.targetWaypointIndex);
-                if (djiGroundStationFlyingInfo.flightMode == DJIGroundStationTypeDef.GroundStationFlightMode.GS_Mode_Waypoint) {
+                Log.d("GROUND STATION", djiGroundStationFlyingInfo.flightMode.name());
+                if (taskDoneCallback != null && djiGroundStationFlyingInfo.flightMode == DJIGroundStationTypeDef.GroundStationFlightMode.GS_Mode_Pause_1) {
                     GroundStation.taskDoneCallback.run();
+                    taskDoneCallback = null;
                 }
                 DroneState.flightMode = djiGroundStationFlyingInfo.flightMode;
             }

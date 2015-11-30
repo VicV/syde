@@ -12,11 +12,11 @@ import android.widget.TextView;
 import android.widget.ToggleButton;
 
 import com.google.android.gms.maps.model.LatLng;
-import com.jarone.litterary.Camera;
 import com.jarone.litterary.DroneState;
 import com.jarone.litterary.GroundStation;
 import com.jarone.litterary.R;
 import com.jarone.litterary.handlers.MessageHandler;
+import com.jarone.litterary.helpers.ContextManager;
 import com.jarone.litterary.helpers.LocationHelper;
 
 import java.util.Arrays;
@@ -53,6 +53,8 @@ public class MainActivity extends DJIBaseActivity {
         registerCamera();
 
         registerUpdateInterface();
+
+        ContextManager.setContext(this);
 
         DroneState.registerConnectedTimer();
         GroundStation.registerMissionCallback();
@@ -180,12 +182,11 @@ public class MainActivity extends DJIBaseActivity {
                 View infoLayout = findViewById(R.id.infoLayout);
                 if (infoLayout.getVisibility() == View.INVISIBLE) {
                     infoLayout.setVisibility(View.VISIBLE);
-                    Camera.requestedGimbalAngle = 1000;
+                    //Camera.requestedGimbalAngle = 1000;
                 } else {
                     infoLayout.setVisibility(View.INVISIBLE);
-                    Camera.requestedGimbalAngle = 0;
+                    //Camera.requestedGimbalAngle = 0;
                 }
-                //DroneState.updateDroneState();
             }
         };
     }

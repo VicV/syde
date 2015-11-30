@@ -1,7 +1,5 @@
 package com.jarone.litterary;
 
-import android.util.Log;
-
 import com.google.android.gms.maps.model.LatLng;
 
 import java.util.concurrent.Executors;
@@ -73,6 +71,8 @@ public class DroneState {
             @Override
             public void run() {
                 droneConnected = false;
+                updateDroneState();
+                GroundStation.registerPhantom2Callback();
             }
         }, 5000, 5000, TimeUnit.MILLISECONDS);
     }
@@ -99,9 +99,10 @@ public class DroneState {
                 roll = state.roll;
                 yaw = state.yaw;
                 DroneState.state = state;
+
                 Camera.setGimbalPitch(Camera.requestedGimbalAngle);
+
                 droneConnected = true;
-                Log.d(TAG, "UPDATING");
                 if (connectedTimer != null) {
                     connectedTimer.cancel(true);
                     registerConnectedTimer();
