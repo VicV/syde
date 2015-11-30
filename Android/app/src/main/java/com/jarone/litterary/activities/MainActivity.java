@@ -57,8 +57,6 @@ public class MainActivity extends DJIBaseActivity {
         ContextManager.setContext(this);
 
         DroneState.registerConnectedTimer();
-        GroundStation.registerMissionCallback();
-        GroundStation.registerStatusCallback();
         GroundStation.registerPhantom2Callback();
     }
 
