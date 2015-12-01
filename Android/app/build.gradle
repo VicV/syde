@@ -25,6 +25,8 @@ android {
 }
 
 dependencies {
+    compile fileTree(dir: 'libs', include: '*.jar')
+
     compile project(':Lib:DJI-SDK-LIB')
     compile project(':Lib:opencv-android')
 compile "org.deeplearning4j:deeplearning4j-core:0.4-rc3.4"
