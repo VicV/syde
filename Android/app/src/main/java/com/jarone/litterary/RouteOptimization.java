@@ -7,6 +7,8 @@ import com.jarone.litterary.helpers.LocationHelper;
 import org.nd4j.linalg.api.ndarray.INDArray;
 import org.nd4j.linalg.factory.Nd4j;
 
+import java.util.ArrayList;
+
 /**
  * Created by Adam on 2015-11-23.
  * <p/>
@@ -21,7 +23,9 @@ public class RouteOptimization {
         if (validateBoundary(points)) {
             //TODO: put Jordan's code here
 
-            optimizeShit(array);
+            INDArray picturePoints = getPhotoPoints(array);
+            INDArray orderedPoints = optimizePhotoRoute(picturePoints);
+
             LatLng[] route = new LatLng[20];
             return points;
         } else {
@@ -29,6 +33,7 @@ public class RouteOptimization {
             return new LatLng[0];
         }
     }
+
 
     private static boolean validateBoundary(LatLng[] points) {
         for (LatLng point : points) {
@@ -40,7 +45,7 @@ public class RouteOptimization {
     }
 
 
-    private static INDArray optimizeShit(INDArray array) {
+    private static INDArray getPhotoPoints(INDArray array) {
 
         // height above the ground
         int height = 4;
@@ -52,8 +57,6 @@ public class RouteOptimization {
         double distY = height * Math.tan(42.5) * 2;
 
         int m = array.rows();
-        int n = array.columns();
-
 
         //array for edge of polygon initialized
         INDArray xv = Nd4j.zeros(1, m + 1);
@@ -61,8 +64,8 @@ public class RouteOptimization {
         //ditto, but for y
         INDArray yv = Nd4j.zeros(1, m + 1);
 
-        double xi = 0;
-        double yi = 0;
+        double xi;
+        double yi;
 
         INDArray GPS = Nd4j.emptyLike(Nd4j.create(new double[]{1, 2}));
 
@@ -83,7 +86,6 @@ public class RouteOptimization {
         GPS = Nd4j.vstack(GPS, Nd4j.create(new double[]{x, y}));
 
         // break counter for upcoming for loop
-        double y2 = 0;
         double y1 = 0;
         int mFlag = 0;
         while (polygonContainsPoint(array, x, y)) {
@@ -145,12 +147,25 @@ public class RouteOptimization {
                     x = x + 0.1;
                 }
             }
-            
         }
 
-        return array;
-
+        return GPS;
     }
+
+    private static INDArray optimizePhotoRoute(INDArray picturePoints) {
+        ArrayList<Double> longitudes = new ArrayList<>(), latitudes = new ArrayList<>();
+        int rows = picturePoints.rows();
+        for (int i = 1; i < rows-1; i++) {
+            longitudes.add(picturePoints.getDouble(i, 1));
+            latitudes.add(picturePoints.getDouble(i, 2));
+        }
+
+        int nStops = rows-1;
+
+
+        return picturePoints;
+    }
+
 
     /**
      * Determine if our polygon contains the point at hand.
