@@ -76,7 +76,14 @@ public class LitterApplication extends Application {
         }.start();
     }
 
+
     public static DroneState getDroneState() {
         return droneState;
     }
+
+    @Override
+    protected void attachBaseContext(Context base) {
+        super.attachBaseContext(base);
+    }
+
 }
