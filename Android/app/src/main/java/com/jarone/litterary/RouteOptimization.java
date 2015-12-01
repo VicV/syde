@@ -153,14 +153,16 @@ public class RouteOptimization {
     }
 
     private static INDArray optimizePhotoRoute(INDArray picturePoints) {
-        ArrayList<Double> longitudes = new ArrayList<>(), latitudes = new ArrayList<>();
-        int rows = picturePoints.rows();
-        for (int i = 1; i < rows-1; i++) {
-            longitudes.add(picturePoints.getDouble(i, 1));
-            latitudes.add(picturePoints.getDouble(i, 2));
-        }
+//        ArrayList<Double> longitudes = new ArrayList<>(), latitudes = new ArrayList<>();
+//        int rows = picturePoints.rows();
+//        for (int i = 1; i < rows-1; i++) {
+//            longitudes.add(picturePoints.getDouble(i, 1));
+//            latitudes.add(picturePoints.getDouble(i, 2));
+//        }
+//
+//        int nStops = rows-1;
 
-        int nStops = rows-1;
+        SalesmanSolver.solve(picturePoints);
 
 
         return picturePoints;
