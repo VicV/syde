@@ -10,6 +10,7 @@ android {
         targetSdkVersion 23
         versionCode 1
         versionName "1.0"
+
     }
     buildTypes {
         release {
@@ -22,6 +23,7 @@ android {
             jniLibs.srcDirs = ['..\\Lib\\DJI-SDK-LIB\\libs']
         }
     }
+
 }
 
 dependencies {
@@ -29,8 +31,10 @@ dependencies {
 
     compile project(':Lib:DJI-SDK-LIB')
     compile project(':Lib:opencv-android')
-compile "org.deeplearning4j:deeplearning4j-core:0.4-rc3.4"
+
 
     compile 'com.google.android.gms:play-services-maps:8.1.0'
     compile 'com.google.android.gms:play-services-location:8.1.0'
 }
+
+
