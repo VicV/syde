@@ -21,6 +21,7 @@ import com.jarone.litterary.handlers.MessageHandler;
 import com.jarone.litterary.helpers.ContextManager;
 import com.jarone.litterary.helpers.LocationHelper;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
@@ -44,6 +45,10 @@ public class MainActivity extends DJIBaseActivity {
 
     private ScheduledExecutorService taskScheduler;
 
+    private LatLng[] currentPolygon = null;
+    private ArrayList<LatLng> currentPhotoPoints = null;
+
+
     //Activity is starting.
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -63,7 +68,7 @@ public class MainActivity extends DJIBaseActivity {
 
         SystemProperties.set("java.version", "1.7.0_79");
         System.setProperty("java.version", "1.7.0_79");
-        Toast.makeText(this, "I EXIST. SYSTEM PROPERTY IS: "+System.getProperty("java.version"), Toast.LENGTH_LONG).show();
+        Toast.makeText(this, "I EXIST. SYSTEM PROPERTY IS: " + System.getProperty("java.version"), Toast.LENGTH_LONG).show();
     }
 
     private void registerUpdateInterface() {
@@ -241,7 +246,10 @@ public class MainActivity extends DJIBaseActivity {
         return new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                startActivityForResult(new Intent(mainActivity, MapActivity.class), POINTS_REQUEST_CODE);
+                Intent intent = (new Intent(mainActivity, MapActivity.class));
+                intent.putExtra("polygon", currentPolygon);
+                intent.putExtra("picturePoints", currentPhotoPoints);
+                startActivityForResult(intent, POINTS_REQUEST_CODE);
             }
         };
     }
@@ -262,6 +270,9 @@ public class MainActivity extends DJIBaseActivity {
             Parcelable[] parcelArray = data.getParcelableArrayExtra("points");
             //can't cast parcelable to latlng array, need to copy it
             LatLng[] parcel = Arrays.copyOf(parcelArray, parcelArray.length, LatLng[].class);
+            if (parcel.length > 2) {
+                currentPolygon = parcel;
+            }
 
             GroundStation.initializeSurveyRoute(parcel, getAltitudeValue());
         }

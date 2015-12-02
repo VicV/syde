@@ -22,8 +22,8 @@ public class DroneState {
     public static final int WAYPOINT_MODE = 0;
     public static final int DIRECT_MODE = 1;
 
-    private static double latitude = 0;
-    private static double longitude = 0;
+    private static double latitude = 43.472;
+    private static double longitude = -80.54;
 
     private static double speed = 0;
     private static double altitude = 0;
@@ -121,7 +121,9 @@ public class DroneState {
         return longitude;
     }
 
-    public static LatLng getLatLng() {return new LatLng(latitude, longitude);}
+    public static LatLng getLatLng() {
+        return new LatLng(latitude, longitude);
+    }
 
     public static boolean hasValidLocation() {
         return (getLongitude() != 0.0 && getLatitude() != 0.0);

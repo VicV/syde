@@ -3,6 +3,7 @@ package com.jarone.litterary.activities;
 import android.content.Intent;
 import android.graphics.Color;
 import android.os.Bundle;
+import android.os.Parcelable;
 import android.support.v4.app.FragmentActivity;
 import android.view.View;
 
@@ -21,9 +22,12 @@ import com.jarone.litterary.DroneState;
 import com.jarone.litterary.GroundStation;
 import com.jarone.litterary.R;
 import com.jarone.litterary.handlers.MessageHandler;
+import com.jarone.litterary.helpers.ContextManager;
 import com.jarone.litterary.helpers.LocationHelper;
 
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 
 /**
  * Created by vic on 11/9/15.
@@ -46,12 +50,16 @@ public class MapActivity extends FragmentActivity implements OnMapReadyCallback 
     /**
      * A list of all the lat long points that are the verticies of the polygon
      **/
-    private ArrayList polyPoints = new ArrayList<>();
+    private ArrayList<LatLng> polyPoints = new ArrayList<>();
 
     /**
      * A list of all the markers which lie on the verticies of the polygon
      **/
-    private ArrayList markers = new ArrayList();
+    private ArrayList<Marker> markers = new ArrayList();
+
+    private ArrayList<Marker> photoMarkers = new ArrayList();
+
+    private ArrayList<LatLng> photoPoints = new ArrayList();
 
     /**
      * The center location of the circular boundary inside which points can be placed
@@ -61,6 +69,8 @@ public class MapActivity extends FragmentActivity implements OnMapReadyCallback 
     private boolean returnWithResults = true;
 
     private int BOUNDARY_COLOUR = Color.argb(120, 10, 192, 192);
+
+    private boolean resetMode = false;
 
 
     @Override
@@ -73,6 +83,19 @@ public class MapActivity extends FragmentActivity implements OnMapReadyCallback 
                 .findFragmentById(R.id.map);
         mapFragment.getMapAsync(this);
 
+        Bundle bundle = getIntent().getExtras();
+
+        if (bundle.get("polygon") != null) {
+            Parcelable[] points = (Parcelable[]) bundle.get("polygon");
+            polyPoints = new ArrayList(Arrays.asList(Arrays.copyOf(points, points.length, LatLng[].class)));
+            if (bundle.get("picturePoints") != null) {
+                photoPoints = (ArrayList<LatLng>) bundle.get("picturePoints");
+                findViewById(R.id.button_undo).setVisibility(View.GONE);
+                findViewById(R.id.button_set).setVisibility(View.GONE);
+                resetMode = true;
+            }
+        }
+
 
         // Undo -- removes the last point and marker.
         // TODO: Undo drags
@@ -84,7 +107,7 @@ public class MapActivity extends FragmentActivity implements OnMapReadyCallback 
                 if (polyPoints.size() > 0) {
                     polyPoints.remove(polyPoints.size() - 1);
                     //Remove the marker from the map and then from our array.
-                    ((Marker) markers.get(markers.size() - 1)).remove();
+                    markers.get(markers.size() - 1).remove();
                     markers.remove(markers.size() - 1);
                     currentPolygon.setPoints(polyPoints);
                 }
@@ -96,6 +119,25 @@ public class MapActivity extends FragmentActivity implements OnMapReadyCallback 
             @Override
             public void onClick(View v) {
                 finish();
+            }
+        });
+
+        findViewById(R.id.button_reset).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                currentPolygon.remove();
+                for (Marker m : markers) {
+                    m.remove();
+                }
+                for (Marker m : photoMarkers) {
+                    m.remove();
+                }
+                photoMarkers.clear();
+                photoPoints.clear();
+                markers.clear();
+                polyPoints.clear();
+                findViewById(R.id.button_undo).setVisibility(View.VISIBLE);
+                findViewById(R.id.button_set).setVisibility(View.VISIBLE);
             }
         });
     }
@@ -122,10 +164,10 @@ public class MapActivity extends FragmentActivity implements OnMapReadyCallback 
             boundaryCenter = defaultLocation;
         }
         droneMap.addCircle(new CircleOptions()
-                        .center(boundaryCenter)
-                        .radius(GroundStation.BOUNDARY_RADIUS)
-                        .fillColor(BOUNDARY_COLOUR)
-                        .strokeWidth(2)
+                .center(boundaryCenter)
+                .radius(GroundStation.BOUNDARY_RADIUS)
+                .fillColor(BOUNDARY_COLOUR)
+                .strokeWidth(2)
         );
         droneMap.addMarker(new MarkerOptions()
                 .position(boundaryCenter)
@@ -133,29 +175,47 @@ public class MapActivity extends FragmentActivity implements OnMapReadyCallback 
                 .anchor(0.5f, 0.5f)
         );
 
+        if (polyPoints != null && polyPoints.size() > 0) {
+            currentPolygon = map.addPolygon(new PolygonOptions().strokeWidth(2).fillColor(Color.parseColor("#50FF0000")).addAll(polyPoints));
+        }
+
+        if (polyPoints != null) {
+            for (LatLng latLng : polyPoints) {
+                markers.add(droneMap.addMarker(new MarkerOptions().position(latLng).draggable(true)));
+            }
+        }
+
+        if (photoPoints != null) {
+            for (LatLng latLng : photoPoints) {
+                photoMarkers.add(droneMap.addMarker(new MarkerOptions().position(latLng).draggable(false)));
+            }
+        }
+
         //This is the pin placing mechanic.
         droneMap.setOnMapLongClickListener(new GoogleMap.OnMapLongClickListener() {
             @Override
             public void onMapLongClick(LatLng latLng) {
-                //Check if the requested point is inside the boundary
-                if (LocationHelper.distanceBetween(latLng, boundaryCenter) > GroundStation.BOUNDARY_RADIUS) {
-                    MessageHandler.d("Choose a point inside the boundary circle");
-                    return;
-                }
+                if (!resetMode) {
+                    //Check if the requested point is inside the boundary
+                    if (LocationHelper.distanceBetween(latLng, boundaryCenter) > GroundStation.BOUNDARY_RADIUS) {
+                        MessageHandler.d("Choose a point inside the boundary circle");
+                        return;
+                    }
 
-                //Erase the polygon because its about to be redrawn.
-                if (currentPolygon != null) {
-                    currentPolygon.remove();
-                }
+                    //Erase the polygon because its about to be redrawn.
+                    if (currentPolygon != null) {
+                        currentPolygon.remove();
+                    }
 
-                //Add a point at the location of the finger.
-                polyPoints.add(latLng);
-                //Redraw the map
-                currentPolygon = map.addPolygon(new PolygonOptions().strokeWidth(2).fillColor(Color.parseColor("#50FF0000")).addAll(polyPoints));
-                //Put a draggable marker at this vertex
-                Marker marker = droneMap.addMarker(new MarkerOptions().position(latLng).draggable(true));
-                //Store our marker.
-                markers.add(marker);
+                    //Add a point at the location of the finger.
+                    polyPoints.add(latLng);
+                    //Redraw the map
+                    currentPolygon = map.addPolygon(new PolygonOptions().strokeWidth(2).fillColor(Color.parseColor("#50FF0000")).addAll(polyPoints));
+                    //Put a draggable marker at this vertex
+                    Marker marker = droneMap.addMarker(new MarkerOptions().position(latLng).draggable(true));
+                    //Store our marker.
+                    markers.add(marker);
+                }
 
             }
         });
@@ -190,6 +250,7 @@ public class MapActivity extends FragmentActivity implements OnMapReadyCallback 
                     polyPoints.remove(thisPoint);
                     markers.remove(marker);
                 }
+
             }
 
             @Override
@@ -240,7 +301,7 @@ public class MapActivity extends FragmentActivity implements OnMapReadyCallback 
         LatLng[] p = new LatLng[markers.size()];
 
         for (int i = 0; i < markers.size(); i++) {
-            Marker marker = ((Marker) markers.get(i));
+            Marker marker = markers.get(i);
             p[i] = marker.getPosition();
         }
         data.putExtra("points", p);

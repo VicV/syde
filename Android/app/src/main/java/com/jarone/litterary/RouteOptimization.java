@@ -43,18 +43,23 @@ public class RouteOptimization {
                 return false;
             }
         }
-        return false;
+        return true;
     }
 
 
     private static ArrayList<LatLng> getPhotoPoints(ArrayList<LatLng> array, float altitude) {
 
+        double stepSize = 0.00001;
+
+        if (altitude == -1) {
+            altitude = 4;
+        }
 
         //x-distance between image capture points
-        double distX = altitude * Math.tan(Math.toRadians(60)) * 2;
+        double distX = (altitude * Math.tan(Math.toRadians(60)) * 2) / 100000;
 
         //y-distance between image capture points
-        double distY = altitude * Math.tan(Math.toRadians(42.5)) * 2;
+        double distY = (altitude * Math.tan(Math.toRadians(42.5)) * 2) / 100000;
 
         int m = array.size();
 
@@ -74,12 +79,12 @@ public class RouteOptimization {
         double maxLong = 0;
         for (int i = 0; i < m; i++) {
             xi = array.get(i).latitude;
-            if (xi > maxLat) {
+            if (Math.abs(xi) > Math.abs(maxLat)) {
                 maxLat = xi;
             }
             xv[i] = xi;
             yi = array.get(i).longitude;
-            if (yi > maxLong) {
+            if (Math.abs(yi) > Math.abs(maxLong)) {
                 maxLong = yi;
             }
             yv[i] = yi;
@@ -110,7 +115,7 @@ public class RouteOptimization {
                 y1 = y + distY;
                 while (y1 > maxLong) {
                     //iterate down until you are in the polygon
-                    y1 = y1 - 0.1;
+                    y1 = y1 - stepSize;
                 }
             }
             //general case where the x and y test value is in the polygon
@@ -128,7 +133,7 @@ public class RouteOptimization {
             //you are in region
             if (!polygonContainsPoint(xv, yv, x, y)) {
                 while (!polygonContainsPoint(xv, yv, x, y)) {
-                    x = x - 0.1;
+                    x = x - stepSize;
                 }
                 GPS.add(new LatLng(x, y));
             }
@@ -146,7 +151,7 @@ public class RouteOptimization {
                             break;
                         }
                     }
-                    x = x - 0.1;
+                    x = x - stepSize;
                 }
             }
 
@@ -161,7 +166,7 @@ public class RouteOptimization {
                             break;
                         }
                     }
-                    x = x + 0.1;
+                    x = x + stepSize;
                 }
             }
         }
