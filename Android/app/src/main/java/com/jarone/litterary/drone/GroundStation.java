@@ -1,8 +1,11 @@
-package com.jarone.litterary;
+package com.jarone.litterary.drone;
 
 import android.util.Log;
 
 import com.google.android.gms.maps.model.LatLng;
+import com.jarone.litterary.AngularController;
+import com.jarone.litterary.RouteOptimization;
+import com.jarone.litterary.SurveyRoute;
 import com.jarone.litterary.handlers.MessageHandler;
 
 import dji.sdk.api.DJIDrone;
@@ -54,11 +57,7 @@ public class GroundStation {
      */
     private static LatLng currentTarget;
 
-    /**
-     * Boolean stating whether some part of the app is waiting for the navigation mission finished
-     * callback
-     */
-    public static boolean waitingForCallback;
+    private static AngularController angularController;
 
     /**
      * Enum of drone status codes sent by mission controller
@@ -360,6 +359,26 @@ public class GroundStation {
 
     private static boolean resultSuccess(DJIGroundStationTypeDef.GroundStationResult result) {
         return result == DJIGroundStationTypeDef.GroundStationResult.GS_Result_Success;
+    }
+
+    public static void executeController() {
+        angularController = new AngularController();
+        angularController.startExecutionLoop();
+    }
+
+    public static AngularController getAngularController() {
+        return angularController;
+    }
+
+    public static boolean executingController() {
+        return (angularController != null);
+    }
+
+    public static void stopController() {
+        if (angularController != null) {
+            angularController.stopExecutionLoop();
+            angularController = null;
+        }
     }
 
     /**

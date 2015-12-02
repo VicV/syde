@@ -1,6 +1,8 @@
 package com.jarone.litterary;
 
 import com.google.android.gms.maps.model.LatLng;
+import com.jarone.litterary.drone.Camera;
+import com.jarone.litterary.drone.GroundStation;
 import com.jarone.litterary.handlers.MessageHandler;
 
 /**

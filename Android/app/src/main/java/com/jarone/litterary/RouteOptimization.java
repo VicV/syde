@@ -1,13 +1,13 @@
 package com.jarone.litterary;
 
 import com.google.android.gms.maps.model.LatLng;
+import com.jarone.litterary.drone.DroneState;
+import com.jarone.litterary.drone.GroundStation;
 import com.jarone.litterary.handlers.MessageHandler;
 import com.jarone.litterary.helpers.LocationHelper;
 
 import org.nd4j.linalg.api.ndarray.INDArray;
 import org.nd4j.linalg.factory.Nd4j;
-
-import java.util.ArrayList;
 
 /**
  * Created by Adam on 2015-11-23.

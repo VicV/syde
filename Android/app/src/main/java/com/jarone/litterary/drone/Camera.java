@@ -1,4 +1,4 @@
-package com.jarone.litterary;
+package com.jarone.litterary.drone;
 
 import com.jarone.litterary.handlers.MessageHandler;
 

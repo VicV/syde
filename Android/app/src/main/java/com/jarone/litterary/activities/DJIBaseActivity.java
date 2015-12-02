@@ -3,7 +3,7 @@ package com.jarone.litterary.activities;
 import android.os.Bundle;
 import android.support.v4.app.FragmentActivity;
 
-import com.jarone.litterary.DroneState;
+import com.jarone.litterary.drone.DroneState;
 
 import dji.midware.data.manager.P3.ServiceManager;
 import dji.sdk.api.DJIDrone;

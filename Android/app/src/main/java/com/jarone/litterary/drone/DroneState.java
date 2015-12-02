@@ -1,6 +1,7 @@
-package com.jarone.litterary;
+package com.jarone.litterary.drone;
 
 import com.google.android.gms.maps.model.LatLng;
+import com.jarone.litterary.SurveyRoute;
 
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
