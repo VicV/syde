@@ -4,10 +4,6 @@ import com.google.android.gms.maps.model.LatLng;
 import com.jarone.litterary.handlers.MessageHandler;
 import com.jarone.litterary.helpers.LocationHelper;
 
-import org.opencv.core.MatOfKeyPoint;
-import org.opencv.core.MatOfPoint2f;
-import org.opencv.features2d.KeyPoint;
-
 import java.util.ArrayList;
 import java.util.Arrays;
 
@@ -57,9 +53,11 @@ public class RouteOptimization {
         Polygon.Builder builder = new Polygon.Builder();
         ArrayList<Point> points = new ArrayList();
 
+        //Whether or not the latitude/longitude are negative
         boolean longNeg;
         boolean latNeg;
 
+        //Current step size. At 0.0001 we'll get around 15 points. Right now we get about 250.
         double stepSize = 0.00005;
 
         if (altitude == -1) {
@@ -72,13 +70,8 @@ public class RouteOptimization {
         //y-distance between image capture points
         double distY = (altitude * Math.tan(Math.toRadians(42.5)) * 2) / 100000;
 
+        //Number of rows.
         int m = originalArray.size();
-
-        //array for edge of polygon initialized
-        double[] xv = new double[m + 1];
-
-        //ditto, but for y
-        double[] yv = new double[m + 1];
 
         double xi;
         double yi;
@@ -92,6 +85,8 @@ public class RouteOptimization {
         double minLong = Double.POSITIVE_INFINITY;
         for (int i = 0; i < m; i++) {
             xi = originalArray.get(i).latitude;
+            yi = originalArray.get(i).longitude;
+
 
             if (xi > maxLat) {
                 maxLat = xi;
@@ -99,17 +94,15 @@ public class RouteOptimization {
             if (xi < minLat) {
                 minLat = xi;
             }
-            xv[i] = xi;
-            yi = originalArray.get(i).longitude;
             if (yi > maxLong) {
                 maxLong = yi;
             }
             if (yi < minLong) {
                 minLong = yi;
             }
-            yv[i] = yi;
         }
 
+        //Set if these are negative.
         longNeg = minLong < 0;
         latNeg = minLat < 0;
 
@@ -117,30 +110,28 @@ public class RouteOptimization {
         maxLong = longNeg ? maxLong + (-minLong) : maxLong;
 
 
-        //close off xv with repeat of first point
-        xv[m] = originalArray.get(0).latitude;
-
-        //close off yv with repeat of first point
-        yv[m] = originalArray.get(0).longitude;
-
-
+        //Copy original array into a new array of Points. If the latitude or longitude were negative, add the inverse of
+        // the min of them to each point so we start at 0.0;
         for (LatLng pt : originalArray) {
             Point p = new Point((latNeg ? pt.latitude + (-minLat) : pt.latitude), (longNeg ? pt.longitude + (-minLong) : pt.longitude));
             points.add(p);
             builder.addVertex(p);
         }
 
+        //Create our polygon.
         Polygon polygon = builder.close().build();
 
-        double x = points.get(0).x;
 
+        //Start at the first point.
+        double x = points.get(0).x;
         double y = points.get(0).y;
 
+        //Add a new point to our final array. If it WAS negative, we now subtract that minimum value because
+        // We would have added it previously.
         GPS.add(new LatLng(latNeg ? x + minLat : x, longNeg ? y + minLong : y));
 
         // break counter for upcoming for loop
         double y1 = 0;
-        int count = 0;
         int mFlag = 0;
         while (polygon.contains(new Point(x, y))) {
             //last loop break clause
@@ -174,6 +165,7 @@ public class RouteOptimization {
                 }
                 GPS.add(new LatLng(latNeg ? x + minLat : x, longNeg ? y + minLong : y));
             }
+
             //iterate upwards to the next row of points
             x = points.get(0).x;
             y = y + distY;
