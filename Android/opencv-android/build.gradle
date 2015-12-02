@@ -14,6 +14,10 @@ android {
         versionCode 2480
         versionName = version
     }
+
+    lintOptions {
+        abortOnError false
+    }
 }
 
 afterEvaluate { project ->

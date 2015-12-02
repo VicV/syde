@@ -111,7 +111,7 @@ public class GroundStation {
                     DroneState.groundStationConnected = true;
                     try {
                         run.run();
-                         //handler.post(run);
+                        //handler.post(run);
                     } catch (Exception e) {
                         MessageHandler.d("withConnection: " + e.toString());
                     }
@@ -138,6 +138,7 @@ public class GroundStation {
 
     /**
      * Upload the current task, then execute it. Execute a callback when upload completes
+     *
      * @param callback
      */
     public static void uploadAndExecuteTask(final Runnable callback) {
@@ -300,6 +301,7 @@ public class GroundStation {
 
     /**
      * Set direct control mode angles for drone
+     *
      * @param pitch
      * @param yaw
      * @param roll
@@ -328,6 +330,7 @@ public class GroundStation {
     /**
      * Generate the optimized survey route based on the boundary points and set it to the current
      * survey route. Does not execute the route
+     *
      * @param points
      * @param altitude
      */
@@ -347,6 +350,7 @@ public class GroundStation {
      * initialized. Also, check if route is already executing so we don't start again
      */
     public static void startSurveyRoute() {
+        initializeSurveyRoute(null, 20);
         if (currentSurveyRoute != null && !currentSurveyRoute.isFinished() && !currentSurveyRoute.isExecuting()) {
             currentSurveyRoute.executeRoute();
         } else {
@@ -395,7 +399,6 @@ public class GroundStation {
 //            }
 //        });
 //    }
-
     public static void registerPhantom2Callback() {
         DJIDrone.getDjiGroundStation().setGroundStationFlyingInfoCallBack(new DJIGroundStationFlyingInfoCallBack() {
             @Override
@@ -410,7 +413,9 @@ public class GroundStation {
         });
     }
 
-    /*** END TEST */
+    /***
+     * END TEST
+     */
 
     public static LatLng getCurrentTarget() {
         if (currentTarget != null) {

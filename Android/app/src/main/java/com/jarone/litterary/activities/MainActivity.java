@@ -9,12 +9,14 @@ import android.os.Parcelable;
 import android.view.View;
 import android.widget.EditText;
 import android.widget.TextView;
+import android.widget.Toast;
 import android.widget.ToggleButton;
 
 import com.google.android.gms.maps.model.LatLng;
 import com.jarone.litterary.DroneState;
 import com.jarone.litterary.GroundStation;
 import com.jarone.litterary.R;
+import com.jarone.litterary.SystemProperties;
 import com.jarone.litterary.handlers.MessageHandler;
 import com.jarone.litterary.helpers.ContextManager;
 import com.jarone.litterary.helpers.LocationHelper;
@@ -58,6 +60,10 @@ public class MainActivity extends DJIBaseActivity {
 
         DroneState.registerConnectedTimer();
         GroundStation.registerPhantom2Callback();
+
+        SystemProperties.set("java.version", "1.7.0_79");
+        System.setProperty("java.version", "1.7.0_79");
+        Toast.makeText(this, "I EXIST. SYSTEM PROPERTY IS: "+System.getProperty("java.version"), Toast.LENGTH_LONG).show();
     }
 
     private void registerUpdateInterface() {
