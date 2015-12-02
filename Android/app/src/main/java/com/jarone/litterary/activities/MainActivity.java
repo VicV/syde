@@ -159,7 +159,11 @@ public class MainActivity extends DJIBaseActivity {
         return new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                GroundStation.startSurveyRoute();
+                LatLng[] points = GroundStation.initializeSurveyRoute(currentPolygon, getAltitudeValue());
+                if (points != null && points.length > 2) {
+                    currentPhotoPoints = new ArrayList<>(Arrays.asList(points));
+                    currentPhotoPoints.size();
+                }
             }
         };
     }
@@ -274,7 +278,11 @@ public class MainActivity extends DJIBaseActivity {
                 currentPolygon = parcel;
             }
 
-            GroundStation.initializeSurveyRoute(parcel, getAltitudeValue());
+            LatLng[] points = GroundStation.initializeSurveyRoute(currentPolygon, getAltitudeValue());
+            if (points != null) {
+                currentPhotoPoints = new ArrayList<>(Arrays.asList(points));
+                currentPhotoPoints.size();
+            }
         }
     }
 

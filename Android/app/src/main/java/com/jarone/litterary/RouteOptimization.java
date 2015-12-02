@@ -32,10 +32,10 @@ public class RouteOptimization {
 
 
             ArrayList<LatLng> picturePoints = getPhotoPoints(latLngs, altitude);
-            ArrayList<LatLng> orderedPoints = optimizePhotoRoute(picturePoints);
+//            ArrayList<LatLng> orderedPoints = optimizePhotoRoute(picturePoints);
 
-            LatLng[] route = new LatLng[20];
-            return points;
+            Object[] route = picturePoints.toArray();
+            return (Arrays.copyOf(route, route.length, LatLng[].class));
         } else {
             MessageHandler.d("Boundary Points Are Too Far From Drone!");
             return new LatLng[0];
@@ -60,17 +60,17 @@ public class RouteOptimization {
         boolean longNeg;
         boolean latNeg;
 
-        double stepSize = 0.0001;
+        double stepSize = 0.00005;
 
         if (altitude == -1) {
             altitude = 4;
         }
 
         //x-distance between image capture points
-        double distX = (altitude * Math.tan(Math.toRadians(60)) * 2) / 10000;
+        double distX = (altitude * Math.tan(Math.toRadians(60)) * 2) / 100000;
 
         //y-distance between image capture points
-        double distY = (altitude * Math.tan(Math.toRadians(42.5)) * 2) / 10000;
+        double distY = (altitude * Math.tan(Math.toRadians(42.5)) * 2) / 100000;
 
         int m = originalArray.size();
 
@@ -129,7 +129,6 @@ public class RouteOptimization {
             points.add(p);
             builder.addVertex(p);
         }
-
 
         Polygon polygon = builder.close().build();
 

@@ -334,28 +334,33 @@ public class GroundStation {
      * @param points
      * @param altitude
      */
-    public static void initializeSurveyRoute(LatLng[] points, float altitude) {
-//        if (altitude < 0 || altitude > 100) {
-//            MessageHandler.d("Please Choose a Valid Altitude");
-//            return;
-//        }
+    public static LatLng[] initializeSurveyRoute(LatLng[] points, float altitude) {
+        if (altitude < 0 || altitude > 100) {
+            MessageHandler.d("Please Choose a Valid Altitude");
+            return null;
+        } else if (points.length < 2) {
+            MessageHandler.d("Please supply valid polygon");
+            return null;
+        }
         GroundStation.currentSurveyRoute = new SurveyRoute(
                 RouteOptimization.createOptimizedSurveyRoute(points, altitude),
                 altitude
         );
+        return GroundStation.currentSurveyRoute.getRoute();
     }
 
     /**
      * Start the previously initialized survey route, or send a message if no route has been
      * initialized. Also, check if route is already executing so we don't start again
      */
-    public static void startSurveyRoute() {
+    public static LatLng[] startSurveyRoute() {
         initializeSurveyRoute(null, 20);
         if (currentSurveyRoute != null && !currentSurveyRoute.isFinished() && !currentSurveyRoute.isExecuting()) {
             currentSurveyRoute.executeRoute();
         } else {
             MessageHandler.d("No Survey Route is Ready!");
         }
+        return currentSurveyRoute.getRoute();
     }
 
     public static DJIGroundStationTask getTask() {

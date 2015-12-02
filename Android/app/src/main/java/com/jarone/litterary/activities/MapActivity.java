@@ -90,9 +90,11 @@ public class MapActivity extends FragmentActivity implements OnMapReadyCallback 
             polyPoints = new ArrayList(Arrays.asList(Arrays.copyOf(points, points.length, LatLng[].class)));
             if (bundle.get("picturePoints") != null) {
                 photoPoints = (ArrayList<LatLng>) bundle.get("picturePoints");
-                findViewById(R.id.button_undo).setVisibility(View.GONE);
-                findViewById(R.id.button_set).setVisibility(View.GONE);
-                resetMode = true;
+                if (photoPoints != null && photoPoints.size() > 1) {
+                    findViewById(R.id.button_undo).setVisibility(View.GONE);
+                    findViewById(R.id.button_set).setVisibility(View.GONE);
+                    resetMode = true;
+                }
             }
         }
 
@@ -138,6 +140,7 @@ public class MapActivity extends FragmentActivity implements OnMapReadyCallback 
                 polyPoints.clear();
                 findViewById(R.id.button_undo).setVisibility(View.VISIBLE);
                 findViewById(R.id.button_set).setVisibility(View.VISIBLE);
+                resetMode = false;
             }
         });
     }
@@ -185,7 +188,7 @@ public class MapActivity extends FragmentActivity implements OnMapReadyCallback 
             }
         }
 
-        if (photoPoints != null) {
+        if (photoPoints != null && photoPoints.size() > 1) {
             for (LatLng latLng : photoPoints) {
                 photoMarkers.add(droneMap.addMarker(new MarkerOptions().position(latLng).draggable(false)));
             }
