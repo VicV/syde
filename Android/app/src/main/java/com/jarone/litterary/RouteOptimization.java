@@ -14,39 +14,19 @@ import java.util.Arrays;
  */
 public class RouteOptimization {
 
-//    public static double[][] array = null;
-
-
     public static LatLng[] createOptimizedSurveyRoute(LatLng[] points, float altitude) {
 
-//        try {
-        final String propertyName = "Property";
-        String oldProperty = System.getProperty("java.version");
-        System.setProperty(propertyName, "1.7.0_79");
-        String newProperty = System.getProperty("java.version");
         ArrayList<LatLng> latLngs = new ArrayList<>();
+
         if (points != null && points.length > 0) {
-            latLngs = (ArrayList<LatLng>) Arrays.asList(points);
+            latLngs = new ArrayList<>(Arrays.asList(points));
         }
 
-//            Nd4jBackend.load();
-//        } catch (Nd4jBackend.NoAvailableBackendException e) {
-//            //
-//        }
-        latLngs.add(new LatLng(20, 0));
-        latLngs.add(new LatLng(40, 0));
-        latLngs.add(new LatLng(80, 30));
-        latLngs.add(new LatLng(40, 90));
-        latLngs.add(new LatLng(0, 40));
-        latLngs.add(new LatLng(0, 20));
-
-//        array = new double[][]{{20, 40, 80, 40, 0, 0}, {0, 0, 30, 90, 40, 0}};
-        ArrayList<LatLng> picturePoints = getPhotoPoints(latLngs);
-        ArrayList<LatLng> orderedPoints = optimizePhotoRoute(picturePoints);
 
         if (validateBoundary(points)) {
-            //TODO: put Jordan's code here
 
+            ArrayList<LatLng> picturePoints = getPhotoPoints(latLngs, altitude);
+            ArrayList<LatLng> orderedPoints = optimizePhotoRoute(picturePoints);
 
             LatLng[] route = new LatLng[20];
             return points;
@@ -58,25 +38,23 @@ public class RouteOptimization {
 
 
     private static boolean validateBoundary(LatLng[] points) {
-//        for (LatLng point : points) {
-//            if (LocationHelper.distanceBetween(point, DroneState.getLatLng()) > GroundStation.BOUNDARY_RADIUS) {
-//                return false;
-//            }
-//        }
-        return true;
+        for (LatLng point : points) {
+            if (LocationHelper.distanceBetween(point, DroneState.getLatLng()) > GroundStation.BOUNDARY_RADIUS) {
+                return false;
+            }
+        }
+        return false;
     }
 
 
-    private static ArrayList<LatLng> getPhotoPoints(ArrayList<LatLng> array) {
+    private static ArrayList<LatLng> getPhotoPoints(ArrayList<LatLng> array, float altitude) {
 
-        // height above the ground
-        int height = 4;
 
         //x-distance between image capture points
-        double distX = height * Math.tan(60) * 2;
+        double distX = altitude * Math.tan(Math.toRadians(60)) * 2;
 
         //y-distance between image capture points
-        double distY = height * Math.tan(42.5) * 2;
+        double distY = altitude * Math.tan(Math.toRadians(42.5)) * 2;
 
         int m = array.size();
 
@@ -96,12 +74,12 @@ public class RouteOptimization {
         double maxLong = 0;
         for (int i = 0; i < m; i++) {
             xi = array.get(i).latitude;
-            if (Math.abs(xi) > maxLat) {
+            if (xi > maxLat) {
                 maxLat = xi;
             }
             xv[i] = xi;
             yi = array.get(i).longitude;
-            if (Math.abs(yi) > maxLong) {
+            if (yi > maxLong) {
                 maxLong = yi;
             }
             yv[i] = yi;
@@ -122,7 +100,7 @@ public class RouteOptimization {
         // break counter for upcoming for loop
         double y1 = 0;
         int mFlag = 0;
-        while (polygonContainsPoint(array, x, y)) {
+        while (polygonContainsPoint(xv, yv, x, y)) {
             //last loop break clause
             if (mFlag == 1)
                 mFlag = 2;
@@ -132,12 +110,12 @@ public class RouteOptimization {
                 y1 = y + distY;
                 while (y1 > maxLong) {
                     //iterate down until you are in the polygon
-                    y = y1 - 0.1;
+                    y1 = y1 - 0.1;
                 }
             }
             //general case where the x and y test value is in the polygon
-            while (polygonContainsPoint(array, x, y)) {
-                if (polygonContainsPoint(array, x, y)) {
+            while (polygonContainsPoint(xv, yv, x, y)) {
+                if (polygonContainsPoint(xv, yv, x, y)) {
                     GPS.add(new LatLng(x, y));
                 }
                 x = x + distX;
@@ -148,8 +126,8 @@ public class RouteOptimization {
 
             //case where you reach the far right-most point, iterate back until
             //you are in region
-            if (!polygonContainsPoint(array, x, y)) {
-                while (!polygonContainsPoint(array, x, y)) {
+            if (!polygonContainsPoint(xv, yv, x, y)) {
+                while (!polygonContainsPoint(xv, yv, x, y)) {
                     x = x - 0.1;
                 }
                 GPS.add(new LatLng(x, y));
@@ -159,11 +137,14 @@ public class RouteOptimization {
             y = y + distY;
 
             //iterate left until you find the left-most edge of the space
-            if (polygonContainsPoint(array, x, y)) {
-                while (polygonContainsPoint(array, x, y)) {
+            if (polygonContainsPoint(xv, yv, x, y)) {
+                while (polygonContainsPoint(xv, yv, x, y)) {
                     if (y > maxLong) {
                         y = y1;
                         mFlag = 1;
+                        if (!polygonContainsPoint(xv, yv, x, y)) {
+                            break;
+                        }
                     }
                     x = x - 0.1;
                 }
@@ -171,11 +152,14 @@ public class RouteOptimization {
 
             //if you iterate up, and it's outside the area, iterate right until
             //you find inside the polygon
-            if (!polygonContainsPoint(array, x, y)) {
-                while (polygonContainsPoint(array, x, y)) {
+            if (!polygonContainsPoint(xv, yv, x, y)) {
+                while (!polygonContainsPoint(xv, yv, x, y)) {
                     if (y > maxLong) {
                         y = y1;
                         mFlag = 1;
+                        if (polygonContainsPoint(xv, yv, x, y)) {
+                            break;
+                        }
                     }
                     x = x + 0.1;
                 }
@@ -202,34 +186,13 @@ public class RouteOptimization {
     }
 
 
-    /**
-     * Determine if our polygon contains the point at hand.
-     *
-     * @param points Vertices of our polygon
-     * @param x      x value
-     * @param y      y value
-     * @return boolean whether or not in polygon
-     */
-    public static boolean polygonContainsPoint(ArrayList<LatLng> points, double x, double y) {
-        int i;
-        int j;
-        boolean result = false;
-        for (i = 0, j = points.size() - 1; i < points.size(); j = i++) {
-            if ((points.get(i).latitude > y) != (points.get(j).latitude > y) &&
-                    (x < (points.get(j).longitude - points.get(i).longitude) * (y - points.get(i).latitude) / (points.get(j).latitude - points.get(i).latitude) + points.get(i).longitude)) {
-                result = !result;
-            }
-        }
-        return result;
-    }
-
-    static boolean pnpoly(double[] vertx, double[] verty, double testx, double testy) {
-        int nvert = vertx.length;
+    static boolean polygonContainsPoint(double[] xv, double[] yv, double x, double y) {
+        int rows = xv.length;
         int i, j;
         boolean c = false;
-        for (i = 0, j = nvert - 1; i < nvert; j = i++) {
-            if (((verty[i] > testy) != (verty[j] > testy)) &&
-                    (testx < (vertx[j] - vertx[i]) * (testy - verty[i]) / (verty[j] - verty[i]) + vertx[i]))
+        for (i = 0, j = rows - 1; i < rows; j = i++) {
+            if (((yv[i] > y) != (yv[j] > y)) &&
+                    (x < (xv[j] - xv[i]) * (y - yv[i]) / (yv[j] - yv[i]) + xv[i]))
                 c = !c;
         }
         return c;
