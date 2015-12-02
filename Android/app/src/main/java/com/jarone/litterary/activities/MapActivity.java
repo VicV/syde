@@ -269,7 +269,6 @@ public class MapActivity extends FragmentActivity implements OnMapReadyCallback 
                     //Add our new point!
                     polyPoints.add(marker.getPosition());
                     currentPolygon = map.addPolygon(new PolygonOptions().strokeWidth(2).fillColor(Color.parseColor("#50FF0000")).addAll(polyPoints));
-
                 } else {
                     if (lastPosition != null) {
                         marker.setPosition(lastPosition);

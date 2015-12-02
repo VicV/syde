@@ -4,6 +4,10 @@ import com.google.android.gms.maps.model.LatLng;
 import com.jarone.litterary.handlers.MessageHandler;
 import com.jarone.litterary.helpers.LocationHelper;
 
+import org.opencv.core.MatOfKeyPoint;
+import org.opencv.core.MatOfPoint2f;
+import org.opencv.features2d.KeyPoint;
+
 import java.util.ArrayList;
 import java.util.Arrays;
 
@@ -16,6 +20,7 @@ public class RouteOptimization {
 
     public static LatLng[] createOptimizedSurveyRoute(LatLng[] points, float altitude) {
 
+
         ArrayList<LatLng> latLngs = new ArrayList<>();
 
         if (points != null && points.length > 0) {
@@ -24,6 +29,7 @@ public class RouteOptimization {
 
 
         if (validateBoundary(points)) {
+
 
             ArrayList<LatLng> picturePoints = getPhotoPoints(latLngs, altitude);
             ArrayList<LatLng> orderedPoints = optimizePhotoRoute(picturePoints);
@@ -47,21 +53,26 @@ public class RouteOptimization {
     }
 
 
-    private static ArrayList<LatLng> getPhotoPoints(ArrayList<LatLng> array, float altitude) {
+    private static ArrayList<LatLng> getPhotoPoints(ArrayList<LatLng> originalArray, float altitude) {
+        Polygon.Builder builder = new Polygon.Builder();
+        ArrayList<Point> points = new ArrayList();
 
-        double stepSize = 0.00001;
+        boolean longNeg;
+        boolean latNeg;
+
+        double stepSize = 0.0001;
 
         if (altitude == -1) {
             altitude = 4;
         }
 
         //x-distance between image capture points
-        double distX = (altitude * Math.tan(Math.toRadians(60)) * 2) / 100000;
+        double distX = (altitude * Math.tan(Math.toRadians(60)) * 2) / 10000;
 
         //y-distance between image capture points
-        double distY = (altitude * Math.tan(Math.toRadians(42.5)) * 2) / 100000;
+        double distY = (altitude * Math.tan(Math.toRadians(42.5)) * 2) / 10000;
 
-        int m = array.size();
+        int m = originalArray.size();
 
         //array for edge of polygon initialized
         double[] xv = new double[m + 1];
@@ -75,37 +86,64 @@ public class RouteOptimization {
         ArrayList<LatLng> GPS = new ArrayList<>();
 
         // inputting all the vertices of polygon P4 to the xv and yv array
-        double maxLat = 0;
-        double maxLong = 0;
+        double maxLat = Double.NEGATIVE_INFINITY;
+        double maxLong = Double.NEGATIVE_INFINITY;
+        double minLat = Double.POSITIVE_INFINITY;
+        double minLong = Double.POSITIVE_INFINITY;
         for (int i = 0; i < m; i++) {
-            xi = array.get(i).latitude;
-            if (Math.abs(xi) > Math.abs(maxLat)) {
+            xi = originalArray.get(i).latitude;
+
+            if (xi > maxLat) {
                 maxLat = xi;
             }
+            if (xi < minLat) {
+                minLat = xi;
+            }
             xv[i] = xi;
-            yi = array.get(i).longitude;
-            if (Math.abs(yi) > Math.abs(maxLong)) {
+            yi = originalArray.get(i).longitude;
+            if (yi > maxLong) {
                 maxLong = yi;
+            }
+            if (yi < minLong) {
+                minLong = yi;
             }
             yv[i] = yi;
         }
 
+        longNeg = minLong < 0;
+        latNeg = minLat < 0;
+
+        maxLat = latNeg ? maxLat + (-minLat) : maxLat;
+        maxLong = longNeg ? maxLong + (-minLong) : maxLong;
+
+
         //close off xv with repeat of first point
-        xv[m] = array.get(0).latitude;
+        xv[m] = originalArray.get(0).latitude;
 
         //close off yv with repeat of first point
-        yv[m] = array.get(0).longitude;
+        yv[m] = originalArray.get(0).longitude;
 
-        double x = array.get(0).latitude;
 
-        double y = array.get(0).longitude;
+        for (LatLng pt : originalArray) {
+            Point p = new Point((latNeg ? pt.latitude + (-minLat) : pt.latitude), (longNeg ? pt.longitude + (-minLong) : pt.longitude));
+            points.add(p);
+            builder.addVertex(p);
+        }
 
-        GPS.add(new LatLng(x, y));
+
+        Polygon polygon = builder.close().build();
+
+        double x = points.get(0).x;
+
+        double y = points.get(0).y;
+
+        GPS.add(new LatLng(latNeg ? x + minLat : x, longNeg ? y + minLong : y));
 
         // break counter for upcoming for loop
         double y1 = 0;
+        int count = 0;
         int mFlag = 0;
-        while (polygonContainsPoint(xv, yv, x, y)) {
+        while (polygon.contains(new Point(x, y))) {
             //last loop break clause
             if (mFlag == 1)
                 mFlag = 2;
@@ -119,9 +157,9 @@ public class RouteOptimization {
                 }
             }
             //general case where the x and y test value is in the polygon
-            while (polygonContainsPoint(xv, yv, x, y)) {
-                if (polygonContainsPoint(xv, yv, x, y)) {
-                    GPS.add(new LatLng(x, y));
+            while (polygon.contains(new Point(x, y))) {
+                if (polygon.contains(new Point(x, y))) {
+                    GPS.add(new LatLng(latNeg ? x + minLat : x, longNeg ? y + minLong : y));
                 }
                 x = x + distX;
             }
@@ -131,23 +169,23 @@ public class RouteOptimization {
 
             //case where you reach the far right-most point, iterate back until
             //you are in region
-            if (!polygonContainsPoint(xv, yv, x, y)) {
-                while (!polygonContainsPoint(xv, yv, x, y)) {
+            if (!polygon.contains(new Point(x, y))) {
+                while (!polygon.contains(new Point(x, y))) {
                     x = x - stepSize;
                 }
-                GPS.add(new LatLng(x, y));
+                GPS.add(new LatLng(latNeg ? x + minLat : x, longNeg ? y + minLong : y));
             }
             //iterate upwards to the next row of points
-            x = array.get(1).latitude;
+            x = points.get(0).x;
             y = y + distY;
 
             //iterate left until you find the left-most edge of the space
-            if (polygonContainsPoint(xv, yv, x, y)) {
-                while (polygonContainsPoint(xv, yv, x, y)) {
+            if (polygon.contains(new Point(x, y))) {
+                while (polygon.contains(new Point(x, y))) {
                     if (y > maxLong) {
                         y = y1;
                         mFlag = 1;
-                        if (!polygonContainsPoint(xv, yv, x, y)) {
+                        if (!polygon.contains(new Point(x, y))) {
                             break;
                         }
                     }
@@ -157,12 +195,12 @@ public class RouteOptimization {
 
             //if you iterate up, and it's outside the area, iterate right until
             //you find inside the polygon
-            if (!polygonContainsPoint(xv, yv, x, y)) {
-                while (!polygonContainsPoint(xv, yv, x, y)) {
+            if (!polygon.contains(new Point(x, y))) {
+                while (!polygon.contains(new Point(x, y))) {
                     if (y > maxLong) {
                         y = y1;
                         mFlag = 1;
-                        if (polygonContainsPoint(xv, yv, x, y)) {
+                        if (polygon.contains(new Point(x, y))) {
                             break;
                         }
                     }
@@ -191,15 +229,21 @@ public class RouteOptimization {
     }
 
 
-    static boolean polygonContainsPoint(double[] xv, double[] yv, double x, double y) {
+    static boolean polygonContainsPointx(double[] xv, double[] yv, double x, double y) {
         int rows = xv.length;
         int i, j;
         boolean c = false;
         for (i = 0, j = rows - 1; i < rows; j = i++) {
             if (((yv[i] > y) != (yv[j] > y)) &&
-                    (x < (xv[j] - xv[i]) * (y - yv[i]) / (yv[j] - yv[i]) + xv[i]))
+                    (x <= (xv[j] - xv[i]) * (y - yv[i]) / (yv[j] - yv[i]) + xv[i]))
                 c = !c;
         }
         return c;
     }
+
+    public static boolean polygonContainsPoint(double[] xvv, double[] yvv, double xx, double yy) {
+//        Polygon polygon = Polygon.Builder().
+        return true;
+    }
+
 }
