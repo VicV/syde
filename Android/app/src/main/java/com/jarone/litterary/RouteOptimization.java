@@ -1,6 +1,7 @@
 package com.jarone.litterary;
 
 import com.google.android.gms.maps.model.LatLng;
+import com.google.android.gms.maps.model.LatLngBounds;
 import com.jarone.litterary.handlers.MessageHandler;
 import com.jarone.litterary.helpers.LocationHelper;
 
@@ -18,6 +19,7 @@ public class RouteOptimization {
 
 
         ArrayList<LatLng> latLngs = new ArrayList<>();
+
 
         if (points != null && points.length > 0) {
             latLngs = new ArrayList<>(Arrays.asList(points));
@@ -51,24 +53,26 @@ public class RouteOptimization {
 
     private static ArrayList<LatLng> getPhotoPoints(ArrayList<LatLng> originalArray, float altitude) {
         Polygon.Builder builder = new Polygon.Builder();
-        ArrayList<Point> points = new ArrayList();
+        ArrayList<LatLng> points = new ArrayList();
+        ArrayList<LatLng> polyPoints = new ArrayList();
+
 
         //Whether or not the latitude/longitude are negative
         boolean longNeg;
         boolean latNeg;
 
         //Current step size. At 0.0001 we'll get around 15 points. Right now we get about 250.
-        double stepSize = 0.00005;
+        double stepSize = .000005;
 
         if (altitude == -1) {
             altitude = 4;
         }
 
         //x-distance between image capture points
-        double distX = (altitude * Math.tan(Math.toRadians(60)) * 2) / 100000;
+        double distX = (altitude * Math.tan(Math.toRadians(60)) * 2) / 200000;
 
         //y-distance between image capture points
-        double distY = (altitude * Math.tan(Math.toRadians(42.5)) * 2) / 100000;
+        double distY = (altitude * Math.tan(Math.toRadians(42.5)) * 2) / 200000;
 
         //Number of rows.
         int m = originalArray.size();
@@ -86,7 +90,6 @@ public class RouteOptimization {
         for (int i = 0; i < m; i++) {
             xi = originalArray.get(i).latitude;
             yi = originalArray.get(i).longitude;
-
 
             if (xi > maxLat) {
                 maxLat = xi;
@@ -109,22 +112,26 @@ public class RouteOptimization {
         maxLat = latNeg ? maxLat + (-minLat) : maxLat;
         maxLong = longNeg ? maxLong + (-minLong) : maxLong;
 
+        LatLngBounds.Builder latBuilder = new LatLngBounds.Builder();
 
         //Copy original array into a new array of Points. If the latitude or longitude were negative, add the inverse of
         // the min of them to each point so we start at 0.0;
         for (LatLng pt : originalArray) {
-            Point p = new Point((latNeg ? pt.latitude + (-minLat) : pt.latitude), (longNeg ? pt.longitude + (-minLong) : pt.longitude));
+            LatLng p = new LatLng((latNeg ? pt.latitude + (-minLat) : pt.latitude), (longNeg ? pt.longitude + (-minLong) : pt.longitude));
             points.add(p);
-            builder.addVertex(p);
+            builder.addVertex(new Point(p.latitude, p.longitude));
+            latBuilder.include(p);
         }
+
+        LatLngBounds bounds = latBuilder.build();
 
         //Create our polygon.
         Polygon polygon = builder.close().build();
 
 
         //Start at the first point.
-        double x = points.get(0).x;
-        double y = points.get(0).y;
+        double x = points.get(originalArray.size() - 1).latitude;
+        double y = points.get(originalArray.size() - 1).longitude;
 
         //Add a new point to our final array. If it WAS negative, we now subtract that minimum value because
         // We would have added it previously.
@@ -133,7 +140,7 @@ public class RouteOptimization {
         // break counter for upcoming for loop
         double y1 = 0;
         int mFlag = 0;
-        while (polygon.contains(new Point(x, y))) {
+        while (bounds.contains(new LatLng(x, y))) {
             //last loop break clause
             if (mFlag == 1)
                 mFlag = 2;
@@ -147,8 +154,8 @@ public class RouteOptimization {
                 }
             }
             //general case where the x and y test value is in the polygon
-            while (polygon.contains(new Point(x, y))) {
-                if (polygon.contains(new Point(x, y))) {
+            while (bounds.contains(new LatLng(x, y))) {
+                if (bounds.contains(new LatLng(x, y))) {
                     GPS.add(new LatLng(latNeg ? x + minLat : x, longNeg ? y + minLong : y));
                 }
                 x = x + distX;
@@ -159,24 +166,28 @@ public class RouteOptimization {
 
             //case where you reach the far right-most point, iterate back until
             //you are in region
-            if (!polygon.contains(new Point(x, y))) {
-                while (!polygon.contains(new Point(x, y))) {
+            if (!bounds.contains(new LatLng(x, y))) {
+                while (!bounds.contains(new LatLng(x, y))) {
                     x = x - stepSize;
+                    if (x < minLat) {
+                        x = points.get(points.size() - 1).latitude;
+                        break;
+                    }
                 }
                 GPS.add(new LatLng(latNeg ? x + minLat : x, longNeg ? y + minLong : y));
             }
 
             //iterate upwards to the next row of points
-            x = points.get(0).x;
+            x = points.get(points.size() - 1).latitude;
             y = y + distY;
 
             //iterate left until you find the left-most edge of the space
-            if (polygon.contains(new Point(x, y))) {
-                while (polygon.contains(new Point(x, y))) {
+            if (bounds.contains(new LatLng(x, y))) {
+                while (bounds.contains(new LatLng(x, y))) {
                     if (y > maxLong) {
                         y = y1;
                         mFlag = 1;
-                        if (!polygon.contains(new Point(x, y))) {
+                        if (!bounds.contains(new LatLng(x, y))) {
                             break;
                         }
                     }
@@ -186,17 +197,24 @@ public class RouteOptimization {
 
             //if you iterate up, and it's outside the area, iterate right until
             //you find inside the polygon
-            if (!polygon.contains(new Point(x, y))) {
-                while (!polygon.contains(new Point(x, y))) {
+            if (!bounds.contains(new LatLng(x, y))) {
+                while (!bounds.contains(new LatLng(x, y))) {
                     if (y > maxLong) {
                         y = y1;
                         mFlag = 1;
-                        if (polygon.contains(new Point(x, y))) {
+                        if (bounds.contains(new LatLng(x, y))) {
                             break;
                         }
                     }
                     x = x + stepSize;
+
                 }
+            }
+        }
+        ArrayList<LatLng> GPSCopy = new ArrayList<>(GPS);
+        for (LatLng latLng : GPSCopy) {
+            if (!polygon.contains(new Point((latNeg ? latLng.latitude + (-minLat) : latLng.latitude), (longNeg ? latLng.longitude + (-minLong) : latLng.longitude)))) {
+                GPS.remove(latLng);
             }
         }
 

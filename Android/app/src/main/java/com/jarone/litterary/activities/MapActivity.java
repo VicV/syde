@@ -190,7 +190,7 @@ public class MapActivity extends FragmentActivity implements OnMapReadyCallback 
 
         if (photoPoints != null && photoPoints.size() > 1) {
             for (LatLng latLng : photoPoints) {
-                photoMarkers.add(droneMap.addMarker(new MarkerOptions().position(latLng).draggable(false)));
+                photoMarkers.add(droneMap.addMarker(new MarkerOptions().position(latLng).draggable(false).icon(BitmapDescriptorFactory.fromAsset("red-star.png")).anchor(0.1f, 0.1f)));
             }
         }
 

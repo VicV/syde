@@ -65,10 +65,6 @@ public class MainActivity extends DJIBaseActivity {
 
         DroneState.registerConnectedTimer();
         GroundStation.registerPhantom2Callback();
-
-        SystemProperties.set("java.version", "1.7.0_79");
-        System.setProperty("java.version", "1.7.0_79");
-        Toast.makeText(this, "I EXIST. SYSTEM PROPERTY IS: " + System.getProperty("java.version"), Toast.LENGTH_LONG).show();
     }
 
     private void registerUpdateInterface() {
