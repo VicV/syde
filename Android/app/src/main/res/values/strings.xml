@@ -1,10 +1,10 @@
 <resources>
-    <string name="app_name">Jarone Test</string>
+    <string name="app_name">Litterary</string>
     <string name="hello_world">Hello world!</string>
-    <string name="action_settings">Settings</string>
-    <string name="title_activity_djiaoa">DJIAoaActivity</string>
-    <string name="title_activity_djiconnection_manager">DJIConnectionManager</string>
+    <string name="action_settings">Litterary</string>
+    <string name="title_activity_djiaoa">Litterary</string>
+    <string name="title_activity_djiconnection_manager">Litterary</string>
 
-<!-- TODO: Remove or change this placeholder text -->
-    <string name="hello_blank_fragment">Hello blank fragment</string>
+    <!-- TODO: Remove or change this placeholder text -->
+    <string name="hello_blank_fragment">Litterary</string>
 </resources>

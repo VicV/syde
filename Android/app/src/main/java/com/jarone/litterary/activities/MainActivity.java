@@ -155,7 +155,7 @@ public class MainActivity extends DJIBaseActivity {
         return new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                LatLng[] points = GroundStation.initializeSurveyRoute(currentPolygon, getAltitudeValue());
+                LatLng[] points = GroundStation.startSurveyRoute();
                 if (points != null && points.length > 2) {
                     currentPhotoPoints = new ArrayList<>(Arrays.asList(points));
                     currentPhotoPoints.size();
