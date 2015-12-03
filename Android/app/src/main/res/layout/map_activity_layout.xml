@@ -65,7 +65,7 @@
             android:gravity="center"
             android:paddingLeft="5dp"
             android:paddingRight="5dp"
-            android:text="Show Path"
+            android:text="Only Path"
             android:visibility="gone" />
 
         <android.widget.Space

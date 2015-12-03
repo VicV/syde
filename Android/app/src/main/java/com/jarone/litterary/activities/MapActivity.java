@@ -6,6 +6,7 @@ import android.os.Bundle;
 import android.os.Parcelable;
 import android.support.v4.app.FragmentActivity;
 import android.view.View;
+import android.widget.TextView;
 
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
@@ -135,24 +136,54 @@ public class MapActivity extends FragmentActivity implements OnMapReadyCallback 
         findViewById(R.id.button_reset).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                currentPolygon.remove();
-                for (Marker m : markers) {
-                    m.remove();
-                }
-                for (Marker m : photoMarkers) {
-                    m.remove();
-                }
-                photoMarkers.clear();
-                photoPoints.clear();
-                markers.clear();
-                polyPoints.clear();
+
+                droneMap.clear();
+
+                droneMap.addCircle(new CircleOptions()
+                        .center(boundaryCenter)
+                        .radius(GroundStation.BOUNDARY_RADIUS)
+                        .fillColor(BOUNDARY_COLOUR)
+                        .strokeWidth(2)
+                );
+
+                droneMap.addMarker(new MarkerOptions()
+                        .position(boundaryCenter)
+                        .icon(BitmapDescriptorFactory.fromAsset("drone.png"))
+                        .anchor(0.5f, 0.5f)
+                );
 
                 if (routeLine != null) {
                     routeLine.remove();
                 }
 
+                currentPolygon.remove();
+
+
+                if (markers != null) {
+                    markers.clear();
+                }
+                for (Marker m : markers) {
+                    m.remove();
+                }
+                if (photoMarkers != null) {
+                    for (Marker m : photoMarkers) {
+                        m.remove();
+                    }
+                    photoMarkers.clear();
+                }
+
+                if (photoPoints != null) {
+                    photoPoints.clear();
+                }
+
+                if (polyPoints != null) {
+                    polyPoints.clear();
+                }
+
                 findViewById(R.id.button_undo).setVisibility(View.VISIBLE);
                 findViewById(R.id.button_set).setVisibility(View.VISIBLE);
+                findViewById(R.id.button_path).setVisibility(View.GONE);
+
                 resetMode = false;
             }
         });
@@ -168,6 +199,7 @@ public class MapActivity extends FragmentActivity implements OnMapReadyCallback 
                     for (Marker m : photoMarkers) {
                         m.remove();
                     }
+                    ((TextView) findViewById(R.id.button_path)).setText("All Markers");
                     onlyPath = true;
                 } else {
                     if (polyPoints != null && polyPoints.size() > 0) {
@@ -189,6 +221,7 @@ public class MapActivity extends FragmentActivity implements OnMapReadyCallback 
                         }
                     }
                     onlyPath = false;
+                    ((TextView) findViewById(R.id.button_path)).setText("Only Path");
                 }
             }
         });
