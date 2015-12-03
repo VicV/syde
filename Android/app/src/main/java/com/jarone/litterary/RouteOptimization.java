@@ -1,9 +1,10 @@
 package com.jarone.litterary;
 
 import com.google.android.gms.maps.model.LatLng;
-import com.google.android.gms.maps.model.LatLngBounds;
 import com.jarone.litterary.handlers.MessageHandler;
 import com.jarone.litterary.helpers.LocationHelper;
+import com.jarone.litterary.optimization.Point;
+import com.jarone.litterary.optimization.Polygon;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -54,7 +55,7 @@ public class RouteOptimization {
     private static ArrayList<LatLng> getPhotoPoints(ArrayList<LatLng> originalArray, float altitude) {
         Polygon.Builder builder = new Polygon.Builder();
 //        ArrayList<LatLng> points = new ArrayList();
-        ArrayList<Point> polyPoints = new ArrayList();
+        ArrayList<Point> polyPoints = new ArrayList<>();
 
 
         //Whether or not the latitude/longitude are negative
@@ -113,7 +114,7 @@ public class RouteOptimization {
         longNeg = minLong < 0;
         latNeg = minLat < 0;
 
-        maxLat = latNeg ? maxLat + (-minLat) : maxLat;
+//        maxLat = latNeg ? maxLat + (-minLat) : maxLat;
         maxLong = longNeg ? maxLong + (-minLong) : maxLong;
 
 

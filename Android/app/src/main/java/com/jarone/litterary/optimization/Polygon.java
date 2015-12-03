@@ -1,4 +1,4 @@
-package com.jarone.litterary;
+package com.jarone.litterary.optimization;
 
 import java.util.ArrayList;
 import java.util.List;

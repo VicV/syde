@@ -1,4 +1,4 @@
-package com.jarone.litterary;
+package com.jarone.litterary.optimization;
 
 /**
  * Point on 2D landscape

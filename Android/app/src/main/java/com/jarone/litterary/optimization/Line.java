@@ -1,4 +1,4 @@
-package com.jarone.litterary;
+package com.jarone.litterary.optimization;
 
 /**
  * Line is defined by starting point and ending point on 2D dimension.<br>
