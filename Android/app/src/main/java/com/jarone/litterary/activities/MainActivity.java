@@ -5,6 +5,7 @@ import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.Paint;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Parcelable;
 import android.util.Log;
@@ -24,6 +25,9 @@ import com.jarone.litterary.drone.GroundStation;
 import com.jarone.litterary.handlers.MessageHandler;
 import com.jarone.litterary.helpers.ContextManager;
 import com.jarone.litterary.helpers.LocationHelper;
+
+import org.json.JSONArray;
+import org.json.JSONObject;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -47,12 +51,6 @@ public class MainActivity extends DJIBaseActivity {
     private static final String TAG = MainActivity.class.toString();
 
     private Context mainActivity;
-
-    public int getIterations() {
-        return iterations;
-    }
-
-    private int iterations = 100;
 
     private ScheduledExecutorService taskScheduler;
 
@@ -213,28 +211,9 @@ public class MainActivity extends DJIBaseActivity {
                 findViewById(R.id.button_special1).setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View v) {
-                        ArrayList<LatLng> latLngs = new ArrayList<>();
 
-                        LatLng[] stockArr = new LatLng[latLngs.size()];
-                        stockArr = latLngs.toArray(stockArr);
-
-                        LatLng[] points = GroundStation.initializeSurveyRoute(stockArr, getAltitudeValue());
-
-                        currentPolygon = stockArr;
-                        if (points != null) {
-                            currentPhotoPoints = new ArrayList<>(Arrays.asList(points));
-                        }
-
-                        if (iterations == 100) {
-                            iterations = 300;
-                        } else if (iterations == 300) {
-                            iterations = 500;
-                        } else if (iterations == 500) {
-                            iterations = 700;
-                        } else if (iterations == 700) {
-                            iterations = 900;
-                        }
                     }
+
                 });
             }
         };
@@ -374,12 +353,54 @@ public class MainActivity extends DJIBaseActivity {
                 currentPolygon = parcel;
             }
 
+
+            new DoRouteTask().execute();
+        }
+    }
+
+    public class DoRouteTask extends AsyncTask<Void, Void, Void> {
+
+        @Override
+        protected void onPreExecute() {
+            findViewById(R.id.linearLayout).setVisibility(View.INVISIBLE);
+            findViewById(R.id.loadingLayout).setVisibility(View.VISIBLE);
+            super.onPreExecute();
+        }
+
+        @Override
+        protected Void doInBackground(Void... params) {
+
+
             LatLng[] points = GroundStation.initializeSurveyRoute(currentPolygon, getAltitudeValue());
+
             if (points != null) {
                 currentPhotoPoints = new ArrayList<>(Arrays.asList(points));
                 currentPhotoPoints.size();
             }
+
+            routeComplete();
+
+            return null;
         }
+
+        @Override
+        protected void onPostExecute(Void aVoid) {
+            final TextView loadingText = ((TextView) findViewById(R.id.loading));
+            loadingText.setText("DONE!");
+            loadingText.postDelayed(new Runnable() {
+                @Override
+                public void run() {
+                    loadingText.setText("Creating Optimized Photo Route");
+                    findViewById(R.id.linearLayout).setVisibility(View.VISIBLE);
+                    findViewById(R.id.loadingLayout).setVisibility(View.INVISIBLE);
+                }
+            }, 500);
+            super.onPostExecute(aVoid);
+        }
+    }
+
+    public void routeComplete() {
+
     }
 
     private void updateInterface() {
@@ -400,8 +421,8 @@ public class MainActivity extends DJIBaseActivity {
                 ((TextView) findViewById(R.id.targetLocation)).setText(
                         LocationHelper.formatForDisplay(
                                 GroundStation.getCurrentTarget().latitude,
-                                GroundStation.getCurrentTarget().longitude
-                        )
+                                GroundStation.getCurrentTarget().longitude)
+
                 );
                 ((TextView) findViewById(R.id.droneConnected)).setText("" + DroneState.droneConnected);
                 if (GroundStation.executingController()) {
@@ -421,4 +442,6 @@ public class MainActivity extends DJIBaseActivity {
             infoLayout.setVisibility(View.INVISIBLE);
         }
     }
+
+
 }

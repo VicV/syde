@@ -77,6 +77,8 @@ public class MapActivity extends FragmentActivity implements OnMapReadyCallback 
 
     private boolean resetMode = false;
 
+    private boolean onlyPath = false;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -98,6 +100,7 @@ public class MapActivity extends FragmentActivity implements OnMapReadyCallback 
                 if (photoPoints != null && photoPoints.size() > 1) {
                     findViewById(R.id.button_undo).setVisibility(View.GONE);
                     findViewById(R.id.button_set).setVisibility(View.GONE);
+                    findViewById(R.id.button_path).setVisibility(View.VISIBLE);
                     resetMode = true;
                 }
             }
@@ -143,9 +146,50 @@ public class MapActivity extends FragmentActivity implements OnMapReadyCallback 
                 photoPoints.clear();
                 markers.clear();
                 polyPoints.clear();
+
+                if (routeLine != null) {
+                    routeLine.remove();
+                }
+
                 findViewById(R.id.button_undo).setVisibility(View.VISIBLE);
                 findViewById(R.id.button_set).setVisibility(View.VISIBLE);
                 resetMode = false;
+            }
+        });
+
+        findViewById(R.id.button_path).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if (!onlyPath) {
+                    currentPolygon.remove();
+                    for (Marker m : markers) {
+                        m.remove();
+                    }
+                    for (Marker m : photoMarkers) {
+                        m.remove();
+                    }
+                    onlyPath = true;
+                } else {
+                    if (polyPoints != null && polyPoints.size() > 0) {
+                        currentPolygon = droneMap.addPolygon(new PolygonOptions().strokeWidth(2).fillColor(Color.parseColor("#50FF0000")).addAll(polyPoints));
+                    }
+
+                    if (polyPoints != null) {
+                        for (LatLng latLng : polyPoints) {
+                            markers.add(droneMap.addMarker(new MarkerOptions().position(latLng).draggable(true)));
+                        }
+                    }
+
+                    if (photoPoints != null && photoPoints.size() > 1) {
+                        for (LatLng latLng : photoPoints) {
+                            photoMarkers.add(droneMap.addMarker(new MarkerOptions().position(latLng).draggable(false).icon(BitmapDescriptorFactory.fromAsset("red-star.png")).anchor(0.1f, 0.1f)));
+                            routeLine = droneMap.addPolyline(new PolylineOptions().addAll(photoPoints)
+                                    .width(2)
+                                    .color(Color.RED));
+                        }
+                    }
+                    onlyPath = false;
+                }
             }
         });
     }

@@ -30,6 +30,7 @@
             android:layout_marginRight="5dp"
             android:text="Long press map to define region."
             android:textColor="#ebebeb" />
+
         <android.widget.Space
             android:layout_width="0dp"
             android:layout_height="0dp"
@@ -49,27 +50,37 @@
 
         <Button
             android:id="@+id/button_undo"
-            android:visibility="visible"
             android:layout_width="wrap_content"
             android:layout_height="30dp"
             android:background="#ebebeb"
-            android:text="Undo" />
+            android:text="Undo"
+            android:visibility="visible" />
+
+        <Button
+            android:id="@+id/button_path"
+            android:layout_width="wrap_content"
+            android:layout_height="30dp"
+            android:layout_gravity="center"
+            android:background="#ebebeb"
+            android:gravity="center"
+            android:paddingLeft="5dp"
+            android:paddingRight="5dp"
+            android:text="Show Path"
+            android:visibility="gone" />
 
         <android.widget.Space
             android:layout_width="0dp"
             android:layout_height="0dp"
             android:layout_weight="1" />
 
-
         <Button
             android:id="@+id/button_set"
             android:layout_width="wrap_content"
-            android:visibility="visible"
-
             android:layout_height="30dp"
             android:layout_marginRight="5dp"
             android:background="#ebebeb"
-            android:text="Set" />
+            android:text="Set"
+            android:visibility="visible" />
 
 
     </LinearLayout>
