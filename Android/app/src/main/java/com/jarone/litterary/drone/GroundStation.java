@@ -1,7 +1,5 @@
 package com.jarone.litterary.drone;
 
-import android.util.Log;
-
 import com.google.android.gms.maps.model.LatLng;
 import com.jarone.litterary.AngularController;
 import com.jarone.litterary.RouteOptimization;
@@ -73,6 +71,12 @@ public class GroundStation {
     public static Runnable taskDoneCallback = null;
 
     /**
+     * Keeps track of whether the drone has begun moving again, thus indicating that a repeat
+     * occurrence of GS_Pause_1 flight mode means it has reached its target
+     */
+    private static boolean canExecuteCallback = false;
+
+    /**
      * Creates a new task, replacing the value of the groundTask variable. Points can be added
      * and then the task uploaded and executed by the drone
      */
@@ -114,7 +118,7 @@ public class GroundStation {
                     } catch (Exception e) {
                         MessageHandler.d("withConnection: " + e.toString());
                     }
-                    MessageHandler.d("withConnection: SUCCESS");
+                   // MessageHandler.d("withConnection: SUCCESS");
                 } else {
                     DroneState.groundStationConnected = false;
                     MessageHandler.d("withConnection: FAILURE");
@@ -307,7 +311,7 @@ public class GroundStation {
      */
     public static void setAngles(final double pitch, final double yaw, final double roll) {
         if (DroneState.getMode() != DroneState.DIRECT_MODE) {
-            MessageHandler.d("Not in Direct Mode!");
+           // MessageHandler.d("Not in Direct Mode!");
             return;
         }
         withConnection(new Runnable() {
@@ -316,7 +320,7 @@ public class GroundStation {
                 DJIDrone.getDjiGroundStation().setAircraftJoystick((int) yaw, (int) pitch, (int) roll, 0, new DJIGroundStationExecuteCallBack() {
                     @Override
                     public void onResult(DJIGroundStationTypeDef.GroundStationResult groundStationResult) {
-                        MessageHandler.d("Engage Joystick: " + groundStationResult.toString());
+                        //MessageHandler.d("Engage Joystick: " + groundStationResult.toString());
                         if (resultSuccess(groundStationResult)) {
                             DroneState.setMode(DroneState.DIRECT_MODE);
                         }
@@ -356,7 +360,11 @@ public class GroundStation {
         if (currentSurveyRoute != null && !currentSurveyRoute.isFinished() && !currentSurveyRoute.isExecuting()) {
             currentSurveyRoute.executeRoute();
         } else {
-            MessageHandler.d("No Survey Route is Ready!");
+            if (currentSurveyRoute != null && currentSurveyRoute.isExecuting()) {
+                MessageHandler.d("Route is already executing!");
+            } else {
+                MessageHandler.d("No Survey Route is Ready!");
+            }
         }
         return currentSurveyRoute.getRoute();
     }
@@ -426,10 +434,15 @@ public class GroundStation {
         DJIDrone.getDjiGroundStation().setGroundStationFlyingInfoCallBack(new DJIGroundStationFlyingInfoCallBack() {
             @Override
             public void onResult(DJIGroundStationFlyingInfo djiGroundStationFlyingInfo) {
-                Log.d("GROUND STATION", djiGroundStationFlyingInfo.flightMode.name());
-                if (taskDoneCallback != null && djiGroundStationFlyingInfo.flightMode == DJIGroundStationTypeDef.GroundStationFlightMode.GS_Mode_Pause_1) {
+                if (taskDoneCallback != null && canExecuteCallback && djiGroundStationFlyingInfo.flightMode == DJIGroundStationTypeDef.GroundStationFlightMode.GS_Mode_Pause_1) {
+                    //Set can execute callback to false to pause the callback chain of survey
+                    //route until drone has started moving again
+                    canExecuteCallback = false;
                     GroundStation.taskDoneCallback.run();
                     taskDoneCallback = null;
+                } else if (djiGroundStationFlyingInfo.flightMode != DJIGroundStationTypeDef.GroundStationFlightMode.GS_Mode_Pause_1) {
+                    //if the drone has started moving, we can unpause the callback chain
+                    canExecuteCallback = true;
                 }
                 DroneState.flightMode = djiGroundStationFlyingInfo.flightMode;
             }

@@ -186,6 +186,56 @@
 
         </LinearLayout>
 
+
+
+        <RelativeLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_alignRight="@+id/linearLayout"
+            android:layout_below="@+id/linearLayout"
+            android:layout_alignParentStart="false"
+            android:layout_alignParentEnd="false"
+            android:layout_alignLeft="@+id/linearLayout">
+
+            <Button
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Status"
+                android:textSize="7pt"
+                android:id="@+id/button_info"
+                android:layout_alignParentEnd="true"
+                />
+
+            <Button
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="PID Demo"
+                android:id="@+id/button_pid"
+                android:layout_alignParentTop="true"
+                android:layout_alignParentStart="true"
+                android:layout_alignParentEnd="false"
+                android:layout_alignParentLeft="false" />
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="400"
+                android:layout_below="@+id/button_pid"
+                android:layout_alignLeft="@+id/button_pid"
+                android:id="@+id/pid_angle"
+                android:textSize="14pt">
+
+            </TextView>
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="10"
+                android:layout_alignLeft="@+id/button_pid"
+                android:id="@+id/pid_error"
+                android:textSize="14pt"
+                android:layout_below="@+id/pid_angle">
+
+            </TextView>
+        </RelativeLayout>
         <LinearLayout
             android:orientation="vertical"
             android:layout_width="match_parent"
@@ -330,57 +380,19 @@
                     android:layout_weight="1" />
             </LinearLayout>
 
+            <Button
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Special 1"
+                android:id="@+id/button_special1" />
+
+            <Button
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Special 2"
+                android:id="@+id/button_special2" />
+
         </LinearLayout>
-
-        <RelativeLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_alignRight="@+id/linearLayout"
-            android:layout_below="@+id/linearLayout"
-            android:layout_alignParentStart="false"
-            android:layout_alignParentEnd="false"
-            android:layout_alignLeft="@+id/linearLayout">
-
-            <Button
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Status"
-                android:textSize="7pt"
-                android:id="@+id/button_info"
-                android:layout_alignParentEnd="true"
-                />
-
-            <Button
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="PID Demo"
-                android:id="@+id/button_pid"
-                android:layout_alignParentTop="true"
-                android:layout_alignParentStart="true"
-                android:layout_alignParentEnd="false"
-                android:layout_alignParentLeft="false" />
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="400"
-                android:layout_below="@+id/button_pid"
-                android:layout_alignLeft="@+id/button_pid"
-                android:id="@+id/pid_angle"
-                android:textSize="14pt">
-
-            </TextView>
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="10"
-                android:layout_alignLeft="@+id/button_pid"
-                android:id="@+id/pid_error"
-                android:textSize="14pt"
-                android:layout_below="@+id/pid_angle">
-
-            </TextView>
-        </RelativeLayout>
-
     </RelativeLayout>
 
 </LinearLayout>

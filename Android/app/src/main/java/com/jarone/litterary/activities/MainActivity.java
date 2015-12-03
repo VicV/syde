@@ -18,6 +18,7 @@ import android.widget.ToggleButton;
 
 import com.google.android.gms.maps.model.LatLng;
 import com.jarone.litterary.R;
+import com.jarone.litterary.drone.Camera;
 import com.jarone.litterary.drone.DroneState;
 import com.jarone.litterary.drone.GroundStation;
 import com.jarone.litterary.SystemProperties;
@@ -220,6 +221,21 @@ public class MainActivity extends DJIBaseActivity {
         };
     }
 
+    public View.OnClickListener getSpecialButtonListener() {
+        return new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                switch (view.getId()) {
+                    case R.id.button_special1:
+                        Camera.takePhoto();
+                        break;
+                    case R.id.button_special2:
+                        break;
+                }
+            }
+        };
+    }
+
     private void registerCamera() {
         mDjiGLSurfaceView = (DjiGLSurfaceView) findViewById(R.id.DjiSurfaceView_02);
         mDjiGLSurfaceView.start();
@@ -251,7 +267,8 @@ public class MainActivity extends DJIBaseActivity {
         findViewById(R.id.button_switch_mode).setOnClickListener(getSwitchModeListener());
         findViewById(R.id.button_info).setOnClickListener(getInfoButtonListener());
         findViewById(R.id.button_pid).setOnClickListener(getPIDButtonListener());
-
+        findViewById(R.id.button_special1).setOnClickListener(getSpecialButtonListener());
+        findViewById(R.id.button_special2).setOnClickListener(getSpecialButtonListener());
     }
 
 

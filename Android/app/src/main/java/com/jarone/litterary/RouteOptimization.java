@@ -8,7 +8,6 @@ import com.jarone.litterary.helpers.LocationHelper;
 import com.jarone.litterary.optimization.Point;
 import com.jarone.litterary.optimization.Polygon;
 
-
 import java.util.ArrayList;
 import java.util.Arrays;
 
@@ -32,6 +31,9 @@ public class RouteOptimization {
 
         if (validateBoundary(points)) {
 
+
+//            INDArray picturePoints = getPhotoPoints(array);
+          //  INDArray orderedPoints = optimizePhotoRoute(picturePoints);
 
             ArrayList<LatLng> picturePoints = getPhotoPoints(latLngs, altitude);
 //            ArrayList<LatLng> orderedPoints = optimizePhotoRoute(picturePoints);
@@ -231,5 +233,4 @@ public class RouteOptimization {
 
         return GPS;
     }
-
 }
