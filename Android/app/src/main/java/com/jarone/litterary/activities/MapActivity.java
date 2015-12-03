@@ -20,6 +20,9 @@ import com.google.android.gms.maps.model.Polygon;
 import com.google.android.gms.maps.model.PolygonOptions;
 import com.jarone.litterary.drone.DroneState;
 import com.jarone.litterary.drone.GroundStation;
+import com.google.android.gms.maps.model.Polyline;
+import com.google.android.gms.maps.model.PolylineOptions;
+
 import com.jarone.litterary.R;
 import com.jarone.litterary.handlers.MessageHandler;
 import com.jarone.litterary.helpers.ContextManager;
@@ -46,6 +49,8 @@ public class MapActivity extends FragmentActivity implements OnMapReadyCallback 
      * The polygon area
      **/
     private Polygon currentPolygon;
+
+    private Polyline routeLine;
 
     /**
      * A list of all the lat long points that are the verticies of the polygon
@@ -166,12 +171,14 @@ public class MapActivity extends FragmentActivity implements OnMapReadyCallback 
         } else {
             boundaryCenter = defaultLocation;
         }
+
         droneMap.addCircle(new CircleOptions()
                 .center(boundaryCenter)
                 .radius(GroundStation.BOUNDARY_RADIUS)
                 .fillColor(BOUNDARY_COLOUR)
                 .strokeWidth(2)
         );
+
         droneMap.addMarker(new MarkerOptions()
                 .position(boundaryCenter)
                 .icon(BitmapDescriptorFactory.fromAsset("drone.png"))
@@ -191,6 +198,9 @@ public class MapActivity extends FragmentActivity implements OnMapReadyCallback 
         if (photoPoints != null && photoPoints.size() > 1) {
             for (LatLng latLng : photoPoints) {
                 photoMarkers.add(droneMap.addMarker(new MarkerOptions().position(latLng).draggable(false).icon(BitmapDescriptorFactory.fromAsset("red-star.png")).anchor(0.1f, 0.1f)));
+                routeLine = map.addPolyline(new PolylineOptions().addAll(photoPoints)
+                        .width(2)
+                        .color(Color.RED));
             }
         }
 

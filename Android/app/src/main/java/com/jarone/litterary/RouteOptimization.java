@@ -5,8 +5,13 @@ import com.jarone.litterary.drone.DroneState;
 import com.jarone.litterary.drone.GroundStation;
 import com.jarone.litterary.handlers.MessageHandler;
 import com.jarone.litterary.helpers.LocationHelper;
+import com.jarone.litterary.optimization.GA;
+import com.jarone.litterary.optimization.PhotoPoint;
 import com.jarone.litterary.optimization.Point;
 import com.jarone.litterary.optimization.Polygon;
+import com.jarone.litterary.optimization.Population;
+import com.jarone.litterary.optimization.Route;
+import com.jarone.litterary.optimization.RouteManager;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -36,9 +41,11 @@ public class RouteOptimization {
           //  INDArray orderedPoints = optimizePhotoRoute(picturePoints);
 
             ArrayList<LatLng> picturePoints = getPhotoPoints(latLngs, altitude);
-//            ArrayList<LatLng> orderedPoints = optimizePhotoRoute(picturePoints);
 
-            Object[] route = picturePoints.toArray();
+            ArrayList<LatLng> orderedPoints = optimizePhotoRoute(picturePoints);
+
+            Object[] route = orderedPoints.toArray();
+
             return (Arrays.copyOf(route, route.length, LatLng[].class));
         } else {
             MessageHandler.d("Boundary Points Are Too Far From Drone!");
@@ -164,7 +171,6 @@ public class RouteOptimization {
                     GPS.add(new LatLng(latNeg ? x + minLat : x, longNeg ? y + minLong : y));
                 }
 
-                MessageHandler.d("INCREASING X BY STEP SIZE FIRST");
                 x = x + distX;
             }
             //the out clause for the last case
@@ -204,7 +210,6 @@ public class RouteOptimization {
 
                     }
 
-                    MessageHandler.d("DECREASING STEP SIZE LAST");
                     x = x - stepSize;
                 }
             }
@@ -220,11 +225,10 @@ public class RouteOptimization {
                             break;
                         }
                     }
-                    if(x > maxLat){
+                    if (x > maxLat) {
                         x = polyPoints.get(lowestLngIndex).latitude;
                         break;
                     }
-                    MessageHandler.d("INCREASING STEP SIZE LAST");
                     x = x + stepSize;
 
                 }
@@ -233,4 +237,36 @@ public class RouteOptimization {
 
         return GPS;
     }
+
+    private static ArrayList<LatLng> optimizePhotoRoute(ArrayList<LatLng> picturePoints) {
+
+        ArrayList<LatLng> bestRoute = new ArrayList();
+
+        RouteManager.addAllPhotoPoints(picturePoints);
+        // Initialize population
+        Population pop = new Population(50, true);
+
+
+        MessageHandler.d("Initial distance: " + pop.getFittest().getDistance());
+
+        // Evolve population for 1000 generations
+        pop = GA.evolvePopulation(pop);
+        for (int i = 0; i < 1000; i++) {
+            pop = GA.evolvePopulation(pop);
+        }
+
+        Route route = pop.getFittest();
+
+        MessageHandler.d("Initial distance: " + pop.getFittest().getDistance());
+
+
+        for (PhotoPoint pt : route.getRoute()) {
+            bestRoute.add(new LatLng(pt.getLatitude(), pt.getLongitude()));
+        }
+
+        return bestRoute;
+
+
+    }
+    
 }
