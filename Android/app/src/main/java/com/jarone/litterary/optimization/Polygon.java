@@ -180,15 +180,15 @@ public class Polygon {
     private boolean intersect(Line ray, Line side) {
         Point intersectPoint = null;
 
-        // if both vectors aren't from the kind of x=1 lines then go into
+        // if both vectors aren't from the kind of latitude=1 lines then go into
         if (!ray.isVertical() && !side.isVertical()) {
             // check if both vectors are parallel. If they are parallel then no intersection point will exist
             if (ray.getA() - side.getA() == 0) {
                 return false;
             }
 
-            double x = ((side.getB() - ray.getB()) / (ray.getA() - side.getA())); // x = (b2-b1)/(a1-a2)
-            double y = side.getA() * x + side.getB(); // y = a2*x+b2
+            double x = ((side.getB() - ray.getB()) / (ray.getA() - side.getA())); // latitude = (b2-b1)/(a1-a2)
+            double y = side.getA() * x + side.getB(); // longitude = a2*latitude+b2
             intersectPoint = new Point(x, y);
         } else if (ray.isVertical() && !side.isVertical()) {
             double x = ray.getStart().latitude;

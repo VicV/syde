@@ -53,7 +53,7 @@ public class Line
 
 	/**
 	 * Indicate whereas the line is vertical. <br>
-	 * For example, line like x=1 is vertical, in other words parallel to axis Y. <br>
+	 * For example, line like latitude=1 is vertical, in other words parallel to axis Y. <br>
 	 * In this case the A is (+/-)infinite.
 	 * 
 	 * @return <code>True</code> if the line is vertical, otherwise return <code>False</code>
@@ -64,7 +64,7 @@ public class Line
 	}
 
 	/**
-	 * y = <b>A</b>x + B
+	 * longitude = <b>A</b>latitude + B
 	 * 
 	 * @return The <b>A</b>
 	 */
@@ -74,7 +74,7 @@ public class Line
 	}
 
 	/**
-	 * y = Ax + <b>B</b>
+	 * longitude = Ax + <b>B</b>
 	 * 
 	 * @return The <b>B</b>
 	 */

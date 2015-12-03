@@ -11,13 +11,13 @@ import com.jarone.litterary.helpers.ContextManager;
 public class MessageHandler {
 
     public static void d (final String message) {
-//        ContextManager.getActivity().runOnUiThread(new Runnable() {
-//            @Override
-//            public void run() {
-//                Toast toast = Toast.makeText(ContextManager.getContext(), message, Toast.LENGTH_SHORT);
-//                toast.show();
-//            }
-//        });
+        ContextManager.getActivity().runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                Toast toast = Toast.makeText(ContextManager.getContext(), message, Toast.LENGTH_SHORT);
+                toast.show();
+            }
+        });
         Log.d("MessageHandler", message);
 
     }
