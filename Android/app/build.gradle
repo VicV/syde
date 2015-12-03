@@ -1,18 +1,16 @@
 apply plugin: 'com.android.application'
 
 android {
-    compileSdkVersion 22
+    compileSdkVersion 23
     buildToolsVersion '23.0.2'
 
     defaultConfig {
         applicationId "com.jarone.litterary"
         minSdkVersion 22
-        targetSdkVersion 22
+        targetSdkVersion 23
         versionCode 1
         versionName "1.0"
-        multiDexEnabled false
     }
-
     buildTypes {
         release {
             minifyEnabled false
@@ -23,76 +21,14 @@ android {
         main {
             jniLibs.srcDirs = ['..\\Lib\\DJI-SDK-LIB\\libs']
         }
-
-    }
-
-    lintOptions {
-        abortOnError false
-    }
-
-    packagingOptions {
-        exclude 'META-INF/DEPENDENCIES.txt'
-        exclude 'META-INF/LICENSE.txt'
-        exclude 'META-INF/NOTICE.txt'
-        exclude 'META-INF/NOTICE'
-        exclude 'META-INF/LICENSE'
-        exclude 'META-INF/DEPENDENCIES'
-        exclude 'META-INF/notice.txt'
-        exclude 'META-INF/license.txt'
-        exclude 'META-INF/dependencies.txt'
-        exclude 'META-INF/LGPL2.1'
-        exclude 'META-INF/io.netty.versions.properties'
-        exclude 'META-INF/INDEX.LIST'
-
-    }
-
-
-    compileOptions {
-        sourceCompatibility JavaVersion.VERSION_1_7
-        targetCompatibility JavaVersion.VERSION_1_7
     }
 }
 
-repositories {
-    mavenCentral()
-    mavenLocal()
-
-    maven { url "http://oss.sonatype.org/content/repositories/snapshots" }
-    maven { url "http://repo.maven.apache.org/maven2" }
-}
 dependencies {
-    compile fileTree(dir: 'libs', include: '*.jar')
     compile project(':Lib:DJI-SDK-LIB')
     compile project(':Lib:opencv-android')
-    //    compile('org.nd4j:nd4j-jblas:0.4-rc3.6')
-    //    }
-    //    compile 'com.android.support:multidex:1.0.1'
+
+
     compile 'com.google.android.gms:play-services-maps:8.1.0'
     compile 'com.google.android.gms:play-services-location:8.1.0'
-
-
-    //=============
-
-//        compile group: 'net.bytebuddy', name: 'byte-buddy', version:'0.6.+'
-//        compile group: 'junit', name: 'junit', version:'4.11'
-//        compile group: 'org.slf4j', name: 'slf4j-api', version:'1.7.10'
-//        compile group: 'org.apache.commons', name: 'commons-math3', version:'3.4.1'
-//        compile group: 'org.apache.commons', name: 'commons-lang3', version:'3.3.1'
-//        compile group: 'com.google.guava', name: 'guava', version:'18.0'
-//        compile group: 'commons-io', name: 'commons-io', version:'2.4'
-//        compile group: 'org.springframework', name: 'spring-core', version:'3.2.5.RELEASE'
-//        compile group: 'org.reflections', name: 'reflections', version:'0.9.10'
-//        compile group: 'io.netty', name: 'netty-buffer', version:'4.0.28.Final'
-//        compile group: 'org.projectlombok', name: 'lombok', version:'1.16.4'
-//    provided "org.projectlombok:lombok:+"
-
-//        compile group: 'org.nd4j', name: 'nd4j-bytebuddy', version:'0.4-rc3.8'
-
-//    compile 'org.glassfish:javax.annotation:10.0-b28'
-
-
 }
-
-
-
-
