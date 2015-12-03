@@ -31,6 +31,10 @@ public class RouteManager {
         return (PhotoPoint) destinationPoints.get(index);
     }
 
+    public static void removeAllPoints() {
+        destinationPoints.clear();
+    }
+
     // Get the number of destination photoPoints
     public static int numberOfPhotoPoints() {
         return destinationPoints.size();

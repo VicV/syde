@@ -13,15 +13,14 @@ import android.view.View;
 import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.TextView;
-import android.widget.Toast;
 import android.widget.ToggleButton;
 
 import com.google.android.gms.maps.model.LatLng;
 import com.jarone.litterary.R;
+import com.jarone.litterary.RouteOptimization;
 import com.jarone.litterary.drone.Camera;
 import com.jarone.litterary.drone.DroneState;
 import com.jarone.litterary.drone.GroundStation;
-import com.jarone.litterary.SystemProperties;
 import com.jarone.litterary.handlers.MessageHandler;
 import com.jarone.litterary.helpers.ContextManager;
 import com.jarone.litterary.helpers.LocationHelper;
@@ -49,6 +48,12 @@ public class MainActivity extends DJIBaseActivity {
 
     private Context mainActivity;
 
+    public int getIterations() {
+        return iterations;
+    }
+
+    private int iterations = 100;
+
     private ScheduledExecutorService taskScheduler;
 
     private LatLng[] currentPolygon = null;
@@ -69,7 +74,7 @@ public class MainActivity extends DJIBaseActivity {
 
         ContextManager.setContext(this);
 
-  //      cameraView = (ImageView) findViewById(R.id.camera_texture);
+        //      cameraView = (ImageView) findViewById(R.id.camera_texture);
 
         DroneState.registerConnectedTimer();
         GroundStation.registerPhantom2Callback();
@@ -192,7 +197,7 @@ public class MainActivity extends DJIBaseActivity {
         };
     }
 
-    public View.OnClickListener getInfoButtonListener() {
+    public View.OnClickListener getStatusButtonListener() {
         return new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -204,6 +209,33 @@ public class MainActivity extends DJIBaseActivity {
                     infoLayout.setVisibility(View.INVISIBLE);
                     //Camera.requestedGimbalAngle = 0;
                 }
+
+                findViewById(R.id.button_special1).setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        ArrayList<LatLng> latLngs = new ArrayList<>();
+
+                        LatLng[] stockArr = new LatLng[latLngs.size()];
+                        stockArr = latLngs.toArray(stockArr);
+
+                        LatLng[] points = GroundStation.initializeSurveyRoute(stockArr, getAltitudeValue());
+
+                        currentPolygon = stockArr;
+                        if (points != null) {
+                            currentPhotoPoints = new ArrayList<>(Arrays.asList(points));
+                        }
+
+                        if (iterations == 100) {
+                            iterations = 300;
+                        } else if (iterations == 300) {
+                            iterations = 500;
+                        } else if (iterations == 500) {
+                            iterations = 700;
+                        } else if (iterations == 700) {
+                            iterations = 900;
+                        }
+                    }
+                });
             }
         };
     }
@@ -265,7 +297,7 @@ public class MainActivity extends DJIBaseActivity {
         findViewById(R.id.button_set_region).setOnClickListener(setRegionClickListener());
         findViewById(R.id.button_start_survey).setOnClickListener(getStartSurveyListener());
         findViewById(R.id.button_switch_mode).setOnClickListener(getSwitchModeListener());
-        findViewById(R.id.button_info).setOnClickListener(getInfoButtonListener());
+        findViewById(R.id.button_status).setOnClickListener(getStatusButtonListener());
         findViewById(R.id.button_pid).setOnClickListener(getPIDButtonListener());
         findViewById(R.id.button_special1).setOnClickListener(getSpecialButtonListener());
         findViewById(R.id.button_special2).setOnClickListener(getSpecialButtonListener());
@@ -273,7 +305,7 @@ public class MainActivity extends DJIBaseActivity {
 
 
     private Bitmap viewToBitmap(SurfaceHolder holder, int width, int height) {
-        if (height <= 0 || width <=0 ) {
+        if (height <= 0 || width <= 0) {
             Log.d("viewToBitmap", "Wrong size");
             return null;
         }
@@ -380,4 +412,13 @@ public class MainActivity extends DJIBaseActivity {
         });
     }
 
+    @Override
+    public void onBackPressed() {
+        View infoLayout = findViewById(R.id.infoLayout);
+        if (infoLayout.getVisibility() == View.INVISIBLE) {
+            super.onBackPressed();
+        } else {
+            infoLayout.setVisibility(View.INVISIBLE);
+        }
+    }
 }

@@ -202,7 +202,7 @@
                 android:layout_height="wrap_content"
                 android:text="Status"
                 android:textSize="7pt"
-                android:id="@+id/button_info"
+                android:id="@+id/button_status"
                 android:layout_alignParentEnd="true"
                 />
 

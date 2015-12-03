@@ -1,9 +1,11 @@
 package com.jarone.litterary;
 
 import com.google.android.gms.maps.model.LatLng;
+import com.jarone.litterary.activities.MainActivity;
 import com.jarone.litterary.drone.DroneState;
 import com.jarone.litterary.drone.GroundStation;
 import com.jarone.litterary.handlers.MessageHandler;
+import com.jarone.litterary.helpers.ContextManager;
 import com.jarone.litterary.helpers.LocationHelper;
 import com.jarone.litterary.optimization.GA;
 import com.jarone.litterary.optimization.PhotoPoint;
@@ -28,17 +30,11 @@ public class RouteOptimization {
 
         ArrayList<LatLng> latLngs = new ArrayList<>();
 
-
         if (points != null && points.length > 0) {
             latLngs = new ArrayList<>(Arrays.asList(points));
         }
 
-
         if (validateBoundary(points)) {
-
-
-//            INDArray picturePoints = getPhotoPoints(array);
-          //  INDArray orderedPoints = optimizePhotoRoute(picturePoints);
 
             ArrayList<LatLng> picturePoints = getPhotoPoints(latLngs, altitude);
 
@@ -242,21 +238,31 @@ public class RouteOptimization {
 
         ArrayList<LatLng> bestRoute = new ArrayList();
 
+        RouteManager.removeAllPoints();
+
         RouteManager.addAllPhotoPoints(picturePoints);
+
         // Initialize population
         Population pop = new Population(50, true);
 
         MessageHandler.d("Initial distance: " + pop.getFittest().getDistance());
+        long startTime = System.currentTimeMillis();
 
-        // Evolve population for 1000 generations
+        // Evolve population for 300 generations
         pop = GA.evolvePopulation(pop);
-        for (int i = 0; i < 1000; i++) {
+
+        int iterations = 300;
+        MessageHandler.d("Iterations: " + iterations);
+
+        for (int i = 0; i < iterations; i++) {
             pop = GA.evolvePopulation(pop);
         }
 
+        long endTime = System.currentTimeMillis();
+
         Route route = pop.getFittest();
 
-        MessageHandler.d("Initial distance: " + pop.getFittest().getDistance());
+        MessageHandler.d("Final distance: " + pop.getFittest().getDistance() + ". Time: " + (endTime - startTime));
 
 
         for (PhotoPoint pt : route.getRoute()) {
@@ -267,5 +273,5 @@ public class RouteOptimization {
 
 
     }
-    
+
 }

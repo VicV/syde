@@ -118,7 +118,7 @@ public class GroundStation {
                     } catch (Exception e) {
                         MessageHandler.d("withConnection: " + e.toString());
                     }
-                   // MessageHandler.d("withConnection: SUCCESS");
+                    // MessageHandler.d("withConnection: SUCCESS");
                 } else {
                     DroneState.groundStationConnected = false;
                     MessageHandler.d("withConnection: FAILURE");
@@ -311,7 +311,7 @@ public class GroundStation {
      */
     public static void setAngles(final double pitch, final double yaw, final double roll) {
         if (DroneState.getMode() != DroneState.DIRECT_MODE) {
-           // MessageHandler.d("Not in Direct Mode!");
+            // MessageHandler.d("Not in Direct Mode!");
             return;
         }
         withConnection(new Runnable() {
