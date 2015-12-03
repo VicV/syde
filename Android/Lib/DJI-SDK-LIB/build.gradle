@@ -1,4 +1,4 @@
-apply plugin: 'com.android.library'
+apply plugin: 'android-library'
 
 dependencies {
     compile fileTree(dir: 'libs', include: '*.jar')
@@ -30,9 +30,5 @@ android {
         // by a similar customization.
         debug.setRoot('build-types/debug')
         release.setRoot('build-types/release')
-    }
-    
-    lintOptions {
-        abortOnError false
     }
 }
