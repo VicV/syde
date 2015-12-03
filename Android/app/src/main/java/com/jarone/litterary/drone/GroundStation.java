@@ -353,7 +353,6 @@ public class GroundStation {
      * initialized. Also, check if route is already executing so we don't start again
      */
     public static LatLng[] startSurveyRoute() {
-        initializeSurveyRoute(null, 20);
         if (currentSurveyRoute != null && !currentSurveyRoute.isFinished() && !currentSurveyRoute.isExecuting()) {
             currentSurveyRoute.executeRoute();
         } else {

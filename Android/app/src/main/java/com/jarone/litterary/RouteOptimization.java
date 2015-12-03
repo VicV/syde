@@ -58,7 +58,7 @@ public class RouteOptimization {
     private static ArrayList<LatLng> getPhotoPoints(ArrayList<LatLng> originalArray, float altitude) {
         Polygon.Builder builder = new Polygon.Builder();
 //        ArrayList<LatLng> points = new ArrayList();
-        ArrayList<Point> polyPoints = new ArrayList<>();
+        ArrayList<Point> polyPoints = new ArrayList();
 
 
         //Whether or not the latitude/longitude are negative
@@ -103,6 +103,7 @@ public class RouteOptimization {
             }
             if (xi < minLat) {
                 minLat = xi;
+
             }
             if (yi > maxLong) {
                 maxLong = yi;
@@ -117,9 +118,8 @@ public class RouteOptimization {
         longNeg = minLong < 0;
         latNeg = minLat < 0;
 
-//        maxLat = latNeg ? maxLat + (-minLat) : maxLat;
+        maxLat = latNeg ? maxLat + (-minLat) : maxLat;
         maxLong = longNeg ? maxLong + (-minLong) : maxLong;
-
 
         //Copy original array into a new array of Points. If the latitude or longitude were negative, add the inverse of
         // the min of them to each point so we start at 0.0;
@@ -129,10 +129,8 @@ public class RouteOptimization {
             builder.addVertex(new Point(p.latitude, p.longitude));
         }
 
-
         //Create our polygon.
         Polygon polygon = builder.close().build();
-
 
         //Start at the first point.
         double x = polyPoints.get(lowestLngIndex).latitude;
@@ -163,6 +161,8 @@ public class RouteOptimization {
                 if (polygon.contains(new Point(x, y))) {
                     GPS.add(new LatLng(latNeg ? x + minLat : x, longNeg ? y + minLong : y));
                 }
+
+                MessageHandler.d("INCREASING X BY STEP SIZE FIRST");
                 x = x + distX;
             }
             //the out clause for the last case
@@ -201,6 +201,8 @@ public class RouteOptimization {
                         }
 
                     }
+
+                    MessageHandler.d("DECREASING STEP SIZE LAST");
                     x = x - stepSize;
                 }
             }
@@ -216,6 +218,11 @@ public class RouteOptimization {
                             break;
                         }
                     }
+                    if(x > maxLat){
+                        x = polyPoints.get(lowestLngIndex).latitude;
+                        break;
+                    }
+                    MessageHandler.d("INCREASING STEP SIZE LAST");
                     x = x + stepSize;
 
                 }
@@ -223,22 +230,6 @@ public class RouteOptimization {
         }
 
         return GPS;
-    }
-
-    private static ArrayList optimizePhotoRoute(ArrayList picturePoints) {
-//        ArrayList<Double> longitudes = new ArrayList<>(), latitudes = new ArrayList<>();
-//        int rows = picturePoints.rows();
-//        for (int i = 1; i < rows-1; i++) {
-//            longitudes.add(picturePoints.getDouble(i, 1));
-//            latitudes.add(picturepoints.get(i).latitute );
-//        }
-//
-//        int nStops = rows-1;
-
-//        SalesmanSolver.solve(picturePoints);
-
-
-        return picturePoints;
     }
 
 }
