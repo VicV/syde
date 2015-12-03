@@ -7,6 +7,7 @@ import dji.sdk.api.DJIDrone;
 import dji.sdk.api.DJIError;
 import dji.sdk.api.Gimbal.DJIGimbalRotation;
 import dji.sdk.interfaces.DJIExecuteResultCallback;
+import dji.sdk.util.DjiLocationCoordinate2D;
 
 /**
  * Created by Adam on 2015-11-16.
@@ -29,13 +30,30 @@ public class Camera {
      * Takes a photo with the built-in drone camera, executes the callback when the action is finished
      */
     public static void takePhoto() {
-        DJIDrone.getDjiCamera().startTakePhoto(DJICameraSettingsTypeDef.CameraCaptureMode.Camera_Single_Capture, new DJIExecuteResultCallback() {
-            @Override
-            public void onResult(DJIError djiError) {
-                MessageHandler.d("Take Photo: " + djiError.errorDescription);
-                photoCallback.run();
+        DJIDrone.getDjiCamera().setCameraGps(
+            new DjiLocationCoordinate2D(DroneState.getLatitude(), DroneState.getLongitude()),
+            new DJIExecuteResultCallback() {
+                @Override
+                public void onResult(DJIError djiError) {
+                    DJIDrone.getDjiCamera().startTakePhoto(
+                        DJICameraSettingsTypeDef.CameraCaptureMode.Camera_Single_Capture,
+                        new DJIExecuteResultCallback() {
+                            @Override
+                            public void onResult(DJIError djiError) {
+                                MessageHandler.d("Take Photo: " + djiError.errorDescription);
+                                photoCallback.run();
+                                photoCallback = new Runnable() {
+                                    @Override
+                                    public void run() {
+
+                                    }
+                                };
+                            }
+                        }
+                    );
+                }
             }
-        });
+        );
     }
 
     public static void setGimbalPitch(int angle) {

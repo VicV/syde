@@ -1,7 +1,5 @@
 package com.jarone.litterary.drone;
 
-import android.util.Log;
-
 import com.google.android.gms.maps.model.LatLng;
 import com.jarone.litterary.AngularController;
 import com.jarone.litterary.RouteOptimization;
@@ -429,7 +427,6 @@ public class GroundStation {
         DJIDrone.getDjiGroundStation().setGroundStationFlyingInfoCallBack(new DJIGroundStationFlyingInfoCallBack() {
             @Override
             public void onResult(DJIGroundStationFlyingInfo djiGroundStationFlyingInfo) {
-                Log.d("GROUND STATION", djiGroundStationFlyingInfo.flightMode.name());
                 if (taskDoneCallback != null && canExecuteCallback && djiGroundStationFlyingInfo.flightMode == DJIGroundStationTypeDef.GroundStationFlightMode.GS_Mode_Pause_1) {
                     //Set can execute callback to false to pause the callback chain of survey
                     //route until drone has started moving again
