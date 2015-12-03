@@ -1,17 +1,18 @@
 package com.jarone.litterary;
 
-import org.nd4j.linalg.api.ndarray.INDArray;
+
+import java.util.ArrayList;
 
 class SalesmanSolver {
 
     static {
-        System.loadLibrary("jniortools");
+//        System.loadLibrary("jniortools");
     }
 
     static class GPSPhotoIndex {
-        public GPSPhotoIndex(INDArray array) {
-            xs = array.getColumn(1).data().asInt();
-            ys = array.getColumn(2).data().asInt();
+        public GPSPhotoIndex(ArrayList array) {
+//            xs = array.getColumn(1).data().asInt();
+//            ys = array.getColumn(2).data().asInt();
 
         }
 
@@ -24,7 +25,7 @@ class SalesmanSolver {
         private int[] ys;
     }
 
-    static void solve(INDArray GPSPhotoLocations) {
+    static void solve(ArrayList GPSPhotoLocations) {
 //        RoutingModel routing = new RoutingModel(GPSPhotoLocations.rows(), 1);
 //        // Setting first solution heuristic (cheapest addition).
 //        routing.setFirstSolutionStrategy(RoutingModel.ROUTING_PATH_CHEAPEST_ARC);

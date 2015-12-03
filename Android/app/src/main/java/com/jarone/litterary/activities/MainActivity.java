@@ -13,16 +13,19 @@ import android.view.View;
 import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.TextView;
+import android.widget.Toast;
 import android.widget.ToggleButton;
 
 import com.google.android.gms.maps.model.LatLng;
 import com.jarone.litterary.R;
 import com.jarone.litterary.drone.DroneState;
 import com.jarone.litterary.drone.GroundStation;
+import com.jarone.litterary.SystemProperties;
 import com.jarone.litterary.handlers.MessageHandler;
 import com.jarone.litterary.helpers.ContextManager;
 import com.jarone.litterary.helpers.LocationHelper;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
@@ -46,6 +49,10 @@ public class MainActivity extends DJIBaseActivity {
     private Context mainActivity;
 
     private ScheduledExecutorService taskScheduler;
+
+    private LatLng[] currentPolygon = null;
+    private ArrayList<LatLng> currentPhotoPoints = null;
+
 
     //Activity is starting.
     @Override
@@ -155,7 +162,11 @@ public class MainActivity extends DJIBaseActivity {
         return new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                GroundStation.startSurveyRoute();
+                LatLng[] points = GroundStation.initializeSurveyRoute(currentPolygon, getAltitudeValue());
+                if (points != null && points.length > 2) {
+                    currentPhotoPoints = new ArrayList<>(Arrays.asList(points));
+                    currentPhotoPoints.size();
+                }
             }
         };
     }
@@ -286,7 +297,10 @@ public class MainActivity extends DJIBaseActivity {
         return new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                startActivityForResult(new Intent(mainActivity, MapActivity.class), POINTS_REQUEST_CODE);
+                Intent intent = (new Intent(mainActivity, MapActivity.class));
+                intent.putExtra("polygon", currentPolygon);
+                intent.putExtra("picturePoints", currentPhotoPoints);
+                startActivityForResult(intent, POINTS_REQUEST_CODE);
             }
         };
     }
@@ -307,8 +321,15 @@ public class MainActivity extends DJIBaseActivity {
             Parcelable[] parcelArray = data.getParcelableArrayExtra("points");
             //can't cast parcelable to latlng array, need to copy it
             LatLng[] parcel = Arrays.copyOf(parcelArray, parcelArray.length, LatLng[].class);
+            if (parcel.length > 2) {
+                currentPolygon = parcel;
+            }
 
-            GroundStation.initializeSurveyRoute(parcel, getAltitudeValue());
+            LatLng[] points = GroundStation.initializeSurveyRoute(currentPolygon, getAltitudeValue());
+            if (points != null) {
+                currentPhotoPoints = new ArrayList<>(Arrays.asList(points));
+                currentPhotoPoints.size();
+            }
         }
     }
 

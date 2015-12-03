@@ -10,6 +10,10 @@ import com.jarone.litterary.handlers.MessageHandler;
  * Class responsible for handling the execution of survey routes
  */
 public class SurveyRoute {
+    public LatLng[] getRoute() {
+        return route;
+    }
+
     private LatLng[] route;
     private int index;
     private float surveyAltitude;
@@ -17,7 +21,7 @@ public class SurveyRoute {
     private boolean executing;
     private boolean finished;
 
-    public SurveyRoute(LatLng[] route, float altitude){
+    public SurveyRoute(LatLng[] route, float altitude) {
         this.route = route;
         this.surveyAltitude = altitude;
         index = 0;
@@ -68,7 +72,8 @@ public class SurveyRoute {
     public void stopRoute() {
         GroundStation.taskDoneCallback = new Runnable() {
             @Override
-            public void run() {}
+            public void run() {
+            }
         };
         Camera.photoCallback = new Runnable() {
             @Override
@@ -79,7 +84,10 @@ public class SurveyRoute {
         GroundStation.stopTask();
     }
 
-    public boolean isExecuting() { return executing; }
+    public boolean isExecuting() {
+        return executing;
+    }
+
     public boolean isFinished() {
         return finished;
     }

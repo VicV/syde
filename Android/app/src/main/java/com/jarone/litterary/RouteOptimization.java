@@ -5,9 +5,12 @@ import com.jarone.litterary.drone.DroneState;
 import com.jarone.litterary.drone.GroundStation;
 import com.jarone.litterary.handlers.MessageHandler;
 import com.jarone.litterary.helpers.LocationHelper;
+import com.jarone.litterary.optimization.Point;
+import com.jarone.litterary.optimization.Polygon;
 
-import org.nd4j.linalg.api.ndarray.INDArray;
-import org.nd4j.linalg.factory.Nd4j;
+
+import java.util.ArrayList;
+import java.util.Arrays;
 
 /**
  * Created by Adam on 2015-11-23.
@@ -16,18 +19,25 @@ import org.nd4j.linalg.factory.Nd4j;
  */
 public class RouteOptimization {
 
-    public static INDArray array = Nd4j.create(new double[]{20, 0, 40, 0, 80, 30, 40, 90, 0, 40, 0, 0}, new int[]{2, 6});
-
-
     public static LatLng[] createOptimizedSurveyRoute(LatLng[] points, float altitude) {
+
+
+        ArrayList<LatLng> latLngs = new ArrayList<>();
+
+
+        if (points != null && points.length > 0) {
+            latLngs = new ArrayList<>(Arrays.asList(points));
+        }
+
+
         if (validateBoundary(points)) {
-            //TODO: put Jordan's code here
 
-            INDArray picturePoints = getPhotoPoints(array);
-            INDArray orderedPoints = optimizePhotoRoute(picturePoints);
 
-            LatLng[] route = new LatLng[20];
-            return points;
+            ArrayList<LatLng> picturePoints = getPhotoPoints(latLngs, altitude);
+//            ArrayList<LatLng> orderedPoints = optimizePhotoRoute(picturePoints);
+
+            Object[] route = picturePoints.toArray();
+            return (Arrays.copyOf(route, route.length, LatLng[].class));
         } else {
             MessageHandler.d("Boundary Points Are Too Far From Drone!");
             return new LatLng[0];
@@ -45,66 +55,113 @@ public class RouteOptimization {
     }
 
 
-    private static INDArray getPhotoPoints(INDArray array) {
+    private static ArrayList<LatLng> getPhotoPoints(ArrayList<LatLng> originalArray, float altitude) {
+        Polygon.Builder builder = new Polygon.Builder();
+//        ArrayList<LatLng> points = new ArrayList();
+        ArrayList<Point> polyPoints = new ArrayList<>();
 
-        // height above the ground
-        int height = 4;
+
+        //Whether or not the latitude/longitude are negative
+        boolean longNeg;
+        boolean latNeg;
+
+        //Current step size. At 0.0001 we'll get around 15 points. Right now we get about 250.
+        double stepSize = .000005;
+
+        if (altitude == -1) {
+            altitude = 4;
+        }
 
         //x-distance between image capture points
-        double distX = height * Math.tan(60) * 2;
+        double distX = (altitude * Math.tan(Math.toRadians(60)) * 2) / 200000;
 
         //y-distance between image capture points
-        double distY = height * Math.tan(42.5) * 2;
+        double distY = (altitude * Math.tan(Math.toRadians(42.5)) * 2) / 200000;
 
-        int m = array.rows();
-
-        //array for edge of polygon initialized
-        INDArray xv = Nd4j.zeros(1, m + 1);
-
-        //ditto, but for y
-        INDArray yv = Nd4j.zeros(1, m + 1);
+        //Number of rows.
+        int m = originalArray.size();
 
         double xi;
         double yi;
 
-        INDArray GPS = Nd4j.emptyLike(Nd4j.create(new double[]{1, 2}));
+        ArrayList<LatLng> GPS = new ArrayList<>();
 
         // inputting all the vertices of polygon P4 to the xv and yv array
-        for (int i = 1; i < m; i++) {
-            xi = array.getDouble(i, 1);
-            xv.put(1, i, xi);
-            yi = array.getDouble(i, 2);
-            yv.put(1, i, yi);
+        double maxLat = Double.NEGATIVE_INFINITY;
+        double maxLong = Double.NEGATIVE_INFINITY;
+        double minLat = Double.POSITIVE_INFINITY;
+        double minLong = Double.POSITIVE_INFINITY;
+
+        int lowestLngIndex = -1;
+
+        for (int i = 0; i < m; i++) {
+            xi = originalArray.get(i).latitude;
+            yi = originalArray.get(i).longitude;
+
+            if (xi > maxLat) {
+                maxLat = xi;
+            }
+            if (xi < minLat) {
+                minLat = xi;
+            }
+            if (yi > maxLong) {
+                maxLong = yi;
+            }
+            if (yi < minLong) {
+                minLong = yi;
+                lowestLngIndex = i;
+            }
         }
 
-        //close off xv with repeat of first point
-        xv.put(1, m + 1, array.getDouble(1, 1));
-        //close off yv with repeat of first point
-        yv.put(1, m + 1, array.getDouble(1, 2));
-        double x = array.getDouble(1, 1);
-        double y = array.getDouble(1, 2);
-        GPS = Nd4j.vstack(GPS, Nd4j.create(new double[]{x, y}));
+        //Set if these are negative.
+        longNeg = minLong < 0;
+        latNeg = minLat < 0;
+
+//        maxLat = latNeg ? maxLat + (-minLat) : maxLat;
+        maxLong = longNeg ? maxLong + (-minLong) : maxLong;
+
+
+        //Copy original array into a new array of Points. If the latitude or longitude were negative, add the inverse of
+        // the min of them to each point so we start at 0.0;
+        for (LatLng pt : originalArray) {
+            Point p = new Point((latNeg ? pt.latitude + (-minLat) : pt.latitude), (longNeg ? pt.longitude + (-minLong) : pt.longitude));
+            polyPoints.add(p);
+            builder.addVertex(new Point(p.latitude, p.longitude));
+        }
+
+
+        //Create our polygon.
+        Polygon polygon = builder.close().build();
+
+
+        //Start at the first point.
+        double x = polyPoints.get(lowestLngIndex).latitude;
+        double y = polyPoints.get(lowestLngIndex).longitude;
+
+        //Add a new point to our final array. If it WAS negative, we now subtract that minimum value because
+        // We would have added it previously.
+        GPS.add(new LatLng(latNeg ? x + minLat : x, longNeg ? y + minLong : y));
 
         // break counter for upcoming for loop
         double y1 = 0;
         int mFlag = 0;
-        while (polygonContainsPoint(array, x, y)) {
+        while (polygon.contains(new Point(x, y))) {
             //last loop break clause
             if (mFlag == 1)
                 mFlag = 2;
 
             //case where next y point is greater than the top of the polygon
-            if ((y + distY) > yv.maxNumber().doubleValue()) {
+            if ((y + distY) > maxLong) {
                 y1 = y + distY;
-                while (y1 > yv.maxNumber().doubleValue()) {
+                while (y1 > maxLong) {
                     //iterate down until you are in the polygon
-                    y = y1 - 0.1;
+                    y1 = y1 - stepSize;
                 }
             }
             //general case where the x and y test value is in the polygon
-            while (polygonContainsPoint(array, x, y)) {
-                if (polygonContainsPoint(array, x, y)) {
-                    GPS = Nd4j.vstack(GPS, Nd4j.create(new double[]{x, y}));
+            while (polygon.contains(new Point(x, y))) {
+                if (polygon.contains(new Point(x, y))) {
+                    GPS.add(new LatLng(latNeg ? x + minLat : x, longNeg ? y + minLong : y));
                 }
                 x = x + distX;
             }
@@ -112,39 +169,55 @@ public class RouteOptimization {
             if (mFlag == 2)
                 break;
 
-
             //case where you reach the far right-most point, iterate back until
             //you are in region
-            if (!polygonContainsPoint(array, x, y)) {
-                while (!polygonContainsPoint(array, x, y)) {
-                    x = x - 0.1;
+            if (!polygon.contains(new Point(x, y))) {
+                while (!polygon.contains(new Point(x, y))) {
+                    x = x - stepSize;
+                    if (x < minLat) {
+                        x = polyPoints.get(lowestLngIndex).latitude;
+                        break;
+                    }
                 }
-                GPS = Nd4j.vstack(GPS, Nd4j.create(new double[]{x, y}));
+                GPS.add(new LatLng(latNeg ? x + minLat : x, longNeg ? y + minLong : y));
             }
+
             //iterate upwards to the next row of points
-            x = array.getDouble(1, 1);
+            x = polyPoints.get(lowestLngIndex).latitude;
             y = y + distY;
 
             //iterate left until you find the left-most edge of the space
-            if (polygonContainsPoint(array, x, y)) {
-                while (polygonContainsPoint(array, x, y)) {
-                    if (y > yv.maxNumber().doubleValue()) {
+            if (polygon.contains(new Point(x, y))) {
+                while (polygon.contains(new Point(x, y))) {
+                    if (y > maxLong) {
                         y = y1;
                         mFlag = 1;
+                        if (x < minLat) {
+                            x = polyPoints.get(lowestLngIndex).latitude;
+                            break;
+                        }
+                        if (!polygon.contains(new Point(x, y))) {
+                            break;
+                        }
+
                     }
-                    x = x - 0.1;
+                    x = x - stepSize;
                 }
             }
 
             //if you iterate up, and it's outside the area, iterate right until
             //you find inside the polygon
-            if (!polygonContainsPoint(array, x, y)) {
-                while (polygonContainsPoint(array, x, y)) {
-                    if (y > yv.maxNumber().doubleValue()) {
+            if (!polygon.contains(new Point(x, y))) {
+                while (!polygon.contains(new Point(x, y))) {
+                    if (y > maxLong) {
                         y = y1;
                         mFlag = 1;
+                        if (polygon.contains(new Point(x, y))) {
+                            break;
+                        }
                     }
-                    x = x + 0.1;
+                    x = x + stepSize;
+
                 }
             }
         }
@@ -152,41 +225,20 @@ public class RouteOptimization {
         return GPS;
     }
 
-    private static INDArray optimizePhotoRoute(INDArray picturePoints) {
+    private static ArrayList optimizePhotoRoute(ArrayList picturePoints) {
 //        ArrayList<Double> longitudes = new ArrayList<>(), latitudes = new ArrayList<>();
 //        int rows = picturePoints.rows();
 //        for (int i = 1; i < rows-1; i++) {
 //            longitudes.add(picturePoints.getDouble(i, 1));
-//            latitudes.add(picturePoints.getDouble(i, 2));
+//            latitudes.add(picturepoints.get(i).latitute );
 //        }
 //
 //        int nStops = rows-1;
 
-        SalesmanSolver.solve(picturePoints);
+//        SalesmanSolver.solve(picturePoints);
 
 
         return picturePoints;
     }
 
-
-    /**
-     * Determine if our polygon contains the point at hand.
-     *
-     * @param points Vertices of our polygon
-     * @param x      x value
-     * @param y      y value
-     * @return boolean whether or not in polygon
-     */
-    public static boolean polygonContainsPoint(INDArray points, double x, double y) {
-        int i;
-        int j;
-        boolean result = false;
-        for (i = 0, j = points.columns() - 1; i < points.rows(); j = i++) {
-            if ((points.getDouble(i, 2) > y) != (points.getDouble(j, 2) > y) &&
-                    (x < (points.getDouble(j, 1) - points.getDouble(i, 1)) * (y - points.getDouble(i, 2)) / (points.getDouble(j, 2) - points.getDouble(i, 2)) + points.getDouble(i, 1))) {
-                result = !result;
-            }
-        }
-        return result;
-    }
 }

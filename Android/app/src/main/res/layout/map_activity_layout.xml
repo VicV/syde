@@ -24,16 +24,32 @@
 
         <TextView
             android:id="@+id/textView2"
-            android:layout_width="160dp"
+            android:layout_width="120dp"
             android:layout_height="wrap_content"
             android:layout_marginLeft="5dp"
-            android:layout_marginRight="40dp"
-            android:text="Long press the map to define a cleanup region."
+            android:layout_marginRight="5dp"
+            android:text="Long press map to define region."
             android:textColor="#ebebeb" />
+        <android.widget.Space
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            android:layout_weight="1" />
 
+        <Button
+            android:id="@+id/button_reset"
+            android:layout_width="wrap_content"
+            android:layout_height="30dp"
+            android:background="#ebebeb"
+            android:text="Reset" />
+
+        <android.widget.Space
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            android:layout_weight="1" />
 
         <Button
             android:id="@+id/button_undo"
+            android:visibility="visible"
             android:layout_width="wrap_content"
             android:layout_height="30dp"
             android:background="#ebebeb"
@@ -48,6 +64,7 @@
         <Button
             android:id="@+id/button_set"
             android:layout_width="wrap_content"
+            android:visibility="visible"
 
             android:layout_height="30dp"
             android:layout_marginRight="5dp"
