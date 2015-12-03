@@ -20,14 +20,17 @@ public class AngularController {
     private ScheduledFuture controlsLoopFuture;
 
     private float MAX_ANGLE = 500;
-    private long SAMPLING_TIME = 10;
+    private long SAMPLING_TIME = 500;
 
-    private float P = 40;
+    private float P = 50;
     private float I = 0;
     private float D = 10;
     private float errorSum = 0;
     private float lastError = 0;
     private float lastAction = 0;
+
+    private boolean flip = false;
+    boolean canFlip = true;
 
     public AngularController() {
         taskScheduler = Executors.newSingleThreadScheduledExecutor();
@@ -50,10 +53,22 @@ public class AngularController {
             return;
         }
         float distance = LocationHelper.distanceBetween(startLocation, DroneState.getLatLng());
-        float error = 10 - distance;
+        float error;
+        if (flip) {
+            error = 10 - distance;
+        } else {
+            error = -distance;
+            lastError = 0;
+        }
         float action = error * P + errorSum * SAMPLING_TIME * I + (error - lastError)/SAMPLING_TIME * D;
         if (Math.abs(action) > MAX_ANGLE) {
             action = MAX_ANGLE * Math.signum(action);
+        }
+        if (Math.abs(error) < 1 && canFlip) {
+            flip = !flip;
+            canFlip = false;
+        } else if (Math.abs(error) > 1) {
+            canFlip = true;
         }
         lastError = error;
         executeAction(action);
