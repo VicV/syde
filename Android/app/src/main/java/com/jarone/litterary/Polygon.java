@@ -107,23 +107,23 @@ public class Polygon {
         private void updateBoundingBox(Point point) {
             if (_firstPoint) {
                 _boundingBox = new BoundingBox();
-                _boundingBox.xMax = point.x;
-                _boundingBox.xMin = point.x;
-                _boundingBox.yMax = point.y;
-                _boundingBox.yMin = point.y;
+                _boundingBox.latitudeMax = point.latitude;
+                _boundingBox.latitudeMin = point.latitude;
+                _boundingBox.longitudeMax = point.longitude;
+                _boundingBox.longitudeMin = point.longitude;
 
                 _firstPoint = false;
             } else {
                 // set bounding box
-                if (point.x > _boundingBox.xMax) {
-                    _boundingBox.xMax = point.x;
-                } else if (point.x < _boundingBox.xMin) {
-                    _boundingBox.xMin = point.x;
+                if (point.latitude > _boundingBox.latitudeMax) {
+                    _boundingBox.latitudeMax = point.latitude;
+                } else if (point.latitude < _boundingBox.latitudeMin) {
+                    _boundingBox.latitudeMin = point.latitude;
                 }
-                if (point.y > _boundingBox.yMax) {
-                    _boundingBox.yMax = point.y;
-                } else if (point.y < _boundingBox.yMin) {
-                    _boundingBox.yMin = point.y;
+                if (point.longitude > _boundingBox.longitudeMax) {
+                    _boundingBox.longitudeMax = point.longitude;
+                } else if (point.longitude < _boundingBox.longitudeMin) {
+                    _boundingBox.longitudeMin = point.longitude;
                 }
             }
         }
@@ -151,7 +151,7 @@ public class Polygon {
                     // System.out.println("intersection++");
                     intersection++;
                 }
-                if ((side.getStart().x == point.x && side.getStart().y == point.y) || (side.getEnd().x == point.x && side.getEnd().y == point.y)) {
+                if ((side.getStart().latitude == point.latitude && side.getStart().longitude == point.longitude) || (side.getEnd().latitude == point.latitude && side.getEnd().longitude == point.longitude)) {
                     isVertex = true;
                 }
             }
@@ -191,12 +191,12 @@ public class Polygon {
             double y = side.getA() * x + side.getB(); // y = a2*x+b2
             intersectPoint = new Point(x, y);
         } else if (ray.isVertical() && !side.isVertical()) {
-            double x = ray.getStart().x;
+            double x = ray.getStart().latitude;
             double y = side.getA() * x + side.getB();
             intersectPoint = new Point(x, y);
         } else {
             if (!ray.isVertical() && side.isVertical()) {
-                double x = side.getStart().x;
+                double x = side.getStart().latitude;
                 double y = ray.getA() * x + ray.getB();
                 intersectPoint = new Point(x, y);
             } else {
@@ -220,8 +220,8 @@ public class Polygon {
      */
     private Line createRay(Point point) {
         // create outside point
-        double epsilon = (_boundingBox.xMax - _boundingBox.xMin) / 100f;
-        Point outsidePoint = new Point(_boundingBox.xMin - epsilon, _boundingBox.yMin);
+        double epsilon = (_boundingBox.latitudeMax - _boundingBox.latitudeMin) / 100f;
+        Point outsidePoint = new Point(_boundingBox.latitudeMin - epsilon, _boundingBox.longitudeMin);
 
         return new Line(outsidePoint, point);
     }
@@ -233,13 +233,13 @@ public class Polygon {
      * @return <code>True</code> if the point in bounding box, otherwise return <code>False</code>
      */
     private boolean inBoundingBox(Point point) {
-        return !(point.x < _boundingBox.xMin || point.x > _boundingBox.xMax || point.y < _boundingBox.yMin || point.y > _boundingBox.yMax);
+        return !(point.latitude < _boundingBox.latitudeMin || point.latitude > _boundingBox.latitudeMax || point.longitude < _boundingBox.longitudeMin || point.longitude > _boundingBox.longitudeMax);
     }
 
     private static class BoundingBox {
-        public double xMax = Double.NEGATIVE_INFINITY;
-        public double xMin = Double.NEGATIVE_INFINITY;
-        public double yMax = Double.NEGATIVE_INFINITY;
-        public double yMin = Double.NEGATIVE_INFINITY;
+        public double latitudeMax = Double.NEGATIVE_INFINITY;
+        public double latitudeMin = Double.NEGATIVE_INFINITY;
+        public double longitudeMax = Double.NEGATIVE_INFINITY;
+        public double longitudeMin = Double.NEGATIVE_INFINITY;
     }
 }

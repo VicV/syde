@@ -18,10 +18,10 @@ public class Line
 		_start = start;
 		_end = end;
 
-		if (_end.x - _start.x != 0)
+		if (_end.latitude - _start.latitude != 0)
 		{
-			_a = ((_end.y - _start.y) / (_end.x - _start.x));
-			_b = _start.y - _a * _start.x;
+			_a = ((_end.longitude - _start.longitude) / (_end.latitude - _start.latitude));
+			_b = _start.longitude - _a * _start.latitude;
 		}
 
 		else
@@ -39,12 +39,12 @@ public class Line
 	 */
 	public boolean isInside(Point point)
 	{
-		double maxX = _start.x > _end.x ? _start.x : _end.x;
-		double minX = _start.x < _end.x ? _start.x : _end.x;
-		double maxY = _start.y > _end.y ? _start.y : _end.y;
-		double minY = _start.y < _end.y ? _start.y : _end.y;
+		double maxX = _start.latitude > _end.latitude ? _start.latitude : _end.latitude;
+		double minX = _start.latitude < _end.latitude ? _start.latitude : _end.latitude;
+		double maxY = _start.longitude > _end.longitude ? _start.longitude : _end.longitude;
+		double minY = _start.longitude < _end.longitude ? _start.longitude : _end.longitude;
 
-		if ((point.x >= minX && point.x <= maxX) && (point.y >= minY && point.y <= maxY))
+		if ((point.latitude >= minX && point.latitude <= maxX) && (point.longitude >= minY && point.longitude <= maxY))
 		{
 			return true;
 		}
