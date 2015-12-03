@@ -242,7 +242,6 @@ public class RouteOptimization {
         // Initialize population
         Population pop = new Population(50, true);
 
-
         MessageHandler.d("Initial distance: " + pop.getFittest().getDistance());
 
         // Evolve population for 1000 generations
