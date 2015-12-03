@@ -1,6 +1,8 @@
 package com.jarone.litterary;
 
 import com.google.android.gms.maps.model.LatLng;
+import com.jarone.litterary.drone.Camera;
+import com.jarone.litterary.drone.GroundStation;
 import com.jarone.litterary.handlers.MessageHandler;
 
 /**
@@ -36,7 +38,7 @@ public class SurveyRoute {
     public void executeRoute() {
         if (index <= route.length - 1) {
             executing = true;
-            MessageHandler.d("Executing Survey Point " + index);
+            MessageHandler.d("Executing Survey Point " + (index + 1));
             GroundStation.newTask();
             GroundStation.addPoint(route[index].latitude, route[index].longitude, SPEED, surveyAltitude);
             index++;

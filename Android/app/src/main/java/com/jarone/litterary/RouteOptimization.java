@@ -1,6 +1,8 @@
 package com.jarone.litterary;
 
 import com.google.android.gms.maps.model.LatLng;
+import com.jarone.litterary.drone.DroneState;
+import com.jarone.litterary.drone.GroundStation;
 import com.jarone.litterary.handlers.MessageHandler;
 import com.jarone.litterary.helpers.LocationHelper;
 import com.jarone.litterary.optimization.GA;
@@ -34,6 +36,9 @@ public class RouteOptimization {
 
         if (validateBoundary(points)) {
 
+
+//            INDArray picturePoints = getPhotoPoints(array);
+          //  INDArray orderedPoints = optimizePhotoRoute(picturePoints);
 
             ArrayList<LatLng> picturePoints = getPhotoPoints(latLngs, altitude);
 
@@ -233,7 +238,6 @@ public class RouteOptimization {
         return GPS;
     }
 
-
     private static ArrayList<LatLng> optimizePhotoRoute(ArrayList<LatLng> picturePoints) {
 
         ArrayList<LatLng> bestRoute = new ArrayList();
@@ -263,6 +267,5 @@ public class RouteOptimization {
 
 
     }
-
-
+    
 }

@@ -4,18 +4,23 @@ import android.content.Context;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
+import android.graphics.Paint;
 import android.os.Bundle;
 import android.os.Parcelable;
+import android.util.Log;
+import android.view.SurfaceHolder;
 import android.view.View;
 import android.widget.EditText;
+import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 import android.widget.ToggleButton;
 
 import com.google.android.gms.maps.model.LatLng;
-import com.jarone.litterary.DroneState;
-import com.jarone.litterary.GroundStation;
 import com.jarone.litterary.R;
+import com.jarone.litterary.drone.Camera;
+import com.jarone.litterary.drone.DroneState;
+import com.jarone.litterary.drone.GroundStation;
 import com.jarone.litterary.SystemProperties;
 import com.jarone.litterary.handlers.MessageHandler;
 import com.jarone.litterary.helpers.ContextManager;
@@ -38,6 +43,7 @@ public class MainActivity extends DJIBaseActivity {
     public static final int POINTS_RESULT_CODE = 230;
 
     private DjiGLSurfaceView mDjiGLSurfaceView;
+    private ImageView cameraView;
 
     private static final String TAG = MainActivity.class.toString();
 
@@ -62,6 +68,8 @@ public class MainActivity extends DJIBaseActivity {
         registerUpdateInterface();
 
         ContextManager.setContext(this);
+
+  //      cameraView = (ImageView) findViewById(R.id.camera_texture);
 
         DroneState.registerConnectedTimer();
         GroundStation.registerPhantom2Callback();
@@ -200,14 +208,44 @@ public class MainActivity extends DJIBaseActivity {
         };
     }
 
+    public View.OnClickListener getPIDButtonListener() {
+        return new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if (GroundStation.executingController()) {
+                    GroundStation.stopController();
+                } else {
+                    GroundStation.executeController();
+                }
+            }
+        };
+    }
+
+    public View.OnClickListener getSpecialButtonListener() {
+        return new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                switch (view.getId()) {
+                    case R.id.button_special1:
+                        Camera.takePhoto();
+                        break;
+                    case R.id.button_special2:
+                        break;
+                }
+            }
+        };
+    }
+
     private void registerCamera() {
         mDjiGLSurfaceView = (DjiGLSurfaceView) findViewById(R.id.DjiSurfaceView_02);
         mDjiGLSurfaceView.start();
+        //mDjiGLSurfaceView.getHolder().addCallback(this);
 
         DJIReceivedVideoDataCallBack mReceivedVideoDataCallBack = new DJIReceivedVideoDataCallBack() {
             @Override
             public void onResult(byte[] videoBuffer, int size) {
                 mDjiGLSurfaceView.setDataToDecoder(videoBuffer, size);
+                //viewToBitmap(mDjiGLSurfaceView.getHolder(),mDjiGLSurfaceView.getWidth(), mDjiGLSurfaceView.getHeight());
 
             }
         };
@@ -228,16 +266,46 @@ public class MainActivity extends DJIBaseActivity {
         findViewById(R.id.button_start_survey).setOnClickListener(getStartSurveyListener());
         findViewById(R.id.button_switch_mode).setOnClickListener(getSwitchModeListener());
         findViewById(R.id.button_info).setOnClickListener(getInfoButtonListener());
-
+        findViewById(R.id.button_pid).setOnClickListener(getPIDButtonListener());
+        findViewById(R.id.button_special1).setOnClickListener(getSpecialButtonListener());
+        findViewById(R.id.button_special2).setOnClickListener(getSpecialButtonListener());
     }
 
 
-    private Bitmap viewToBitmap(DjiGLSurfaceView view) {
-        Bitmap b = Bitmap.createBitmap(view.getLayoutParams().width, view.getLayoutParams().height, Bitmap.Config.ARGB_8888);
-        Canvas c = new Canvas(b);
-        view.layout(view.getLeft(), view.getTop(), view.getRight(), view.getBottom());
-        view.draw(c);
+    private Bitmap viewToBitmap(SurfaceHolder holder, int width, int height) {
+        if (height <= 0 || width <=0 ) {
+            Log.d("viewToBitmap", "Wrong size");
+            return null;
+        }
+        Bitmap b = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888);
+        Canvas c = holder.lockCanvas();
+        c.setBitmap(b);
+        Paint backgroundPaint = new Paint();
+        backgroundPaint.setARGB(255, 40, 40, 40);
+        c.drawRect(0, 0, c.getWidth(), c.getHeight(), backgroundPaint);
+        mDjiGLSurfaceView.draw(c);
+        final Bitmap b2 = Bitmap.createBitmap(b, 0, 0, width, height);
+        c.setBitmap(null);
+        holder.unlockCanvasAndPost(c);
 
+
+//        Paint backgroundPaint = new Paint();
+//        backgroundPaint.setAlpha(255);
+//        //c.drawRect(0, 0, c.getWidth() - 10, c.getHeight() - 10, backgroundPaint);
+//        //view.layout(view.getLeft(), view.getTop(), view.getRight(), view.getBottom());
+//        //c.drawBitmap(view.getDrawingCache(),0, 0, backgroundPaint);
+//        ByteBuffer buf = ByteBuffer.allocateDirect(view.getWidth() * view.getHeight() * 4);
+//        buf.order(ByteOrder.LITTLE_ENDIAN);
+//        GLES20.glReadPixels(0, 0, view.getWidth(), view.getHeight(), GLES20.GL_RGBA, GLES20.GL_UNSIGNED_BYTE, buf);
+//        buf.rewind();
+//        b.copyPixelsFromBuffer(buf);
+
+        runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                cameraView.setImageBitmap(b2);
+            }
+        });
         return b;
     }
 
@@ -304,7 +372,12 @@ public class MainActivity extends DJIBaseActivity {
                         )
                 );
                 ((TextView) findViewById(R.id.droneConnected)).setText("" + DroneState.droneConnected);
+                if (GroundStation.executingController()) {
+                    ((TextView) findViewById(R.id.pid_angle)).setText("" + GroundStation.getAngularController().getLastAction());
+                    ((TextView) findViewById(R.id.pid_error)).setText("" + GroundStation.getAngularController().getLastError());
+                }
             }
         });
     }
+
 }
