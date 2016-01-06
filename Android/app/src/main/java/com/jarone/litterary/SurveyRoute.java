@@ -17,13 +17,15 @@ public class SurveyRoute {
     private LatLng[] route;
     private int index;
     private float surveyAltitude;
+    private short surveyHeading;
     private final int SPEED = 5;
     private boolean executing;
     private boolean finished;
 
-    public SurveyRoute(LatLng[] route, float altitude) {
+    public SurveyRoute(LatLng[] route, float altitude, short heading) {
         this.route = route;
         this.surveyAltitude = altitude;
+        this.surveyHeading = heading;
         index = 0;
         executing = false;
         finished = false;
@@ -40,7 +42,7 @@ public class SurveyRoute {
             executing = true;
             MessageHandler.d("Executing Survey Point " + (index + 1));
             GroundStation.newTask();
-            GroundStation.addPoint(route[index].latitude, route[index].longitude, SPEED, surveyAltitude);
+            GroundStation.addPoint(route[index].latitude, route[index].longitude, SPEED, surveyAltitude, surveyHeading);
             index++;
 
             //set the callbacks to take a photo when the point is reached

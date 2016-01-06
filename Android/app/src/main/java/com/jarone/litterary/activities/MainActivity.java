@@ -18,16 +18,12 @@ import android.widget.ToggleButton;
 
 import com.google.android.gms.maps.model.LatLng;
 import com.jarone.litterary.R;
-import com.jarone.litterary.RouteOptimization;
 import com.jarone.litterary.drone.Camera;
 import com.jarone.litterary.drone.DroneState;
 import com.jarone.litterary.drone.GroundStation;
 import com.jarone.litterary.handlers.MessageHandler;
 import com.jarone.litterary.helpers.ContextManager;
 import com.jarone.litterary.helpers.LocationHelper;
-
-import org.json.JSONArray;
-import org.json.JSONObject;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -95,25 +91,21 @@ public class MainActivity extends DJIBaseActivity {
             public void onClick(View v) {
                 switch (v.getId()) {
                     case R.id.button_up:
-                        //TODO: Up Code
                         if (DroneState.getMode() == DroneState.DIRECT_MODE) {
                             GroundStation.setAngles(DroneState.getPitch() + 500, DroneState.getYaw(), DroneState.getRoll());
                         }
                         break;
                     case R.id.button_down:
-                        //TODO: Down Code
                         if (DroneState.getMode() == DroneState.DIRECT_MODE) {
                             GroundStation.setAngles(DroneState.getPitch() - 500, DroneState.getYaw(), DroneState.getRoll());
                         }
                         break;
                     case R.id.button_left:
-                        //TODO: Left Code
                         if (DroneState.getMode() == DroneState.DIRECT_MODE) {
                             GroundStation.setAngles(DroneState.getPitch(), DroneState.getYaw(), DroneState.getRoll() - 500);
                         }
                         break;
                     case R.id.button_right:
-                        //TODO: Right Code
                         if (DroneState.getMode() == DroneState.DIRECT_MODE) {
                             GroundStation.setAngles(DroneState.getPitch(), DroneState.getYaw(), DroneState.getRoll() + 500);
                         }

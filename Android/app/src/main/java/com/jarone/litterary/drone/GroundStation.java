@@ -35,6 +35,11 @@ public class GroundStation {
     public static float defaultAltitude;
 
     /**
+     * Default heading used for GPS waypoint nav points
+     */
+    public static short defaultHeading;
+
+    /**
      * Default speed of the drone. Will be used when no speed is provided in navigation.
      **/
     public static float defaultSpeed;
@@ -95,9 +100,14 @@ public class GroundStation {
      * Add a point for the Drone to navigate to, with speed and altitude specifications.
      */
     public static void addPoint(double latitude, double longitude, float speed, float altitude) {
+        addPoint(latitude, longitude, speed, altitude, defaultHeading);
+    }
+
+    public static void addPoint(double latitude, double longitude, float speed, float altitude, short heading) {
         DJIGroundStationWaypoint point = new DJIGroundStationWaypoint(latitude, longitude);
         point.speed = speed;
         point.altitude = altitude;
+        point.heading = heading;
         groundTask.addWaypoint(point);
     }
 
@@ -106,7 +116,6 @@ public class GroundStation {
      * openGroundStation and executing the callable in case of success
      */
     public static void withConnection(final Runnable run) {
-//        final Handler handler = new Handler();
         DJIDrone.getDjiGroundStation().openGroundStation(new DJIGroundStationExecuteCallBack() {
             @Override
             public void onResult(DJIGroundStationTypeDef.GroundStationResult result) {
@@ -347,7 +356,8 @@ public class GroundStation {
         }
         GroundStation.currentSurveyRoute = new SurveyRoute(
                 RouteOptimization.createOptimizedSurveyRoute(points, altitude),
-                altitude
+                altitude,
+                defaultHeading
         );
         return GroundStation.currentSurveyRoute.getRoute();
     }

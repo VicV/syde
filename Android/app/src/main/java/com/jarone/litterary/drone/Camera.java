@@ -14,7 +14,7 @@ import dji.sdk.util.DjiLocationCoordinate2D;
  */
 public class Camera {
 
-    public static int requestedGimbalAngle = 1000;
+    public static int requestedGimbalAngle = 0;
     /**
      * The callback which is executed when a photo is successfully taken. This will be changed
      * by calling classes

@@ -4,6 +4,7 @@ import android.os.Bundle;
 import android.support.v4.app.FragmentActivity;
 
 import com.jarone.litterary.drone.DroneState;
+import com.jarone.litterary.imageproc.ImageProcessing;
 
 import dji.midware.data.manager.P3.ServiceManager;
 import dji.sdk.api.DJIDrone;
@@ -19,6 +20,7 @@ public class DJIBaseActivity extends FragmentActivity {
     @Override
     protected void onResume() {
         super.onResume();
+        ImageProcessing.initializeOpenCV();
         DJIDrone.getDjiMC().startUpdateTimer(1000);
 
         DJIDrone.getDjiGroundStation().startUpdateTimer(1000);

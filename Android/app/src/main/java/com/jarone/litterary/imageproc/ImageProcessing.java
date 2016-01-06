@@ -4,30 +4,58 @@ import android.content.Context;
 import android.graphics.Bitmap;
 import android.util.Pair;
 
-import org.opencv.android.InstallCallbackInterface;
+import com.jarone.litterary.helpers.ContextManager;
+
+import org.opencv.android.BaseLoaderCallback;
 import org.opencv.android.LoaderCallbackInterface;
 import org.opencv.android.OpenCVLoader;
+import org.opencv.android.Utils;
+import org.opencv.core.Mat;
+import org.opencv.imgproc.Imgproc;
 
 /**
  * Created by vic on 11/17/15.
  */
 public class ImageProcessing {
 
-    public Pair calculateGPSPoints(Bitmap image, int pw, int py, Context context) {
+    private static boolean connected = false;
+    private static Mat currentMat = new Mat();
+
+    public static BaseLoaderCallback loaderCallback = new BaseLoaderCallback(ContextManager.getContext()) {
+        @Override
+        public void onManagerConnected(int status) {
+            switch(status) {
+                case LoaderCallbackInterface.SUCCESS:
+                    connected = true;
+                    break;
+                default:
+                    super.onManagerConnected(status);
+                    break;
+            }
+        }
+    };
+
+    public static void initializeOpenCV() {
+        OpenCVLoader.initAsync("2.4.8", ContextManager.getContext(), loaderCallback);
+    }
+
+    public static Pair calculateGPSPoints(Bitmap image, int pw, int py, Context context) {
         Pair points = new Pair<>(0, 0);
         int counter = 0, top = 0, bottom = 0, left = 0, right = 0;
-        OpenCVLoader.initAsync("2.4.8", context, new LoaderCallbackInterface() {
-            @Override
-            public void onManagerConnected(int status) {
 
-            }
-
-            @Override
-            public void onPackageInstall(int operation, InstallCallbackInterface callback) {
-
-            }
-        });
         return points;
+    }
+
+    public static void readFrame(Bitmap image) {
+        Utils.bitmapToMat(image, currentMat);
+    }
+
+    public static Bitmap findEdges() {
+        Mat edges = new Mat();
+        Imgproc.Canny(currentMat, edges, 3, 10);
+        Bitmap bitmap = Bitmap.createBitmap(edges.width(), edges.height(), Bitmap.Config.ARGB_8888);
+        Utils.matToBitmap(edges, bitmap);
+        return bitmap;
     }
 }
 

@@ -19,13 +19,14 @@ public class AngularController {
     private ScheduledExecutorService taskScheduler;
     private ScheduledFuture controlsLoopFuture;
 
-    private float MAX_ANGLE = 500;
-    private long SAMPLING_TIME = 500;
+    float MAX_ANGLE = 500;
+    private long SAMPLING_TIME = 200;
+    double CONVERGENCE_THRESHOLD = 0.1;
 
-    private float P = 50;
-    private float I = 0;
-    private float D = 10;
-    private float errorSum = 0;
+    float P = 50;
+    float I = 0;
+    float D = 10;
+    float errorSum = 0;
     private float lastError = 0;
     private float lastAction = 0;
 
@@ -36,6 +37,9 @@ public class AngularController {
         taskScheduler = Executors.newSingleThreadScheduledExecutor();
     }
 
+    /**
+     * Initiates the PID control loop using the SAMPLING_TIME
+     */
     public void startExecutionLoop() {
         startLocation = DroneState.getLatLng();
         GroundStation.setAngles(0, 0, 0);
@@ -47,6 +51,10 @@ public class AngularController {
         },0, SAMPLING_TIME, TimeUnit.MILLISECONDS);
     }
 
+    /**
+     * The control loop governing the PID control strategy. Loop is executed on a timer with
+     * a rate of SAMPLING_TIME
+     */
     public void controlsLoop() {
         if (!DroneState.hasValidLocation()) {
             executeAction(0);
@@ -54,26 +62,40 @@ public class AngularController {
         }
         float distance = LocationHelper.distanceBetween(startLocation, DroneState.getLatLng());
         float error;
+
+        //Set error based on status of flip variable to trigger movement towards or away from start
         if (flip) {
             error = 10 - distance;
         } else {
             error = -distance;
             lastError = 0;
         }
-        float action = error * P + errorSum * SAMPLING_TIME * I + (error - lastError)/SAMPLING_TIME * D;
+
+        float action = PID(error);
+
         if (Math.abs(action) > MAX_ANGLE) {
             action = MAX_ANGLE * Math.signum(action);
         }
-        if (Math.abs(error) < 1 && canFlip) {
+
+        if (Math.abs(error) < CONVERGENCE_THRESHOLD && canFlip) {
             flip = !flip;
             canFlip = false;
-        } else if (Math.abs(error) > 1) {
+        } else if (Math.abs(error) > CONVERGENCE_THRESHOLD) {
             canFlip = true;
         }
+
         lastError = error;
         executeAction(action);
     }
 
+    /**
+     * PID Control Equation, using constant parameters defined in class
+     * @param error The error term used for control
+     * @return The calculated action based on PID control math
+     */
+    private float PID(float error) {
+        return error * P + errorSum * SAMPLING_TIME * I + (error - lastError)/SAMPLING_TIME * D;
+    }
     private void executeAction(float action) {
         lastAction = action;
         GroundStation.setAngles(action, 0, 0);
