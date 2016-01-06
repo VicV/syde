@@ -1,0 +1,32 @@
+clc;
+close all;
+clear;
+rgbI = imread('popcan.jpg');
+I = rgb2gray(rgbI);
+gaussFilter = fspecial('gaussian', [2 2], 1);
+I = imfilter(I, gaussFilter);
+[~, threshold] = edge(I, 'sobel');
+fudgeFactor = .5;
+BWs = edge(I,'sobel', threshold * fudgeFactor);
+figure, imshow(BWs), title('binary gradient mask');
+se90 = strel('line', 3, 90);
+se0 = strel('line', 3, 0);
+BWsdil = imdilate(BWs, [se90 se0]);
+figure, imshow(BWsdil), title('dilated gradient mask');
+BWdfill = imfill(BWsdil, 'holes');
+figure, imshow(BWdfill);
+title('binary image with filled holes');
+BWnobord = imclearborder(BWdfill, 4);
+figure, imshow(BWnobord), title('cleared border image');
+seD = strel('diamond',1);
+BWfinal = imerode(BWnobord,seD);
+BWfinal = imerode(BWfinal,seD);
+figure();
+fig = imshow(BWfinal);
+title('segmented image');
+saveas(fig,'ovalsegmented.jpg');
+r=getRadiusOfObject(BWfinal)
+[centersBright, radiiBright] = imfindcircles(rgbI,[round(r*0.75), round(r*1.25)],'ObjectPolarity', ...
+    'bright','Sensitivity',0.92);
+imshow(rgbI);
+hBright = viscircles(centersBright, radiiBright,'EdgeColor','b');

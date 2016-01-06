@@ -1,0 +1,84 @@
+clc;
+close all;
+clear;
+rgbI = imread('oval.jpg');
+I = rgb2gray(rgbI);
+gaussFilter = fspecial('gaussian', [5 5], 5);
+I = imfilter(I, gaussFilter);
+figure();
+imshow(I)
+[~, threshold] = edge(I, 'sobel');
+fudgeFactor = 1.5;
+BWs = edge(I,'sobel', threshold * fudgeFactor);
+figure, 
+fig1 = imshow(BWs);
+saveas(fig1,'bingradmask.jpg');
+title('binary gradient mask');
+% se90 = strel('line', 3, 90);
+% se0 = strel('line', 3, 0);
+% BWsdil = imdilate(BWs, [se90 se0]);
+se = strel('disk',50);
+BWsdil = imclose(BWs,se);
+figure();
+fig2 = imshow(BWsdil);
+saveas(fig2,'dilgradmask.jpg');
+title('dilated gradient mask');
+BWdfill = imfill(BWsdil, 'holes');
+figure();
+fig3 = imshow(BWdfill);
+saveas(fig3,'filled.jpg');
+title('binary image with filled holes');
+BWnobord = imclearborder(BWdfill, 4);
+figure(); 
+fig4 = imshow(BWnobord);
+saveas(fig4,'cleared.jpg');
+title('cleared border image');
+seD = strel('diamond',1);
+BWfinal = imerode(BWnobord,seD);
+BWfinal = imerode(BWfinal,seD);
+figure();
+fig5 = imshow(BWfinal);
+saveas(fig5,'segmented.jpg');
+title('segmented image');
+% r=getRadiusOfObject(BWfinal)
+% [centersBright, radiiBright] = imfindcircles(rgbI,[round(r*0.75), round(r*1.25)],'ObjectPolarity', ...
+%     'bright','Sensitivity',0.92);
+% figure();
+% imshow(rgbI);
+% hBright = viscircles(centersBright, radiiBright,'EdgeColor','b');
+
+
+%Apply median filter to remove noise
+filteredImage=medfilt2(BWfinal,[25 25]);
+%Boundary Label the Filtered Image
+[L, num]=bwlabel(filteredImage);
+STATS=regionprops(L,'all');
+cc=[];
+removed=0;
+%Remove the noisy regions 
+for i=1:num
+    dd=STATS(i).Area;
+    if (dd < 1000)
+        L(L==i)=0;
+        removed = removed + 1;
+        num=num-1;
+    end
+end
+[L2, num2]=bwlabel(L);
+% Trace region boundaries in a binary image.
+[B,L,N,A] = bwboundaries(L2);
+%Display results
+figure();
+fig2 = imshow(L2);title('Blob Detected');
+saveas(fig2,'ovaldetected.jpg');
+hold on;
+for k=1:length(B),
+    if(~sum(A(k,:)))
+        boundary = B{k};
+        plot(boundary(:,2), boundary(:,1), 'r','LineWidth',2);
+        for l=find(A(:,k))
+            boundary = B{l};
+            plot(boundary(:,2), boundary(:,1), 'g','LineWidth',2);
+        end
+    end
+end
