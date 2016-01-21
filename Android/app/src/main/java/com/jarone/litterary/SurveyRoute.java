@@ -1,34 +1,32 @@
 package com.jarone.litterary;
 
+import android.graphics.BitmapFactory;
+import android.os.Environment;
+
 import com.google.android.gms.maps.model.LatLng;
 import com.jarone.litterary.drone.Camera;
 import com.jarone.litterary.drone.GroundStation;
 import com.jarone.litterary.handlers.MessageHandler;
+import com.jarone.litterary.helpers.LocationHelper;
+import com.jarone.litterary.imageproc.ImageProcessing;
+
+import java.io.File;
+import java.util.ArrayList;
 
 /**
  * Created by Adam on 2015-11-16.
  * Class responsible for handling the execution of survey routes
  */
-public class SurveyRoute {
-    public LatLng[] getRoute() {
-        return route;
-    }
+public class SurveyRoute extends NavigationRoute{
 
-    private LatLng[] route;
-    private int index;
-    private float surveyAltitude;
-    private short surveyHeading;
-    private final int SPEED = 5;
-    private boolean executing;
-    private boolean finished;
+    private float altitude;
+    private short heading;
+
+
+    private ArrayList<LatLng> litterPoints;
 
     public SurveyRoute(LatLng[] route, float altitude, short heading) {
-        this.route = route;
-        this.surveyAltitude = altitude;
-        this.surveyHeading = heading;
-        index = 0;
-        executing = false;
-        finished = false;
+        super(route, altitude, heading);
     }
 
     /**
@@ -37,12 +35,13 @@ public class SurveyRoute {
      * callback for photo taken success that executes this method again with an incremented waypoint
      * index
      */
-    public void executeRoute() {
+    @Override
+    public void executeRouteStep() {
         if (index <= route.length - 1) {
             executing = true;
             MessageHandler.d("Executing Survey Point " + (index + 1));
             GroundStation.newTask();
-            GroundStation.addPoint(route[index].latitude, route[index].longitude, SPEED, surveyAltitude, surveyHeading);
+            GroundStation.addPoint(route[index].latitude, route[index].longitude, SPEED, altitude, heading);
             index++;
 
             //set the callbacks to take a photo when the point is reached
@@ -54,7 +53,7 @@ public class SurveyRoute {
                         @Override
                         public void run() {
                             //call this function again with the incremented index after photo taken
-                            executeRoute();
+                            executeRouteStep();
                         }
                     };
                     Camera.takePhoto();
@@ -71,26 +70,46 @@ public class SurveyRoute {
 
     }
 
+    @Override
     public void stopRoute() {
-        GroundStation.taskDoneCallback = new Runnable() {
-            @Override
-            public void run() {
-            }
-        };
         Camera.photoCallback = new Runnable() {
             @Override
             public void run() {
 
             }
         };
-        GroundStation.stopTask();
+        super.stopRoute();
     }
 
-    public boolean isExecuting() {
-        return executing;
+    public ArrayList<File> findSurveyPhotos() {
+        String path = Environment.getExternalStorageDirectory().toString()+"/survey";
+        File f = new File(path);
+        File files[] = f.listFiles();
+
+        ArrayList<File> surveyPhotos = new ArrayList<>();
+
+        for (File file : files) {
+            long timestamp = Long.parseLong(file.getName().split("|")[0]);
+            if (timestamp > startTime && timestamp < endTime) {
+                surveyPhotos.add(file);
+            }
+        }
+        return surveyPhotos;
     }
 
-    public boolean isFinished() {
-        return finished;
+    public void analyzeSurveyPhotos() {
+        ArrayList<File> photos = findSurveyPhotos();
+        ArrayList<LatLng> litter = new ArrayList<>();
+        for (File photo : photos) {
+            litter.addAll(
+                    ImageProcessing.identifyLitter(
+                            BitmapFactory.decodeFile(
+                                    photo.getAbsolutePath()
+                            )
+                    )
+            );
+        }
+        litterPoints = LocationHelper.removeDuplicates(litter);
     }
+
 }

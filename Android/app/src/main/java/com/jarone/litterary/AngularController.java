@@ -68,7 +68,6 @@ public class AngularController {
             error = 10 - distance;
         } else {
             error = -distance;
-            lastError = 0;
         }
 
         float action = PID(error);
@@ -80,11 +79,14 @@ public class AngularController {
         if (Math.abs(error) < CONVERGENCE_THRESHOLD && canFlip) {
             flip = !flip;
             canFlip = false;
+            lastError = 0;
+            errorSum = 0;
         } else if (Math.abs(error) > CONVERGENCE_THRESHOLD) {
             canFlip = true;
         }
 
         lastError = error;
+        errorSum += error;
         executeAction(action);
     }
 

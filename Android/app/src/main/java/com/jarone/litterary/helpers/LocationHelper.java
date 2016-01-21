@@ -5,6 +5,7 @@ import android.location.Location;
 import com.google.android.gms.maps.model.LatLng;
 
 import java.text.DecimalFormat;
+import java.util.ArrayList;
 
 /**
  * Created by Adam on 2015-11-25.
@@ -23,6 +24,28 @@ public class LocationHelper {
 
     public static String formatForDisplay(double latitude, double longitude) {
         return formatForDisplay(new LatLng(latitude, longitude));
+    }
+
+    /**
+     * VERY BAD n^2 removal of duplicate LatLngs. Rewrite if there's time
+     * @param initial
+     * @return
+     */
+    public static ArrayList<LatLng> removeDuplicates(ArrayList<LatLng> initial) {
+        int threshold = 2;
+        ArrayList<LatLng> deduped = new ArrayList<>();
+        for (int i = 0; i < initial.size(); i++) {
+            boolean duplicate = false;
+            for (int a = 0; a < initial.size(); a++) {
+                if (i != a && distanceBetween(initial.get(i), initial.get(a)) < threshold) {
+                    duplicate = true;
+                }
+            }
+            if (!duplicate) {
+                deduped.add(initial.get(i));
+            }
+        }
+        return deduped;
     }
 }
 

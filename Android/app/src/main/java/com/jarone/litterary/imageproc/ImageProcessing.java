@@ -2,8 +2,10 @@ package com.jarone.litterary.imageproc;
 
 import android.content.Context;
 import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.util.Pair;
 
+import com.google.android.gms.maps.model.LatLng;
 import com.jarone.litterary.helpers.ContextManager;
 
 import org.opencv.android.BaseLoaderCallback;
@@ -12,6 +14,10 @@ import org.opencv.android.OpenCVLoader;
 import org.opencv.android.Utils;
 import org.opencv.core.Mat;
 import org.opencv.imgproc.Imgproc;
+
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.ArrayList;
 
 /**
  * Created by vic on 11/17/15.
@@ -46,6 +52,20 @@ public class ImageProcessing {
         return points;
     }
 
+    public static void setTestImage() {
+        try {
+            InputStream i = ContextManager.getActivity().getAssets().open("drone.png");
+            readFrame(BitmapFactory.decodeStream(i));
+        } catch(IOException e){
+
+        }
+    }
+
+    public static Bitmap testCanny() {
+        setTestImage();
+        return findEdges();
+    }
+
     public static void readFrame(Bitmap image) {
         Utils.bitmapToMat(image, currentMat);
     }
@@ -56,6 +76,10 @@ public class ImageProcessing {
         Bitmap bitmap = Bitmap.createBitmap(edges.width(), edges.height(), Bitmap.Config.ARGB_8888);
         Utils.matToBitmap(edges, bitmap);
         return bitmap;
+    }
+
+    public static ArrayList<LatLng> identifyLitter(Bitmap photo) {
+        return new ArrayList<>();
     }
 }
 
