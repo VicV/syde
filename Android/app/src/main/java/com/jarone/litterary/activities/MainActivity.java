@@ -248,9 +248,27 @@ public class MainActivity extends DJIBaseActivity {
         };
     }
 
+    public View.OnClickListener getCameraViewListener() {
+        return new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                switch (v.getId()) {
+                    case R.id.DjiSurfaceView_02:
+                        v.setVisibility(View.GONE);
+                        findViewById(R.id.CVPreview).setVisibility(View.VISIBLE);
+                    break;
+                    case R.id.CVPreview:
+                        v.setVisibility(View.GONE);
+                        findViewById(R.id.DjiSurfaceView_02).setVisibility(View.VISIBLE);
+                    break;
+                }
+            }
+        };
+    }
+
     private void registerCamera() {
-        //mDjiGLSurfaceView = (DjiGLSurfaceView) findViewById(R.id.DjiSurfaceView_02);
-        //mDjiGLSurfaceView.start();
+        mDjiGLSurfaceView = (DjiGLSurfaceView) findViewById(R.id.DjiSurfaceView_02);
+        mDjiGLSurfaceView.start();
         //mDjiGLSurfaceView.getHolder().addCallback(this);
 
         DJIReceivedVideoDataCallBack mReceivedVideoDataCallBack = new DJIReceivedVideoDataCallBack() {
@@ -281,7 +299,8 @@ public class MainActivity extends DJIBaseActivity {
         findViewById(R.id.button_pid).setOnClickListener(getPIDButtonListener());
         findViewById(R.id.button_special1).setOnClickListener(getSpecialButtonListener());
         findViewById(R.id.button_special2).setOnClickListener(getSpecialButtonListener());
-
+        findViewById(R.id.DjiSurfaceView_02).setOnClickListener(getCameraViewListener());
+        findViewById(R.id.CVPreview).setOnClickListener(getCameraViewListener());
     }
 
 
