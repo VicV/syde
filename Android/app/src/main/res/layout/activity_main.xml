@@ -11,6 +11,13 @@
         android:layout_height="212dp"
         android:elevation="5dp" />
 
+    <ImageView
+        android:id="@+id/CVPreview"
+        android:layout_width="fill_parent"
+        android:layout_height="212dp"
+        android:elevation="5dp"
+        android:visibility="gone"/>
+
     <!--<ImageView-->
     <!--android:layout_width="match_parent"-->
     <!--android:layout_height="match_parent"-->
@@ -406,6 +413,7 @@
             </LinearLayout>
 
             <Button
+                android:layout_marginTop="60dp"
                 android:id="@+id/button_special1"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"

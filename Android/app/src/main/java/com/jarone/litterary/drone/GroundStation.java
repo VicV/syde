@@ -379,6 +379,10 @@ public class GroundStation {
         return currentSurveyRoute.getRoute();
     }
 
+    public static SurveyRoute getCurrentSurveyRoute() {
+        return currentSurveyRoute;
+    }
+
     public static DJIGroundStationTask getTask() {
         return groundTask;
     }

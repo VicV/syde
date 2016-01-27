@@ -6,7 +6,6 @@ import android.os.Environment;
 import com.google.android.gms.maps.model.LatLng;
 import com.jarone.litterary.drone.Camera;
 import com.jarone.litterary.drone.GroundStation;
-import com.jarone.litterary.handlers.MessageHandler;
 import com.jarone.litterary.helpers.LocationHelper;
 import com.jarone.litterary.imageproc.ImageProcessing;
 
@@ -27,47 +26,31 @@ public class SurveyRoute extends NavigationRoute{
 
     public SurveyRoute(LatLng[] route, float altitude, short heading) {
         super(route, altitude, heading);
+        setCallbacks();
     }
 
     /**
-     * Create a one-waypoint task with the next waypoint in the survey route. Register a
+     * Create a one-waypoint task with the next waypoint in the route. Register a
      * callback to execute when the waypoint is reached. Take a photo at this point. Register a
      * callback for photo taken success that executes this method again with an incremented waypoint
      * index
      */
-    @Override
-    public void executeRouteStep() {
-        if (index <= route.length - 1) {
-            executing = true;
-            MessageHandler.d("Executing Survey Point " + (index + 1));
-            GroundStation.newTask();
-            GroundStation.addPoint(route[index].latitude, route[index].longitude, SPEED, altitude, heading);
-            index++;
-
-            //set the callbacks to take a photo when the point is reached
-            GroundStation.taskDoneCallback = new Runnable() {
-                @Override
-                public void run() {
-                    //MessageHandler.d("Point Reached, Taking Photo");
-                    Camera.photoCallback = new Runnable() {
-                        @Override
-                        public void run() {
-                            //call this function again with the incremented index after photo taken
-                            executeRouteStep();
-                        }
-                    };
-                    Camera.takePhoto();
-                }
-            };
-            GroundStation.uploadAndExecuteTask();
-
-        } else {
-            MessageHandler.d("Survey Route Complete!");
-            finished = true;
-            executing = false;
-            stopRoute();
-        }
-
+    private void setCallbacks() {
+        //set the callbacks to take a photo when the point is reached
+        GroundStation.taskDoneCallback = new Runnable() {
+            @Override
+            public void run() {
+                //MessageHandler.d("Point Reached, Taking Photo");
+                Camera.photoCallback = new Runnable() {
+                    @Override
+                    public void run() {
+                        //call this function again with the incremented index after photo taken
+                        executeRouteStep();
+                    }
+                };
+                Camera.takePhoto();
+            }
+        };
     }
 
     @Override

@@ -6,6 +6,7 @@ import android.graphics.BitmapFactory;
 import android.util.Pair;
 
 import com.google.android.gms.maps.model.LatLng;
+import com.jarone.litterary.handlers.MessageHandler;
 import com.jarone.litterary.helpers.ContextManager;
 
 import org.opencv.android.BaseLoaderCallback;
@@ -25,7 +26,8 @@ import java.util.ArrayList;
 public class ImageProcessing {
 
     private static boolean connected = false;
-    private static Mat currentMat = new Mat();
+    private static Mat currentMat;
+    private static Bitmap CVPreview;
 
     public static BaseLoaderCallback loaderCallback = new BaseLoaderCallback(ContextManager.getContext()) {
         @Override
@@ -33,6 +35,8 @@ public class ImageProcessing {
             switch(status) {
                 case LoaderCallbackInterface.SUCCESS:
                     connected = true;
+                    currentMat = new Mat();
+                    MessageHandler.d("OPENCV INITIALIZED");
                     break;
                 default:
                     super.onManagerConnected(status);
@@ -42,7 +46,8 @@ public class ImageProcessing {
     };
 
     public static void initializeOpenCV() {
-        OpenCVLoader.initAsync("2.4.8", ContextManager.getContext(), loaderCallback);
+        MessageHandler.d("INITIALIZING OPENCV");
+        OpenCVLoader.initAsync("2.4.8", ContextManager.getActivity(), loaderCallback);
     }
 
     public static Pair calculateGPSPoints(Bitmap image, int pw, int py, Context context) {
@@ -63,7 +68,8 @@ public class ImageProcessing {
 
     public static Bitmap testCanny() {
         setTestImage();
-        return findEdges();
+        CVPreview = findEdges();
+        return CVPreview;
     }
 
     public static void readFrame(Bitmap image) {
@@ -80,6 +86,10 @@ public class ImageProcessing {
 
     public static ArrayList<LatLng> identifyLitter(Bitmap photo) {
         return new ArrayList<>();
+    }
+
+    public static Bitmap getCVPreview() {
+        return CVPreview;
     }
 }
 

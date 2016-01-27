@@ -18,12 +18,12 @@ import android.widget.ToggleButton;
 
 import com.google.android.gms.maps.model.LatLng;
 import com.jarone.litterary.R;
-import com.jarone.litterary.drone.Camera;
 import com.jarone.litterary.drone.DroneState;
 import com.jarone.litterary.drone.GroundStation;
 import com.jarone.litterary.handlers.MessageHandler;
 import com.jarone.litterary.helpers.ContextManager;
 import com.jarone.litterary.helpers.LocationHelper;
+import com.jarone.litterary.imageproc.ImageProcessing;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -167,6 +167,19 @@ public class MainActivity extends DJIBaseActivity {
         };
     }
 
+    public View.OnClickListener getFindLitterListener() {
+        return new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if (!GroundStation.getCurrentSurveyRoute().isFinished()) {
+                    MessageHandler.d("Survey Still Executing!");
+                } else {
+                    GroundStation.getCurrentSurveyRoute().analyzeSurveyPhotos();
+                }
+            }
+        };
+    }
+
     public View.OnClickListener getSwitchModeListener() {
         return new View.OnClickListener() {
             @Override
@@ -199,14 +212,6 @@ public class MainActivity extends DJIBaseActivity {
                     infoLayout.setVisibility(View.INVISIBLE);
                     //Camera.requestedGimbalAngle = 0;
                 }
-
-                findViewById(R.id.button_special1).setOnClickListener(new View.OnClickListener() {
-                    @Override
-                    public void onClick(View v) {
-
-                    }
-
-                });
             }
         };
     }
@@ -228,11 +233,15 @@ public class MainActivity extends DJIBaseActivity {
         return new View.OnClickListener() {
             @Override
             public void onClick(View view) {
+                MessageHandler.d("Special Press");
                 switch (view.getId()) {
                     case R.id.button_special1:
-                        Camera.takePhoto();
+                        MessageHandler.d("Special 1 Pressed");
+                        ImageProcessing.initializeOpenCV();
                         break;
                     case R.id.button_special2:
+                        MessageHandler.d("Testing");
+                        ImageProcessing.testCanny();
                         break;
                 }
             }
@@ -240,8 +249,8 @@ public class MainActivity extends DJIBaseActivity {
     }
 
     private void registerCamera() {
-        mDjiGLSurfaceView = (DjiGLSurfaceView) findViewById(R.id.DjiSurfaceView_02);
-        mDjiGLSurfaceView.start();
+        //mDjiGLSurfaceView = (DjiGLSurfaceView) findViewById(R.id.DjiSurfaceView_02);
+        //mDjiGLSurfaceView.start();
         //mDjiGLSurfaceView.getHolder().addCallback(this);
 
         DJIReceivedVideoDataCallBack mReceivedVideoDataCallBack = new DJIReceivedVideoDataCallBack() {
@@ -272,6 +281,7 @@ public class MainActivity extends DJIBaseActivity {
         findViewById(R.id.button_pid).setOnClickListener(getPIDButtonListener());
         findViewById(R.id.button_special1).setOnClickListener(getSpecialButtonListener());
         findViewById(R.id.button_special2).setOnClickListener(getSpecialButtonListener());
+
     }
 
 
@@ -421,6 +431,8 @@ public class MainActivity extends DJIBaseActivity {
                     ((TextView) findViewById(R.id.pid_angle)).setText("" + GroundStation.getAngularController().getLastAction());
                     ((TextView) findViewById(R.id.pid_error)).setText("" + GroundStation.getAngularController().getLastError());
                 }
+
+                ((ImageView) findViewById(R.id.CVPreview)).setImageBitmap(ImageProcessing.getCVPreview());
             }
         });
     }

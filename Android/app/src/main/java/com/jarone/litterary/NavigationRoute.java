@@ -2,6 +2,7 @@ package com.jarone.litterary;
 
 import com.google.android.gms.maps.model.LatLng;
 import com.jarone.litterary.drone.GroundStation;
+import com.jarone.litterary.handlers.MessageHandler;
 
 /**
  * Created by Adam on 2016-01-21.
@@ -47,6 +48,21 @@ public class NavigationRoute {
      * Override this to determine what happens when route is executed
      */
     public void executeRouteStep() {
+        if (index <= route.length - 1) {
+            executing = true;
+            MessageHandler.d("Executing Survey Point " + (index + 1));
+            GroundStation.newTask();
+            GroundStation.addPoint(route[index].latitude, route[index].longitude, SPEED, altitude, heading);
+            index++;
+
+            GroundStation.uploadAndExecuteTask();
+
+        } else {
+            MessageHandler.d("Survey Route Complete!");
+            finished = true;
+            executing = false;
+            stopRoute();
+        }
 
     }
 
