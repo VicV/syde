@@ -19,7 +19,7 @@ android {
     }
     sourceSets {
         main {
-            jniLibs.srcDirs = ['..\\Lib\\DJI-SDK-LIB\\libs']
+//            jniLibs.srcDirs = ['..\\Lib\\DJI-SDK-LIB\\libs']
         }
     }
 }
