@@ -233,15 +233,13 @@ public class MainActivity extends DJIBaseActivity {
         return new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                MessageHandler.d("Special Press");
                 switch (view.getId()) {
                     case R.id.button_special1:
-                        MessageHandler.d("Special 1 Pressed");
                         ImageProcessing.initializeOpenCV();
                         break;
                     case R.id.button_special2:
-                        MessageHandler.d("Testing");
-                        ImageProcessing.testCanny();
+                        ImageProcessing.setTestImage();
+                        ImageProcessing.detectBlobs();
                         break;
                 }
             }

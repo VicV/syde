@@ -1,4 +1,4 @@
-package com.jarone.litterary;
+package com.jarone.litterary.control;
 
 import com.google.android.gms.maps.model.LatLng;
 import com.jarone.litterary.drone.DroneState;

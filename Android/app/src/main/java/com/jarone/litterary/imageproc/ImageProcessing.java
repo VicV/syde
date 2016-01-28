@@ -13,7 +13,11 @@ import org.opencv.android.BaseLoaderCallback;
 import org.opencv.android.LoaderCallbackInterface;
 import org.opencv.android.OpenCVLoader;
 import org.opencv.android.Utils;
+import org.opencv.core.Core;
 import org.opencv.core.Mat;
+import org.opencv.core.Point;
+import org.opencv.core.Scalar;
+import org.opencv.core.Size;
 import org.opencv.imgproc.Imgproc;
 
 import java.io.IOException;
@@ -27,6 +31,7 @@ public class ImageProcessing {
 
     private static boolean connected = false;
     private static Mat currentMat;
+    private static Mat processingMat;
     private static Bitmap CVPreview;
 
     public static BaseLoaderCallback loaderCallback = new BaseLoaderCallback(ContextManager.getContext()) {
@@ -36,7 +41,6 @@ public class ImageProcessing {
                 case LoaderCallbackInterface.SUCCESS:
                     connected = true;
                     currentMat = new Mat();
-                    MessageHandler.d("OPENCV INITIALIZED");
                     break;
                 default:
                     super.onManagerConnected(status);
@@ -59,7 +63,7 @@ public class ImageProcessing {
 
     public static void setTestImage() {
         try {
-            InputStream i = ContextManager.getActivity().getAssets().open("drone.png");
+            InputStream i = ContextManager.getActivity().getAssets().open("oval.jpg");
             readFrame(BitmapFactory.decodeStream(i));
         } catch(IOException e){
 
@@ -90,6 +94,27 @@ public class ImageProcessing {
 
     public static Bitmap getCVPreview() {
         return CVPreview;
+    }
+
+    public static void detectBlobs() {
+        processingMat = currentMat;
+        Imgproc.cvtColor(processingMat, processingMat, Imgproc.COLOR_BGR2GRAY);
+        Imgproc.Canny(processingMat, processingMat, 150, 250);
+        Mat element = Imgproc.getStructuringElement(Imgproc.MORPH_ELLIPSE, new Size(100, 100));
+        Imgproc.morphologyEx(processingMat, processingMat, Imgproc.MORPH_CLOSE, element);
+        //imFill();
+        Imgproc.medianBlur(processingMat, processingMat, 25);
+        currentMat = processingMat;
+        Bitmap preview = Bitmap.createBitmap(currentMat.width(), currentMat.height(), Bitmap.Config.ARGB_8888);
+        Utils.matToBitmap(currentMat, preview);
+        CVPreview = preview;
+    }
+
+    public static void imFill() {
+        Mat fillMask = new Mat();
+        Imgproc.floodFill(processingMat, fillMask, new Point(0, 0), new Scalar(255));
+        Core.bitwise_not(fillMask, fillMask);
+        Core.bitwise_or(processingMat, fillMask, processingMat);
     }
 }
 

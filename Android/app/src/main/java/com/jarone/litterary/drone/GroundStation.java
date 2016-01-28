@@ -1,7 +1,7 @@
 package com.jarone.litterary.drone;
 
 import com.google.android.gms.maps.model.LatLng;
-import com.jarone.litterary.AngularController;
+import com.jarone.litterary.control.AngularController;
 import com.jarone.litterary.RouteOptimization;
 import com.jarone.litterary.SurveyRoute;
 import com.jarone.litterary.handlers.MessageHandler;
