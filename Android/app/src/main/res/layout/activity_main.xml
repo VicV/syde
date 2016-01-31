@@ -5,8 +5,8 @@
     android:orientation="vertical">
 
 
-    <dji.sdk.widget.DjiGLSurfaceView
-        android:id="@+id/DjiSurfaceView_02"
+    <TextureView
+        android:id="@+id/texture_view"
         android:layout_width="fill_parent"
         android:layout_height="212dp"
         android:elevation="5dp" />

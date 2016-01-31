@@ -5,4 +5,4 @@
     <item android:drawable="@android:drawable/ic_lock_lock"></item>
 
 </selector>
-<!-- From: file:/C:/work/syde/Android/Lib/DJI-SDK-LIB/res/drawable/btn_lock_selector.xml -->
+<!-- From: file:/C:/work/syde/Android/Lib/DJI-SDK-LIB/src/main/res/drawable/btn_lock_selector.xml -->

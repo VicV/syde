@@ -2,14 +2,11 @@ package com.jarone.litterary.activities;
 
 import android.content.Context;
 import android.content.Intent;
-import android.graphics.Bitmap;
-import android.graphics.Canvas;
-import android.graphics.Paint;
+import android.graphics.SurfaceTexture;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Parcelable;
-import android.util.Log;
-import android.view.SurfaceHolder;
+import android.view.TextureView;
 import android.view.View;
 import android.widget.EditText;
 import android.widget.ImageView;
@@ -17,6 +14,7 @@ import android.widget.TextView;
 import android.widget.ToggleButton;
 
 import com.google.android.gms.maps.model.LatLng;
+import com.jarone.litterary.LitterApplication;
 import com.jarone.litterary.R;
 import com.jarone.litterary.drone.DroneState;
 import com.jarone.litterary.drone.GroundStation;
@@ -31,17 +29,22 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
-import dji.sdk.api.DJIDrone;
-import dji.sdk.interfaces.DJIReceivedVideoDataCallBack;
-import dji.sdk.widget.DjiGLSurfaceView;
+import dji.sdk.AirLink.DJILBAirLink;
+import dji.sdk.Camera.DJICamera;
+import dji.sdk.Codec.DJICodecManager;
+import dji.sdk.base.DJIBaseProduct;
 
 
-public class MainActivity extends DJIBaseActivity {
+public class MainActivity extends DJIBaseActivity implements TextureView.SurfaceTextureListener {
 
     public static final int POINTS_REQUEST_CODE = 130;
     public static final int POINTS_RESULT_CODE = 230;
 
-    private DjiGLSurfaceView mDjiGLSurfaceView;
+    protected DJICamera.CameraReceivedVideoDataCallback mReceivedVideoDataCallback = null;
+    protected DJILBAirLink.DJIOnReceivedVideoCallback mOnReceivedVideoCallback = null;
+    private DJICodecManager mCodecManager = null;
+
+    private TextureView mCameraFeed;
     private ImageView cameraView;
 
     private static final String TAG = MainActivity.class.toString();
@@ -256,30 +259,53 @@ public class MainActivity extends DJIBaseActivity {
                     case R.id.DjiSurfaceView_02:
                         v.setVisibility(View.GONE);
                         findViewById(R.id.CVPreview).setVisibility(View.VISIBLE);
-                    break;
+                        break;
                     case R.id.CVPreview:
                         v.setVisibility(View.GONE);
                         findViewById(R.id.DjiSurfaceView_02).setVisibility(View.VISIBLE);
-                    break;
+                        break;
                 }
             }
         };
     }
 
     private void registerCamera() {
-        mDjiGLSurfaceView = (DjiGLSurfaceView) findViewById(R.id.DjiSurfaceView_02);
-        mDjiGLSurfaceView.start();
-        //mDjiGLSurfaceView.getHolder().addCallback(this);
+        mCameraFeed = (TextureView) findViewById(R.id.texture_view);
 
-        DJIReceivedVideoDataCallBack mReceivedVideoDataCallBack = new DJIReceivedVideoDataCallBack() {
-            @Override
-            public void onResult(byte[] videoBuffer, int size) {
-                mDjiGLSurfaceView.setDataToDecoder(videoBuffer, size);
-                //viewToBitmap(mDjiGLSurfaceView.getHolder(),mDjiGLSurfaceView.getWidth(), mDjiGLSurfaceView.getHeight());
+        if (null != mCameraFeed) {
+            mCameraFeed.setSurfaceTextureListener(this);
 
+            // This callback is for
+            mOnReceivedVideoCallback = new DJILBAirLink.DJIOnReceivedVideoCallback() {
+                @Override
+                public void onResult(byte[] videoBuffer, int size) {
+                    if (mCodecManager != null) {
+                        mCodecManager.sendDataToDecoder(videoBuffer, size);
+                    }
+                }
+            };
+
+            mReceivedVideoDataCallback = new DJICamera.CameraReceivedVideoDataCallback() {
+                @Override
+                public void onResult(byte[] videoBuffer, int size) {
+                    if (null != mCodecManager) {
+                        mCodecManager.sendDataToDecoder(videoBuffer, size);
+                    }
+                }
+            };
+        }
+
+    }
+
+    private void initSDKCallback() {
+        try {
+            if (DroneState.mProduct.getModel() != DJIBaseProduct.Model.UnknownAircraft) {
+                DroneState.mProduct.getCamera().setDJICameraReceivedVideoDataCallback(mReceivedVideoDataCallback);
+            } else {
+                DroneState.mProduct.getAirLink().getLBAirLink().setDJIOnReceivedVideoCallback(mOnReceivedVideoCallback);
             }
-        };
-        DJIDrone.getDjiCamera().setReceivedVideoDataCallBack(mReceivedVideoDataCallBack);
+        } catch (Exception exception) {
+        }
     }
 
 
@@ -302,45 +328,6 @@ public class MainActivity extends DJIBaseActivity {
         findViewById(R.id.DjiSurfaceView_02).setOnClickListener(getCameraViewListener());
         findViewById(R.id.CVPreview).setOnClickListener(getCameraViewListener());
     }
-
-
-    private Bitmap viewToBitmap(SurfaceHolder holder, int width, int height) {
-        if (height <= 0 || width <= 0) {
-            Log.d("viewToBitmap", "Wrong size");
-            return null;
-        }
-        Bitmap b = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888);
-        Canvas c = holder.lockCanvas();
-        c.setBitmap(b);
-        Paint backgroundPaint = new Paint();
-        backgroundPaint.setARGB(255, 40, 40, 40);
-        c.drawRect(0, 0, c.getWidth(), c.getHeight(), backgroundPaint);
-        mDjiGLSurfaceView.draw(c);
-        final Bitmap b2 = Bitmap.createBitmap(b, 0, 0, width, height);
-        c.setBitmap(null);
-        holder.unlockCanvasAndPost(c);
-
-
-//        Paint backgroundPaint = new Paint();
-//        backgroundPaint.setAlpha(255);
-//        //c.drawRect(0, 0, c.getWidth() - 10, c.getHeight() - 10, backgroundPaint);
-//        //view.layout(view.getLeft(), view.getTop(), view.getRight(), view.getBottom());
-//        //c.drawBitmap(view.getDrawingCache(),0, 0, backgroundPaint);
-//        ByteBuffer buf = ByteBuffer.allocateDirect(view.getWidth() * view.getHeight() * 4);
-//        buf.order(ByteOrder.LITTLE_ENDIAN);
-//        GLES20.glReadPixels(0, 0, view.getWidth(), view.getHeight(), GLES20.GL_RGBA, GLES20.GL_UNSIGNED_BYTE, buf);
-//        buf.rewind();
-//        b.copyPixelsFromBuffer(buf);
-
-        runOnUiThread(new Runnable() {
-            @Override
-            public void run() {
-                cameraView.setImageBitmap(b2);
-            }
-        });
-        return b;
-    }
-
 
     private View.OnClickListener setRegionClickListener() {
         return new View.OnClickListener() {
@@ -434,7 +421,9 @@ public class MainActivity extends DJIBaseActivity {
                     ((TextView) findViewById(R.id.currentMode)).setText("DIRECT");
                 } else if (DroneState.getMode() == DroneState.WAYPOINT_MODE) {
                     modeButton.setChecked(false);
-                    ((TextView) findViewById(R.id.currentMode)).setText(DroneState.flightMode.name());
+
+                    //TODO: FIX ME
+//                    ((TextView) findViewById(R.id.currentMode)).setText(DroneState.flightMode.name());
                 }
                 ((TextView) findViewById(R.id.currentLocation)).setText(
                         LocationHelper.formatForDisplay(DroneState.getLatitude(), DroneState.getLongitude()));
@@ -464,6 +453,33 @@ public class MainActivity extends DJIBaseActivity {
         } else {
             infoLayout.setVisibility(View.INVISIBLE);
         }
+    }
+
+
+    @Override
+    public void onSurfaceTextureAvailable(SurfaceTexture surface, int width, int height) {
+        if (mCodecManager == null) {
+            mCodecManager = new DJICodecManager(LitterApplication.getContext(), surface, width, height);
+        }
+    }
+
+    @Override
+    public void onSurfaceTextureSizeChanged(SurfaceTexture surface, int width, int height) {
+
+    }
+
+    @Override
+    public boolean onSurfaceTextureDestroyed(SurfaceTexture surface) {
+        if (mCodecManager != null) {
+            mCodecManager.cleanSurface();
+            mCodecManager = null;
+        }
+        return false;
+    }
+
+    @Override
+    public void onSurfaceTextureUpdated(SurfaceTexture surface) {
+
     }
 
 

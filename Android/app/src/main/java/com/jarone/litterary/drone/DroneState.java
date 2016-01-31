@@ -8,17 +8,64 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 
-import dji.sdk.api.DJIDrone;
-import dji.sdk.api.GroundStation.DJIGroundStationTypeDef;
-import dji.sdk.api.MainController.DJIMainControllerSystemState;
-import dji.sdk.interfaces.DJIMcuUpdateStateCallBack;
+import dji.sdk.FlightController.DJIFlightController;
+import dji.sdk.FlightController.DJIFlightControllerDataType;
+import dji.sdk.FlightController.DJIFlightControllerDelegate;
+import dji.sdk.Products.DJIAircraft;
+import dji.sdk.Products.DJIHandHeld;
+import dji.sdk.SDKManager.DJISDKManager;
+import dji.sdk.base.DJIBaseProduct;
 
 /**
  * Created by Adam on 2015-10-24.
- * <p/>
+ * <p>
  * Static class containing information about the current state of the Drone.
  */
 public class DroneState {
+
+    public static void setmProduct(DJIBaseProduct mProduct) {
+        DroneState.mProduct = mProduct;
+    }
+
+    public static DJIBaseProduct mProduct;
+
+    /**
+     * Gets instance of the specific product connected after the
+     * API KEY is successfully validated. Please make sure the
+     * API_KEY has been added in the Manifest
+     */
+    public static synchronized DJIBaseProduct getProductInstance() {
+        if (null == mProduct) {
+            mProduct = DJISDKManager.getInstance().getDJIProduct();
+        }
+        return mProduct;
+    }
+
+    public DroneState() {
+        mFlightController = ((DJIAircraft) mProduct).getFlightController();
+    }
+
+
+    public static boolean isAircraftConnected() {
+        return getProductInstance() != null && getProductInstance() instanceof DJIAircraft;
+    }
+
+    public static boolean isHandHeldConnected() {
+        return getProductInstance() != null && getProductInstance() instanceof DJIHandHeld;
+    }
+
+    public static synchronized DJIAircraft getAircraftInstance() {
+        if (!isAircraftConnected()) return null;
+        return (DJIAircraft) getProductInstance();
+    }
+
+    public static synchronized DJIHandHeld getHandHeldInstance() {
+        if (!isHandHeldConnected()) return null;
+        return (DJIHandHeld) getProductInstance();
+    }
+
+    private static DJIFlightController mFlightController;
+
 
     public static final int WAYPOINT_MODE = 0;
     public static final int DIRECT_MODE = 1;
@@ -40,7 +87,7 @@ public class DroneState {
     private static double battery = 0;
     private static int mode;
 
-    public static DJIGroundStationTypeDef.GroundStationFlightMode flightMode = DJIGroundStationTypeDef.GroundStationFlightMode.GS_Mode_Assited_Takeoff;
+    public static DJIFlightControllerDataType.DJIFlightControllerFlightMode flightMode = DJIFlightControllerDataType.DJIFlightControllerFlightMode.AssistedTakeOff;
 
     /**
      * Latitude of the home station
@@ -56,10 +103,10 @@ public class DroneState {
     public static boolean groundStationConnected = false;
     public static boolean hasTask = false;
 
-    private static DJIMainControllerSystemState state;
+    private static DJIFlightControllerDataType.DJIFlightControllerCurrentState state;
     private static final String TAG = DroneState.class.toString();
 
-    private static DJIMcuUpdateStateCallBack mMcuUpdateStateCallBack;
+    private static DJIFlightControllerDelegate.FlightControllerUpdateSystemStateCallback mMcuUpdateStateCallBack;
 
     public static SurveyRoute currentSurveyRoute;
 
@@ -82,26 +129,26 @@ public class DroneState {
      * Update the current state of the drone.
      */
     public static void updateDroneState() {
-        mMcuUpdateStateCallBack = new DJIMcuUpdateStateCallBack() {
+        mMcuUpdateStateCallBack = new DJIFlightControllerDelegate.FlightControllerUpdateSystemStateCallback() {
 
             @Override
-            public void onResult(DJIMainControllerSystemState state) {
-                latitude = state.droneLocationLatitude;
-                longitude = state.droneLocationLongitude;
-                homeLatitude = state.homeLocationLatitude;
-                homeLongitude = state.homeLocationLongitude;
-                altitude = state.altitude;
-                speed = state.speed;
-                battery = state.powerLevel;
-                velocityX = state.velocityX;
-                velocityY = state.velocityY;
-                velocityZ = state.velocityZ;
-                pitch = state.pitch;
-                roll = state.roll;
-                yaw = state.yaw;
+            public void onResult(DJIFlightControllerDataType.DJIFlightControllerCurrentState state) {
+                latitude = state.getAircraftLocation().getLatitude();
+                longitude = state.getAircraftLocation().getLongitude();
+                homeLatitude = state.getHomeLocation().getLatitude();
+                homeLongitude = state.getHomeLocation().getLongitude();
+                altitude = state.getAircraftLocation().getAltitude();
+                battery = state.getRemainingBattery().value();
+                velocityX = state.getVelocityX();
+                velocityY = state.getVelocityY();
+                velocityZ = state.getVelocityZ();
+                pitch = state.getAttitude().pitch;
+                roll = state.getAttitude().roll;
+                yaw = state.getAttitude().yaw;
                 DroneState.state = state;
 
-                Camera.setGimbalPitch(Camera.requestedGimbalAngle);
+                //TODO: REIMPLEMENT THIS
+//                Camera.setGimbalPitch(Camera.requestedGimbalAngle);
 
                 droneConnected = true;
                 if (connectedTimer != null) {
@@ -111,7 +158,7 @@ public class DroneState {
             }
         };
 
-        DJIDrone.getDjiMC().setMcuUpdateStateCallBack(mMcuUpdateStateCallBack);
+        mFlightController.setUpdateSystemStateCallback(mMcuUpdateStateCallBack);
     }
 
     public static double getLatitude() {

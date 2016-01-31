@@ -2,20 +2,27 @@ package com.jarone.litterary;
 
 import android.app.Application;
 import android.content.Context;
+import android.content.Intent;
+import android.os.Handler;
+import android.os.Looper;
+import android.util.Log;
+import android.widget.Toast;
 
 import com.jarone.litterary.drone.DroneState;
-import com.jarone.litterary.handlers.MessageHandler;
 
-import dji.sdk.api.DJIDrone;
-import dji.sdk.api.DJIDroneTypeDef;
-import dji.sdk.api.DJIError;
-import dji.sdk.interfaces.DJIGeneralListener;
+import dji.sdk.SDKManager.DJISDKManager;
+import dji.sdk.base.DJIBaseComponent;
+import dji.sdk.base.DJIBaseProduct;
+import dji.sdk.base.DJISDKError;
 
 /**
  * Created by vic on 10/26/15.
  */
 public class LitterApplication extends Application {
 
+    public static final String FLAG_CONNECTION_CHANGE = "connection_change";
+
+    private Handler mHandler;
 
     private static LitterApplication instance;
 
@@ -38,44 +45,131 @@ public class LitterApplication extends Application {
     @Override
     public void onCreate() {
         super.onCreate();
-        activateDJI();
-        initSDK();
-        DroneState.droneConnected = DJIDrone.connectToDrone();
+//        activateDJI();
+//        initSDK();
+//        DroneState.droneConnected = DJIDrone.connectToDrone();
+        mHandler = new Handler(Looper.getMainLooper());
+
+        /**
+         * handles SDK Registration using the API_KEY
+         */
+        DJISDKManager.getInstance().initSDKManager(this, mDJISDKManagerCallback);
     }
 
+    private DJISDKManager.DJISDKManagerCallback mDJISDKManagerCallback = new DJISDKManager.DJISDKManagerCallback() {
 
-    private void initSDK() {
-        DJIDrone.initWithType(this.getApplicationContext(), DJIDroneTypeDef.DJIDroneType.DJIDrone_Vision);
-    }
+        @Override
+        public void onGetRegisteredResult(DJISDKError error) {
+            if(error == DJISDKError.REGISTRATION_SUCCESS) {
+                DJISDKManager.getInstance().startConnectionToProduct();
+            } else {
+                Handler handler = new Handler(Looper.getMainLooper());
+                handler.post(new Runnable() {
 
+                    @Override
+                    public void run() {
+                        Toast.makeText(getApplicationContext(),
+                               "Registration failed",
+                                Toast.LENGTH_LONG).show();
+                    }
+                });
 
-    private void activateDJI() {
-        new Thread() {
-            public void run() {
-                try {
-                    DJIDrone.checkPermission(getApplicationContext(), new DJIGeneralListener() {
-                        @Override
-                        public void onGetPermissionResult(int result) {
-                            if (result == 0) {
-                                // show success
-                                MessageHandler.d("onGetPermissionResult =" + result);
-                                MessageHandler.d(
-                                        "onGetPermissionResultDescription=" + DJIError.getCheckPermissionErrorDescription(result));
-                            } else {
-                                // show errors
-                                MessageHandler.d("onGetPermissionResult =" + result);
-                                MessageHandler.d("onGetPermissionResultDescription="
-                                        + DJIError.getCheckPermissionErrorDescription(result)
-                                );
-                            }
-                        }
-                    });
-                } catch (Exception e) {
-                    //Something broke
-                }
             }
-        }.start();
-    }
+            Log.v(TAG, error.getDescription());
+        }
+
+        @Override
+        public void onProductChanged(DJIBaseProduct oldProduct, DJIBaseProduct newProduct) {
+
+            Log.v(TAG, String.format("onProductChanged oldProduct:%s, newProduct:%s", oldProduct, newProduct));
+            DroneState.setmProduct(newProduct);
+            if(DroneState.mProduct != null) {
+                DroneState.mProduct.setDJIBaseProductListener(mDJIBaseProductListener);
+            }
+
+            notifyStatusChange();
+        }
+
+        private DJIBaseProduct.DJIBaseProductListener mDJIBaseProductListener = new DJIBaseProduct.DJIBaseProductListener() {
+
+            @Override
+            public void onComponentChange(DJIBaseProduct.DJIComponentKey key, DJIBaseComponent oldComponent, DJIBaseComponent newComponent) {
+
+                if(newComponent != null) {
+                    newComponent.setDJIComponentListener(mDJIComponentListener);
+                }
+                Log.v(TAG, String.format("onComponentChange key:%s, oldComponent:%s, newComponent:%s", key, oldComponent, newComponent));
+
+                notifyStatusChange();
+            }
+
+            @Override
+            public void onProductConnectivityChanged(boolean isConnected) {
+
+                Log.v(TAG, "onProductConnectivityChanged: " + isConnected);
+
+                notifyStatusChange();
+            }
+
+        };
+
+        private DJIBaseComponent.DJIComponentListener mDJIComponentListener = new DJIBaseComponent.DJIComponentListener() {
+
+            @Override
+            public void onComponentConnectivityChanged(boolean isConnected) {
+                notifyStatusChange();
+            }
+
+        };
+
+        private void notifyStatusChange() {
+            mHandler.removeCallbacks(updateRunnable);
+            mHandler.postDelayed(updateRunnable, 500);
+        }
+
+        private Runnable updateRunnable = new Runnable() {
+
+            @Override
+            public void run() {
+                Intent intent = new Intent(FLAG_CONNECTION_CHANGE);
+                sendBroadcast(intent);
+            }
+        };
+    };
+
+
+//    private void initSDK() {
+//        DJIDrone.initWithType(this.getApplicationContext(), DJIDroneTypeDef.DJIDroneType.DJIDrone_Vision);
+//    }
+
+
+//    private void activateDJI() {
+//        new Thread() {
+//            public void run() {
+//                try {
+//                    DJIDrone.checkPermission(getApplicationContext(), new DJIGeneralListener() {
+//                        @Override
+//                        public void onGetPermissionResult(int result) {
+//                            if (result == 0) {
+//                                // show success
+//                                MessageHandler.d("onGetPermissionResult =" + result);
+//                                MessageHandler.d(
+//                                        "onGetPermissionResultDescription=" + DJIError.getCheckPermissionErrorDescription(result));
+//                            } else {
+//                                // show errors
+//                                MessageHandler.d("onGetPermissionResult =" + result);
+//                                MessageHandler.d("onGetPermissionResultDescription="
+//                                        + DJIError.getCheckPermissionErrorDescription(result)
+//                                );
+//                            }
+//                        }
+//                    });
+//                } catch (Exception e) {
+//                    //Something broke
+//                }
+//            }
+//        }.start();
+//    }
 
 
     public static DroneState getDroneState() {

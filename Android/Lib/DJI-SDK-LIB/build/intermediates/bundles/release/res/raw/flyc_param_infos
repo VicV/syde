@@ -3151,7 +3151,7 @@
 		"size" : 2,
 		"attribute" : 11,
 		"minValue" : 100,
-		"maxValue" : 200,
+		"maxValue" : 150,
 		"defaultValue" : 150,
 		"name" : "g_config.control.atti_torsion_w_rate_0"
 	},
@@ -3200,8 +3200,8 @@
 		"typeID" : 5,
 		"size" : 2,
 		"attribute" : 11,
-		"minValue" : 30,
-		"maxValue" : 70,
+		"minValue" : 20,
+		"maxValue" : 80,
 		"defaultValue" : 40,
 		"name" : "g_config.control.thr_exp_mid_point_0"
 	},
@@ -3210,8 +3210,8 @@
 		"typeID" : 5,
 		"size" : 2,
 		"attribute" : 11,
-		"minValue" : 30,
-		"maxValue" : 70,
+		"minValue" : 20,
+		"maxValue" : 80,
 		"defaultValue" : 40,
 		"name" : "g_config.control.yaw_exp_mid_point_0"
 	},
@@ -5750,8 +5750,8 @@
 		"typeID" : 5,
 		"size" : 2,
 		"attribute" : 11,
-		"minValue" : 30,
-		"maxValue" : 70,
+		"minValue" : 20,
+		"maxValue" : 80,
 		"defaultValue" : 40,
 		"name" : "g_config.control.tilt_exp_mid_point_0",
 		"modify" : true
@@ -5844,5 +5844,4 @@
 		"name" : "g_config.followme_cfg.enable_change_homepoint_0",
 		"modify" : true
 	}
-	
 ]

@@ -86,7 +86,7 @@ public class GroundStation {
      * and then the task uploaded and executed by the drone
      */
     public static void newTask() {
-        groundTask = new DJIGroundStationTask();
+        groundTask = new Ground();
     }
 
     /**

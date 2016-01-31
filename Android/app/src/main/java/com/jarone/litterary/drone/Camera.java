@@ -1,19 +1,16 @@
 package com.jarone.litterary.drone;
 
-import com.jarone.litterary.handlers.MessageHandler;
+import android.os.Environment;
 
+import java.io.File;
 import java.util.ArrayList;
 
-import dji.sdk.api.Camera.DJICameraSettingsTypeDef;
-import dji.sdk.api.DJIDrone;
-import dji.sdk.api.DJIError;
-import dji.sdk.api.Gimbal.DJIGimbalRotation;
-import dji.sdk.api.media.DJIMediaDirInfo;
-import dji.sdk.api.media.DJIMediaInfo;
-import dji.sdk.interfaces.DJIDownloadListener;
-import dji.sdk.interfaces.DJIExecuteResultCallback;
-import dji.sdk.interfaces.DJIFileDownloadCallBack;
-import dji.sdk.util.DjiLocationCoordinate2D;
+import dji.sdk.Camera.DJICameraSettingsDef;
+import dji.sdk.Camera.DJIMedia;
+import dji.sdk.Camera.DJIMediaManager;
+import dji.sdk.base.DJIBaseComponent;
+import dji.sdk.base.DJICameraError;
+import dji.sdk.base.DJIError;
 
 /**
  * Created by Adam on 2015-11-16.
@@ -36,30 +33,15 @@ public class Camera {
      * Takes a photo with the built-in drone camera, executes the callback when the action is finished
      */
     public static void takePhoto() {
-        DJIDrone.getDjiCamera().setCameraGps(
-            new DjiLocationCoordinate2D(DroneState.getLatitude(), DroneState.getLongitude()),
-            new DJIExecuteResultCallback() {
-                @Override
-                public void onResult(DJIError djiError) {
-                    DJIDrone.getDjiCamera().startTakePhoto(
-                        DJICameraSettingsTypeDef.CameraCaptureMode.Camera_Single_Capture,
-                        new DJIExecuteResultCallback() {
-                            @Override
-                            public void onResult(DJIError djiError) {
-                                MessageHandler.d("Take Photo: " + djiError.errorDescription);
-                                downloadLatestPhoto();
-                                photoCallback.run();
-                                photoCallback = new Runnable() {
-                                    @Override
-                                    public void run() {
-
-                                    }
-                                };
-                            }
-                        }
-                    );
+        DroneState.mProduct.getCamera().startShootPhoto(
+                DJICameraSettingsDef.CameraShootPhotoMode.Single,
+                new DJIBaseComponent.DJICompletionCallback() {
+                    @Override
+                    public void onResult(DJIError djiError) {
+                        //TODO: See if this actually works.
+                        downloadLatestPhoto();
+                    }
                 }
-            }
         );
     }
 
@@ -67,7 +49,7 @@ public class Camera {
      * Downloads the latest photo on the SD card and labels it with the drone's current GPS coords
      */
     public static void downloadLatestPhoto() {
-        DJIDrone.getDjiCamera().fetchMediaList(new DJIDownloadListener<DJIMediaDirInfo>() {
+        DroneState.mProduct.getCamera().getMediaManager().fetchMediaList(new DJIMediaManager.CameraDownloadListener<ArrayList<DJIMedia>>() {
             @Override
             public void onStart() {
 
@@ -84,63 +66,67 @@ public class Camera {
             }
 
             @Override
-            public void onSuccess(DJIMediaDirInfo djiMediaDirInfo) {
-                ArrayList<DJIMediaInfo> fileList = djiMediaDirInfo.fileInfoList;
-                int index = fileList.get(fileList.size()).index;
-
-                DJIDrone.getDjiCamera().selectFileAtIndex(index, new DJIExecuteResultCallback() {
+            public void onSuccess(ArrayList<DJIMedia> djiMedias) {
+                djiMedias.get(djiMedias.size()).fetchMediaData(new File(Environment.getExternalStorageDirectory().
+                        getPath() + "/Dji_Sdk_Test/lalala.jpg"), new DJIMediaManager.CameraDownloadListener<Boolean>() {
                     @Override
-                    public void onResult(DJIError djiError) {
-                        DJIDrone.getDjiCamera().downloadAllSelectedFiles(formatFileName(), new DJIFileDownloadCallBack() {
-                            @Override
-                            public void OnStart() {
+                    public void onStart() {
 
-                            }
+                    }
 
-                            @Override
-                            public void OnEnd() {
-                                DJIDrone.getDjiCamera().unselectAllFiles(new DJIExecuteResultCallback() {
-                                    @Override
-                                    public void onResult(DJIError djiError) {
+                    @Override
+                    public void onRateUpdate(long l, long l1, long l2) {
 
-                                    }
-                                });
-                            }
+                    }
 
-                            @Override
-                            public void OnError(Exception e) {
+                    @Override
+                    public void onProgress(long l, long l1) {
 
-                            }
+                    }
 
-                            @Override
-                            public void OnProgressUpdate(int i) {
+                    @Override
+                    public void onSuccess(Boolean aBoolean) {
+                        //TODO: Check whether or not the lalal.jpg actually got made?
+                        //yay?
+                    }
 
-                            }
-                        });
+                    @Override
+                    public void onFailure(DJICameraError djiCameraError) {
+
                     }
                 });
             }
 
             @Override
-            public void onFailure(DJIError djiError) {
+            public void onFailure(DJICameraError djiCameraError) {
 
             }
+
+
         });
     }
+
+    ;
+
 
     public static String formatFileName() {
         return "survey/" + System.currentTimeMillis() + "|" + DroneState.getLatitude() + "|" + DroneState.getLongitude();
     }
 
-    public static void setGimbalPitch(int angle) {
-        DJIDrone.getDjiGimbal().updateGimbalAttitude(
-                getGimbalRotation(angle),
-                new DJIGimbalRotation(false, false, false, 0),
-                new DJIGimbalRotation(false, false, false, 0)
-        );
-    }
-
-    private static DJIGimbalRotation getGimbalRotation(int angle) {
-        return new DJIGimbalRotation(true, false, true, angle);
-    }
+    //TODO: lalalal
+//    public static void setGimbalPitch(int angle) {
+//        DroneState.mProduct.getGimbal().;
+//
+//        rotateGimbalByAngle();
+//        updateGimbalAttitude(
+//                getGimbalRotation(angle),
+//                new DJIGimbalRotation(false, false, false, 0),
+//                new DJIGimbalRotation(false, false, false, 0)
+//        );
+//    }
+//
+//    private static DJIGimbalRotation getGimbalRotation(int angle) {
+//        return new DJIGimbalRotation(true, false, true, angle);
+//    }
+//}
 }
