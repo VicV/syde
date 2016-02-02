@@ -29,42 +29,31 @@ public class DroneState {
 
     public static DJIBaseProduct mProduct;
 
-    /**
-     * Gets instance of the specific product connected after the
-     * API KEY is successfully validated. Please make sure the
-     * API_KEY has been added in the Manifest
-     */
-    public static synchronized DJIBaseProduct getProductInstance() {
-        if (null == mProduct) {
-            mProduct = DJISDKManager.getInstance().getDJIProduct();
-        }
-        return mProduct;
-    }
 
     public DroneState() {
         mFlightController = ((DJIAircraft) mProduct).getFlightController();
+        mProduct = DJISDKManager.getInstance().getDJIProduct();
     }
 
-
     public static boolean isAircraftConnected() {
-        return getProductInstance() != null && getProductInstance() instanceof DJIAircraft;
+        return mProduct != null && mProduct instanceof DJIAircraft;
     }
 
     public static boolean isHandHeldConnected() {
-        return getProductInstance() != null && getProductInstance() instanceof DJIHandHeld;
+        return mProduct != null && mProduct instanceof DJIHandHeld;
     }
 
     public static synchronized DJIAircraft getAircraftInstance() {
         if (!isAircraftConnected()) return null;
-        return (DJIAircraft) getProductInstance();
+        return (DJIAircraft) mProduct;
     }
 
     public static synchronized DJIHandHeld getHandHeldInstance() {
         if (!isHandHeldConnected()) return null;
-        return (DJIHandHeld) getProductInstance();
+        return (DJIHandHeld) mProduct;
     }
 
-    private static DJIFlightController mFlightController;
+    public static DJIFlightController mFlightController;
 
 
     public static final int WAYPOINT_MODE = 0;

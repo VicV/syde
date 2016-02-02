@@ -60,7 +60,7 @@ public class LitterApplication extends Application {
 
         @Override
         public void onGetRegisteredResult(DJISDKError error) {
-            if(error == DJISDKError.REGISTRATION_SUCCESS) {
+            if (error == DJISDKError.REGISTRATION_SUCCESS) {
                 DJISDKManager.getInstance().startConnectionToProduct();
             } else {
                 Handler handler = new Handler(Looper.getMainLooper());
@@ -69,7 +69,7 @@ public class LitterApplication extends Application {
                     @Override
                     public void run() {
                         Toast.makeText(getApplicationContext(),
-                               "Registration failed",
+                                "Registration failed",
                                 Toast.LENGTH_LONG).show();
                     }
                 });
@@ -83,10 +83,9 @@ public class LitterApplication extends Application {
 
             Log.v(TAG, String.format("onProductChanged oldProduct:%s, newProduct:%s", oldProduct, newProduct));
             DroneState.setmProduct(newProduct);
-            if(DroneState.mProduct != null) {
+            if (DroneState.mProduct != null) {
                 DroneState.mProduct.setDJIBaseProductListener(mDJIBaseProductListener);
             }
-
             notifyStatusChange();
         }
 
@@ -95,7 +94,7 @@ public class LitterApplication extends Application {
             @Override
             public void onComponentChange(DJIBaseProduct.DJIComponentKey key, DJIBaseComponent oldComponent, DJIBaseComponent newComponent) {
 
-                if(newComponent != null) {
+                if (newComponent != null) {
                     newComponent.setDJIComponentListener(mDJIComponentListener);
                 }
                 Log.v(TAG, String.format("onComponentChange key:%s, oldComponent:%s, newComponent:%s", key, oldComponent, newComponent));
@@ -117,6 +116,8 @@ public class LitterApplication extends Application {
 
             @Override
             public void onComponentConnectivityChanged(boolean isConnected) {
+
+                Log.d("Litterary", "COMPONENT CONNECTIVITY CHANGED" + isConnected);
                 notifyStatusChange();
             }
 
@@ -136,40 +137,6 @@ public class LitterApplication extends Application {
             }
         };
     };
-
-
-//    private void initSDK() {
-//        DJIDrone.initWithType(this.getApplicationContext(), DJIDroneTypeDef.DJIDroneType.DJIDrone_Vision);
-//    }
-
-
-//    private void activateDJI() {
-//        new Thread() {
-//            public void run() {
-//                try {
-//                    DJIDrone.checkPermission(getApplicationContext(), new DJIGeneralListener() {
-//                        @Override
-//                        public void onGetPermissionResult(int result) {
-//                            if (result == 0) {
-//                                // show success
-//                                MessageHandler.d("onGetPermissionResult =" + result);
-//                                MessageHandler.d(
-//                                        "onGetPermissionResultDescription=" + DJIError.getCheckPermissionErrorDescription(result));
-//                            } else {
-//                                // show errors
-//                                MessageHandler.d("onGetPermissionResult =" + result);
-//                                MessageHandler.d("onGetPermissionResultDescription="
-//                                        + DJIError.getCheckPermissionErrorDescription(result)
-//                                );
-//                            }
-//                        }
-//                    });
-//                } catch (Exception e) {
-//                    //Something broke
-//                }
-//            }
-//        }.start();
-//    }
 
 
     public static DroneState getDroneState() {
