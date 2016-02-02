@@ -18,7 +18,7 @@ import dji.sdk.base.DJIBaseProduct;
 
 /**
  * Created by Adam on 2015-10-24.
- * <p>
+ * <p/>
  * Static class containing information about the current state of the Drone.
  */
 public class DroneState {
@@ -31,8 +31,8 @@ public class DroneState {
 
 
     public DroneState() {
-        mFlightController = ((DJIAircraft) mProduct).getFlightController();
         mProduct = DJISDKManager.getInstance().getDJIProduct();
+        mFlightController = ((DJIAircraft) mProduct).getFlightController();
     }
 
     public static boolean isAircraftConnected() {
@@ -109,9 +109,10 @@ public class DroneState {
             public void run() {
                 droneConnected = false;
                 updateDroneState();
-                GroundStation.registerPhantom2Callback();
+//                GroundStation.registerPhantom2Callback();
             }
         }, 5000, 5000, TimeUnit.MILLISECONDS);
+
     }
 
     /**
@@ -147,7 +148,9 @@ public class DroneState {
             }
         };
 
-        mFlightController.setUpdateSystemStateCallback(mMcuUpdateStateCallBack);
+        if (mFlightController != null) {
+            mFlightController.setUpdateSystemStateCallback(mMcuUpdateStateCallBack);
+        }
     }
 
     public static double getLatitude() {

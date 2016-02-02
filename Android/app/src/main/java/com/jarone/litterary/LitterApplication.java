@@ -39,7 +39,7 @@ public class LitterApplication extends Application {
      **/
     private static final String TAG = "Litterary";
 
-    public static DroneState droneState = new DroneState();
+    public static DroneState droneState;
 
 
     @Override
@@ -54,6 +54,8 @@ public class LitterApplication extends Application {
          * handles SDK Registration using the API_KEY
          */
         DJISDKManager.getInstance().initSDKManager(this, mDJISDKManagerCallback);
+
+
     }
 
     private DJISDKManager.DJISDKManagerCallback mDJISDKManagerCallback = new DJISDKManager.DJISDKManagerCallback() {
@@ -82,6 +84,7 @@ public class LitterApplication extends Application {
         public void onProductChanged(DJIBaseProduct oldProduct, DJIBaseProduct newProduct) {
 
             Log.v(TAG, String.format("onProductChanged oldProduct:%s, newProduct:%s", oldProduct, newProduct));
+            droneState = new DroneState();
             DroneState.setmProduct(newProduct);
             if (DroneState.mProduct != null) {
                 DroneState.mProduct.setDJIBaseProductListener(mDJIBaseProductListener);

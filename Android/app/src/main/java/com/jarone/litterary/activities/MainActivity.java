@@ -74,7 +74,7 @@ public class MainActivity extends DJIBaseActivity implements TextureView.Surface
         //      cameraView = (ImageView) findViewById(R.id.camera_texture);
 
         DroneState.registerConnectedTimer();
-        GroundStation.registerPhantom2Callback();
+//        GroundStation.registerPhantom2Callback();
     }
 
     private void registerUpdateInterface() {
@@ -256,13 +256,13 @@ public class MainActivity extends DJIBaseActivity implements TextureView.Surface
             @Override
             public void onClick(View v) {
                 switch (v.getId()) {
-                    case R.id.DjiSurfaceView_02:
+                    case R.id.texture_view:
                         v.setVisibility(View.GONE);
                         findViewById(R.id.CVPreview).setVisibility(View.VISIBLE);
                         break;
                     case R.id.CVPreview:
                         v.setVisibility(View.GONE);
-                        findViewById(R.id.DjiSurfaceView_02).setVisibility(View.VISIBLE);
+                        findViewById(R.id.texture_view).setVisibility(View.VISIBLE);
                         break;
                 }
             }
@@ -325,7 +325,7 @@ public class MainActivity extends DJIBaseActivity implements TextureView.Surface
         findViewById(R.id.button_pid).setOnClickListener(getPIDButtonListener());
         findViewById(R.id.button_special1).setOnClickListener(getSpecialButtonListener());
         findViewById(R.id.button_special2).setOnClickListener(getSpecialButtonListener());
-        findViewById(R.id.DjiSurfaceView_02).setOnClickListener(getCameraViewListener());
+        findViewById(R.id.texture_view).setOnClickListener(getCameraViewListener());
         findViewById(R.id.CVPreview).setOnClickListener(getCameraViewListener());
     }
 

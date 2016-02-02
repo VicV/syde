@@ -8,7 +8,6 @@ import com.jarone.litterary.handlers.MessageHandler;
 
 import dji.sdk.FlightController.DJIFlightControllerDataType;
 import dji.sdk.MissionManager.DJIMission;
-import dji.sdk.MissionManager.DJIMissionManager;
 import dji.sdk.MissionManager.DJIWaypoint;
 import dji.sdk.MissionManager.DJIWaypointMission;
 import dji.sdk.base.DJIBaseComponent;
@@ -436,25 +435,25 @@ public class GroundStation {
         }
     }
 
-    public static void registerPhantom2Callback() {
-        DroneState.
-                DJIDrone.getDjiGroundStation().setGroundStationFlyingInfoCallBack(new DJIGroundStationFlyingInfoCallBack() {
-            @Override
-            public void onResult(DJIGroundStationFlyingInfo djiGroundStationFlyingInfo) {
-                if (taskDoneCallback != null && canExecuteCallback && djiGroundStationFlyingInfo.flightMode == DJIGroundStationTypeDef.GroundStationFlightMode.GS_Mode_Pause_1) {
-                    //Set can execute callback to false to pause the callback chain of survey
-                    //route until drone has started moving again
-                    canExecuteCallback = false;
-                    GroundStation.taskDoneCallback.run();
-                    taskDoneCallback = null;
-                } else if (djiGroundStationFlyingInfo.flightMode != DJIGroundStationTypeDef.GroundStationFlightMode.GS_Mode_Pause_1) {
-                    //if the drone has started moving, we can unpause the callback chain
-                    canExecuteCallback = true;
-                }
-                DroneState.flightMode = djiGroundStationFlyingInfo.flightMode;
-            }
-        });
-    }
+//    public static void registerPhantom2Callback() {
+//        DroneState.
+//                DJIDrone.getDjiGroundStation().setGroundStationFlyingInfoCallBack(new DJIGroundStationFlyingInfoCallBack() {
+//            @Override
+//            public void onResult(DJIGroundStationFlyingInfo djiGroundStationFlyingInfo) {
+//                if (taskDoneCallback != null && canExecuteCallback && djiGroundStationFlyingInfo.flightMode == DJIGroundStationTypeDef.GroundStationFlightMode.GS_Mode_Pause_1) {
+//                    //Set can execute callback to false to pause the callback chain of survey
+//                    //route until drone has started moving again
+//                    canExecuteCallback = false;
+//                    GroundStation.taskDoneCallback.run();
+//                    taskDoneCallback = null;
+//                } else if (djiGroundStationFlyingInfo.flightMode != DJIGroundStationTypeDef.GroundStationFlightMode.GS_Mode_Pause_1) {
+//                    //if the drone has started moving, we can unpause the callback chain
+//                    canExecuteCallback = true;
+//                }
+//                DroneState.flightMode = djiGroundStationFlyingInfo.flightMode;
+//            }
+//        });
+//    }
 
     /***
      * END TEST
