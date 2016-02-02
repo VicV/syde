@@ -238,8 +238,14 @@ public class MainActivity extends DJIBaseActivity {
                         ImageProcessing.initializeOpenCV();
                         break;
                     case R.id.button_special2:
-                        ImageProcessing.setTestImage();
-                        ImageProcessing.detectBlobs();
+                        long start = System.currentTimeMillis();
+                        int count = 10;
+                        for (int i = 0; i < count; i ++) {
+                            ImageProcessing.setSourceImage("charger.jpg");
+                            ImageProcessing.detectBlobs();
+                        }
+                        long end = System.currentTimeMillis();
+                        MessageHandler.d("Average: " + ((end - start) / count));
                         break;
                 }
             }
@@ -449,6 +455,7 @@ public class MainActivity extends DJIBaseActivity {
                     ((TextView) findViewById(R.id.pid_error)).setText("" + GroundStation.getAngularController().getLastError());
                 }
 
+                ImageProcessing.convertLatestFrame();
                 ((ImageView) findViewById(R.id.CVPreview)).setImageBitmap(ImageProcessing.getCVPreview());
             }
         });

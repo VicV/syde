@@ -13,9 +13,8 @@ import org.opencv.android.BaseLoaderCallback;
 import org.opencv.android.LoaderCallbackInterface;
 import org.opencv.android.OpenCVLoader;
 import org.opencv.android.Utils;
-import org.opencv.core.Core;
 import org.opencv.core.Mat;
-import org.opencv.core.Point;
+import org.opencv.core.MatOfPoint;
 import org.opencv.core.Scalar;
 import org.opencv.core.Size;
 import org.opencv.imgproc.Imgproc;
@@ -30,9 +29,15 @@ import java.util.ArrayList;
 public class ImageProcessing {
 
     private static boolean connected = false;
+
+    //The latest fully-processed result image
     private static Mat currentMat;
+
+    //The temporary image used for intermediate processing
     private static Mat processingMat;
-    private static Bitmap CVPreview;
+
+    //The Bitmap representation of the current result image
+    private static Bitmap CVPreview = null;
 
     public static BaseLoaderCallback loaderCallback = new BaseLoaderCallback(ContextManager.getContext()) {
         @Override
@@ -61,31 +66,17 @@ public class ImageProcessing {
         return points;
     }
 
-    public static void setTestImage() {
+    public static void setSourceImage(String source) {
         try {
-            InputStream i = ContextManager.getActivity().getAssets().open("oval.jpg");
+            InputStream i = ContextManager.getActivity().getAssets().open(source);
             readFrame(BitmapFactory.decodeStream(i));
         } catch(IOException e){
-
+            MessageHandler.d("Image File not Found!");
         }
-    }
-
-    public static Bitmap testCanny() {
-        setTestImage();
-        CVPreview = findEdges();
-        return CVPreview;
     }
 
     public static void readFrame(Bitmap image) {
         Utils.bitmapToMat(image, currentMat);
-    }
-
-    public static Bitmap findEdges() {
-        Mat edges = new Mat();
-        Imgproc.Canny(currentMat, edges, 3, 10);
-        Bitmap bitmap = Bitmap.createBitmap(edges.width(), edges.height(), Bitmap.Config.ARGB_8888);
-        Utils.matToBitmap(edges, bitmap);
-        return bitmap;
     }
 
     public static ArrayList<LatLng> identifyLitter(Bitmap photo) {
@@ -96,25 +87,54 @@ public class ImageProcessing {
         return CVPreview;
     }
 
+    /**
+     * Detect blobs in an image using edge detection, closing, filling and thresholding
+     */
     public static void detectBlobs() {
         processingMat = currentMat;
         Imgproc.cvtColor(processingMat, processingMat, Imgproc.COLOR_BGR2GRAY);
-        Imgproc.Canny(processingMat, processingMat, 150, 250);
-        Mat element = Imgproc.getStructuringElement(Imgproc.MORPH_ELLIPSE, new Size(100, 100));
-        Imgproc.morphologyEx(processingMat, processingMat, Imgproc.MORPH_CLOSE, element);
-        //imFill();
-        Imgproc.medianBlur(processingMat, processingMat, 25);
+        Imgproc.Canny(processingMat, processingMat, 250, 300);
+        closeImage();
+        Imgproc.threshold(processingMat, processingMat, 0, 255, Imgproc.THRESH_BINARY);
+        fillImage();
+        Imgproc.medianBlur(processingMat, processingMat, 31);
         currentMat = processingMat;
-        Bitmap preview = Bitmap.createBitmap(currentMat.width(), currentMat.height(), Bitmap.Config.ARGB_8888);
-        Utils.matToBitmap(currentMat, preview);
-        CVPreview = preview;
     }
 
-    public static void imFill() {
-        Mat fillMask = new Mat();
-        Imgproc.floodFill(processingMat, fillMask, new Point(0, 0), new Scalar(255));
-        Core.bitwise_not(fillMask, fillMask);
-        Core.bitwise_or(processingMat, fillMask, processingMat);
+    /**
+     * Perform closing operation on the image, first downscaling to speed up processing
+     */
+    public static void closeImage() {
+        int scaleFactor = 10;
+        Mat element = Imgproc.getStructuringElement(Imgproc.MORPH_ELLIPSE, new Size(100/scaleFactor, 100/scaleFactor));
+        //Rescale to smaller size to perform closing much faster
+        int width = processingMat.width();
+        int height = processingMat.height();
+        Imgproc.resize(processingMat, processingMat, new Size(processingMat.width()/scaleFactor, processingMat.height()/scaleFactor));
+        Imgproc.morphologyEx(processingMat, processingMat, Imgproc.MORPH_CLOSE, element);
+        Imgproc.resize(processingMat, processingMat, new Size(width, height));
+    }
+
+    public static void fillImage() {
+        ArrayList<MatOfPoint> contours = new ArrayList<>();
+        Imgproc.findContours(processingMat, contours, new Mat(), Imgproc.RETR_CCOMP, Imgproc.CHAIN_APPROX_SIMPLE);
+        for (int i = 0; i < contours.size(); i++) {
+            Imgproc.drawContours(processingMat, contours, i, new Scalar(255), -1);
+        }
+    }
+
+    /**
+     * Converts the most recently-processed Mat frame to a Bitmap and stores it in CVPreview
+     * @return
+     */
+    public static Bitmap convertLatestFrame() {
+        if (CVPreview == null && currentMat != null && currentMat.width() > 0) {
+            CVPreview = Bitmap.createBitmap(currentMat.width(), currentMat.height(), Bitmap.Config.ARGB_8888);
+        } else if (currentMat == null || currentMat.width() <= 0) {
+            return null;
+        }
+        Utils.matToBitmap(currentMat, CVPreview);
+        return CVPreview;
     }
 }
 
