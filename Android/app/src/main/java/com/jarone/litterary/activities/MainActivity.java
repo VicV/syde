@@ -240,7 +240,7 @@ public class MainActivity extends DJIBaseActivity {
                     case R.id.button_special2:
                         long start = System.currentTimeMillis();
                         int count = 10;
-                        for (int i = 0; i < count; i ++) {
+                        for (int i = 0; i < count; i++) {
                             ImageProcessing.setSourceImage("charger.jpg");
                             ImageProcessing.detectBlobs();
                         }
@@ -259,12 +259,12 @@ public class MainActivity extends DJIBaseActivity {
                 switch (v.getId()) {
                     case R.id.DjiSurfaceView_02:
                         v.setVisibility(View.GONE);
-                        findViewById(R.id.CVPreview).setVisibility(View.VISIBLE);
-                    break;
-                    case R.id.CVPreview:
-                        v.setVisibility(View.GONE);
-                        findViewById(R.id.DjiSurfaceView_02).setVisibility(View.VISIBLE);
-                    break;
+//                        findViewById(R.id.CVPreview).setVisibility(View.VISIBLE);
+                        break;
+//                    case R.id.CVPreview:
+//                        v.setVisibility(View.GONE);
+//                        findViewById(R.id.DjiSurfaceView_02).setVisibility(View.VISIBLE);
+//                        break;
                 }
             }
         };
@@ -304,7 +304,7 @@ public class MainActivity extends DJIBaseActivity {
         findViewById(R.id.button_special1).setOnClickListener(getSpecialButtonListener());
         findViewById(R.id.button_special2).setOnClickListener(getSpecialButtonListener());
         findViewById(R.id.DjiSurfaceView_02).setOnClickListener(getCameraViewListener());
-        findViewById(R.id.CVPreview).setOnClickListener(getCameraViewListener());
+//        findViewById(R.id.CVPreview).setOnClickListener(getCameraViewListener());
     }
 
 
@@ -456,7 +456,7 @@ public class MainActivity extends DJIBaseActivity {
                 }
 
                 ImageProcessing.convertLatestFrame();
-                ((ImageView) findViewById(R.id.CVPreview)).setImageBitmap(ImageProcessing.getCVPreview());
+//                ((ImageView) findViewById(R.id.CVPreview)).setImageBitmap(ImageProcessing.getCVPreview());
             }
         });
     }

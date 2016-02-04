@@ -11,12 +11,6 @@
         android:layout_height="212dp"
         android:elevation="5dp" />
 
-    <ImageView
-        android:id="@+id/CVPreview"
-        android:layout_width="fill_parent"
-        android:layout_height="212dp"
-        android:elevation="5dp"
-        android:visibility="gone"/>
 
     <!--<ImageView-->
     <!--android:layout_width="match_parent"-->
