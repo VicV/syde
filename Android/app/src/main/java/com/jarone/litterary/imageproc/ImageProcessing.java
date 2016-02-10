@@ -42,7 +42,7 @@ public class ImageProcessing {
     public static BaseLoaderCallback loaderCallback = new BaseLoaderCallback(ContextManager.getContext()) {
         @Override
         public void onManagerConnected(int status) {
-            switch(status) {
+            switch (status) {
                 case LoaderCallbackInterface.SUCCESS:
                     connected = true;
                     currentMat = new Mat();
@@ -70,9 +70,13 @@ public class ImageProcessing {
         try {
             InputStream i = ContextManager.getActivity().getAssets().open(source);
             readFrame(BitmapFactory.decodeStream(i));
-        } catch(IOException e){
+        } catch (IOException e) {
             MessageHandler.d("Image File not Found!");
         }
+    }
+
+    public static void setSourceFrame(byte[] videoBuffer) {
+        readFrame(BitmapFactory.decodeByteArray(videoBuffer, 0, videoBuffer.length));
     }
 
     public static void readFrame(Bitmap image) {
@@ -106,11 +110,11 @@ public class ImageProcessing {
      */
     public static void closeImage() {
         int scaleFactor = 10;
-        Mat element = Imgproc.getStructuringElement(Imgproc.MORPH_ELLIPSE, new Size(100/scaleFactor, 100/scaleFactor));
+        Mat element = Imgproc.getStructuringElement(Imgproc.MORPH_ELLIPSE, new Size(100 / scaleFactor, 100 / scaleFactor));
         //Rescale to smaller size to perform closing much faster
         int width = processingMat.width();
         int height = processingMat.height();
-        Imgproc.resize(processingMat, processingMat, new Size(processingMat.width()/scaleFactor, processingMat.height()/scaleFactor));
+        Imgproc.resize(processingMat, processingMat, new Size(processingMat.width() / scaleFactor, processingMat.height() / scaleFactor));
         Imgproc.morphologyEx(processingMat, processingMat, Imgproc.MORPH_CLOSE, element);
         Imgproc.resize(processingMat, processingMat, new Size(width, height));
     }
@@ -125,6 +129,7 @@ public class ImageProcessing {
 
     /**
      * Converts the most recently-processed Mat frame to a Bitmap and stores it in CVPreview
+     *
      * @return
      */
     public static Bitmap convertLatestFrame() {
