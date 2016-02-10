@@ -5,6 +5,13 @@ package com.jarone.litterary.control;
  */
 public class ControlTable {
 
+    private static String path="table_values.txt";
 
+    public static void save(){
+
+    }
+    public static void load() {
+
+    }
 
 }

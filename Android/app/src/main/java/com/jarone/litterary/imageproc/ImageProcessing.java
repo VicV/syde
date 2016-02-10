@@ -15,6 +15,7 @@ import org.opencv.android.OpenCVLoader;
 import org.opencv.android.Utils;
 import org.opencv.core.Mat;
 import org.opencv.core.MatOfPoint;
+import org.opencv.core.Point;
 import org.opencv.core.Scalar;
 import org.opencv.core.Size;
 import org.opencv.imgproc.Imgproc;
@@ -97,10 +98,13 @@ public class ImageProcessing {
     public static void detectBlobs() {
         processingMat = currentMat;
         Imgproc.cvtColor(processingMat, processingMat, Imgproc.COLOR_BGR2GRAY);
-        Imgproc.Canny(processingMat, processingMat, 250, 300);
+        double cannyThresh = determineCannyThreshold();
+        Imgproc.Canny(processingMat, processingMat, cannyThresh / 2, cannyThresh);
         closeImage();
         Imgproc.threshold(processingMat, processingMat, 0, 255, Imgproc.THRESH_BINARY);
         fillImage();
+        eliminateSmallBlobs(4);
+        clearBorders();
         Imgproc.medianBlur(processingMat, processingMat, 31);
         currentMat = processingMat;
     }
@@ -122,9 +126,7 @@ public class ImageProcessing {
     public static void fillImage() {
         ArrayList<MatOfPoint> contours = new ArrayList<>();
         Imgproc.findContours(processingMat, contours, new Mat(), Imgproc.RETR_CCOMP, Imgproc.CHAIN_APPROX_SIMPLE);
-        for (int i = 0; i < contours.size(); i++) {
-            Imgproc.drawContours(processingMat, contours, i, new Scalar(255), -1);
-        }
+        fillContours(contours, 255);
     }
 
     /**
@@ -140,6 +142,56 @@ public class ImageProcessing {
         }
         Utils.matToBitmap(currentMat, CVPreview);
         return CVPreview;
+    }
+
+    /**
+     * Use Otsu thresholding to determine a good threshold value for Canny edge detection
+     * @return
+     */
+    public static double determineCannyThreshold() {
+        Mat _ = new Mat();
+        return Imgproc.threshold(currentMat, _, 0, 255, Imgproc.THRESH_BINARY | Imgproc.THRESH_OTSU);
+    }
+
+    /**
+     * Eliminate objects that are too small (noise)
+     */
+    public static void eliminateSmallBlobs(double threshold) {
+        ArrayList<MatOfPoint> contours = new ArrayList<>();
+        Imgproc.findContours(processingMat, contours, new Mat(), Imgproc.RETR_CCOMP, Imgproc.CHAIN_APPROX_SIMPLE);
+        ArrayList<MatOfPoint> badContours = new ArrayList<>();
+        for (MatOfPoint contour : contours) {
+            if (Imgproc.contourArea(contour) > threshold) {
+                badContours.add(contour);
+            }
+        }
+        fillContours(badContours, 0);
+    }
+
+    /**
+     * Eliminate shapes which touch the border of the image
+     */
+    public static void clearBorders() {
+        ArrayList<MatOfPoint> contours = new ArrayList<>();
+        Imgproc.findContours(processingMat, contours, new Mat(), Imgproc.RETR_CCOMP, Imgproc.CHAIN_APPROX_SIMPLE);
+        int width = processingMat.width();
+        int height = processingMat.height();
+
+        ArrayList<MatOfPoint> badContours = new ArrayList<>();
+        for (MatOfPoint contour : contours) {
+            for (Point p : contour.toArray()) {
+                if (p.x == 0 || p.x == width || p.y == 0 || p.y == height) {
+                    badContours.add(contour);
+                }
+            }
+        }
+        fillContours(badContours, 0);
+    }
+
+    public static void fillContours(ArrayList<MatOfPoint> contours, int colour) {
+        for (int i = 0; i < contours.size(); i++) {
+            Imgproc.drawContours(processingMat, contours, i, new Scalar(colour), -1);
+        }
     }
 }
 
