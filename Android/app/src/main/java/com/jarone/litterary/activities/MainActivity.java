@@ -6,12 +6,12 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
+import android.opengl.GLException;
 import android.os.AsyncTask;
 import android.os.Bundle;
-import android.os.Environment;
 import android.os.Parcelable;
 import android.support.v4.app.ActivityCompat;
+import android.util.Log;
 import android.view.View;
 import android.widget.EditText;
 import android.widget.ImageView;
@@ -27,8 +27,6 @@ import com.jarone.litterary.helpers.ContextManager;
 import com.jarone.litterary.helpers.LocationHelper;
 import com.jarone.litterary.imageproc.ImageProcessing;
 
-import java.io.FileOutputStream;
-import java.io.IOException;
 import java.nio.IntBuffer;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -36,6 +34,8 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
+import javax.microedition.khronos.egl.EGL10;
+import javax.microedition.khronos.egl.EGLContext;
 import javax.microedition.khronos.opengles.GL10;
 
 import dji.sdk.api.DJIDrone;
@@ -184,27 +184,55 @@ public class MainActivity extends DJIBaseActivity {
         };
     }
 
-    public static Bitmap SavePixels(int x, int y, int w, int h, GL10 gl) {
-        int b[] = new int[w * (y + h)];
-        int bt[] = new int[w * h];
-        IntBuffer ib = IntBuffer.wrap(b);
-        ib.position(0);
-        gl.glReadPixels(x, 0, w, y + h, GL10.GL_RGBA, GL10.GL_UNSIGNED_BYTE, ib);
+    private interface BitmapReadyCallbacks {
+        void onBitmapReady(Bitmap bitmap);
+    }
 
-        for (int i = 0, k = 0; i < h; i++, k++) {//remember, that OpenGL bitmap is incompatible with Android bitmap
-            //and so, some correction need.
-            for (int j = 0; j < w; j++) {
-                int pix = b[i * w + j];
-                int pb = (pix >> 16) & 0xff;
-                int pr = (pix << 16) & 0x00ff0000;
-                int pix1 = (pix & 0xff00ff00) | pr | pb;
-                bt[(h - k - 1) * w + j] = pix1;
+    // supporting methods
+    private void captureBitmap(final BitmapReadyCallbacks bitmapReadyCallbacks) {
+
+        mDjiGLSurfaceView.queueEvent(new Runnable() {
+            @Override
+            public void run() {
+                EGL10 egl = (EGL10) EGLContext.getEGL();
+                GL10 gl = (GL10) egl.eglGetCurrentContext().getGL();
+                final Bitmap snapshotBitmap = createBitmapFromGLSurface(0, 0, mDjiGLSurfaceView.getWidth(), mDjiGLSurfaceView.getHeight(), gl);
+
+                bitmapReadyCallbacks.onBitmapReady(snapshotBitmap);
+
+
             }
+        });
+
+    }
+
+    private Bitmap createBitmapFromGLSurface(int x, int y, int w, int h, GL10 gl) {
+
+        int bitmapBuffer[] = new int[w * h];
+        int bitmapSource[] = new int[w * h];
+        IntBuffer intBuffer = IntBuffer.wrap(bitmapBuffer);
+        intBuffer.position(0);
+
+        try {
+            gl.glReadPixels(x, y, w, h, GL10.GL_RGBA, GL10.GL_UNSIGNED_BYTE, intBuffer);
+            int offset1, offset2;
+            for (int i = 0; i < h; i++) {
+                offset1 = i * w;
+                offset2 = (h - i - 1) * w;
+                for (int j = 0; j < w; j++) {
+                    int texturePixel = bitmapBuffer[offset1 + j];
+                    int blue = (texturePixel >> 16) & 0xff;
+                    int red = (texturePixel << 16) & 0x00ff0000;
+                    int pixel = (texturePixel & 0xff00ff00) | red | blue;
+                    bitmapSource[offset2 + j] = pixel;
+                }
+            }
+        } catch (GLException e) {
+            Log.e(TAG, "createBitmapFromGLSurface: " + e.getMessage(), e);
+            return null;
         }
 
-
-        return Bitmap.createBitmap(bt, w, h, Bitmap.Config.ARGB_8888);
-
+        return Bitmap.createBitmap(bitmapSource, w, h, Bitmap.Config.ARGB_8888);
     }
 
     public View.OnClickListener getFindLitterListener() {
@@ -278,15 +306,17 @@ public class MainActivity extends DJIBaseActivity {
                         ImageProcessing.initializeOpenCV();
                         break;
                     case R.id.button_special2:
-//                        long start = System.currentTimeMillis();
-//                        int count = 10;
-//                        for (int i = 0; i < count; i++) {
-//                            ImageProcessing.setSourceImage("charger.jpg");
-//                            ImageProcessing.detectBlobs();
-//                        }
-//                        long end = System.currentTimeMillis();
-//                        MessageHandler.d("Average: " + ((end - start) / count));
+                        long start = System.currentTimeMillis();
+                        int count = 10;
+                        for (int i = 0; i < count; i++) {
+                            ImageProcessing.setSourceImage("charger.jpg");
+                            ImageProcessing.detectBlobs();
+                        }
+                        long end = System.currentTimeMillis();
+                        MessageHandler.d("Average: " + ((end - start) / count));
 
+                        break;
+                    case R.id.button_special3:
                         buttonPress = true;
                         break;
                 }
@@ -315,7 +345,7 @@ public class MainActivity extends DJIBaseActivity {
     private void registerCamera() {
         mDjiGLSurfaceView = (DjiGLSurfaceView) findViewById(R.id.DjiSurfaceView_02);
         mDjiGLSurfaceView.start();
-        //mDjiGLSurfaceView.getHolder().addCallback(this);
+
 
         DJIReceivedVideoDataCallBack mReceivedVideoDataCallBack = new DJIReceivedVideoDataCallBack() {
             @Override
@@ -323,63 +353,20 @@ public class MainActivity extends DJIBaseActivity {
                 mDjiGLSurfaceView.setDataToDecoder(videoBuffer, size);
 
                 if (buttonPress) {
-                    Bitmap bitmap = SavePixels(0,0,100,100,mDjiGLSurfaceView);
-
-                    FileOutputStream out = null;
-                    try {
-                        if (bitmap != null) {
-                            MessageHandler.d("SAVING IMAGE");
-                            out = new FileOutputStream(Environment.getExternalStorageDirectory().toString() + "/TESTBUTTS.png");
-                            bitmap.compress(Bitmap.CompressFormat.PNG, 100, out); // bmp is your Bitmap instance
-                            // PNG is a lossless format, the compression factor (100) is
-                            MessageHandler.d("SAVED IMAGE");
+                    captureBitmap(new BitmapReadyCallbacks() {
+                        @Override
+                        public void onBitmapReady(Bitmap bitmap) {
+                            count++;
+                            MessageHandler.d("Bitmap: "+count);
                         }
-
-                    } catch (Exception e) {
-                        MessageHandler.d("SAVE IMAGE FAIL: " + e.getMessage());
-
-                        e.printStackTrace();
-                    } finally {
-                        try {
-                            if (out != null) {
-                                out.close();
-                            }
-                        } catch (IOException e) {
-                            e.printStackTrace();
-                        }
-                    }
-
+                    });
                 }
-                count++;
-//                MessageHandler.d(Arrays.toString(videoBuffer));
-
-                //viewToBitmap(mDjiGLSurfaceView.getHolder(),mDjiGLSurfaceView.getWidth(), mDjiGLSurfaceView.getHeight());
 
             }
         };
         DJIDrone.getDjiCamera().setReceivedVideoDataCallBack(mReceivedVideoDataCallBack);
     }
 
-
-    private void setOnClickListeners() {
-        findViewById(R.id.button_down).setOnClickListener(getDirectionalListener());
-        findViewById(R.id.button_left).setOnClickListener(getDirectionalListener());
-        findViewById(R.id.button_right).setOnClickListener(getDirectionalListener());
-        findViewById(R.id.button_up).setOnClickListener(getDirectionalListener());
-        findViewById(R.id.button_stop).setOnClickListener(getDirectionalListener());
-        findViewById(R.id.button_go_home).setOnClickListener(getHomeButtonListener());
-        findViewById(R.id.button_set_home).setOnClickListener(getHomeButtonListener());
-        findViewById(R.id.button_set_altitude).setOnClickListener(setAltitudeListener());
-        findViewById(R.id.button_set_region).setOnClickListener(setRegionClickListener());
-        findViewById(R.id.button_start_survey).setOnClickListener(getStartSurveyListener());
-        findViewById(R.id.button_switch_mode).setOnClickListener(getSwitchModeListener());
-        findViewById(R.id.button_status).setOnClickListener(getStatusButtonListener());
-        findViewById(R.id.button_pid).setOnClickListener(getPIDButtonListener());
-        findViewById(R.id.button_special1).setOnClickListener(getSpecialButtonListener());
-        findViewById(R.id.button_special2).setOnClickListener(getSpecialButtonListener());
-        findViewById(R.id.DjiSurfaceView_02).setOnClickListener(getCameraViewListener());
-        findViewById(R.id.CVPreview).setOnClickListener(getCameraViewListener());
-    }
 
 
     private View.OnClickListener setRegionClickListener() {
@@ -462,7 +449,7 @@ public class MainActivity extends DJIBaseActivity {
 
     /**
      * Checks if the app has permission to write to device storage
-     * <p>
+     * <p/>
      * If the app does not has permission then the user will be prompted to grant permissions
      *
      * @param activity
@@ -529,4 +516,24 @@ public class MainActivity extends DJIBaseActivity {
     }
 
 
+    private void setOnClickListeners() {
+        findViewById(R.id.button_down).setOnClickListener(getDirectionalListener());
+        findViewById(R.id.button_left).setOnClickListener(getDirectionalListener());
+        findViewById(R.id.button_right).setOnClickListener(getDirectionalListener());
+        findViewById(R.id.button_up).setOnClickListener(getDirectionalListener());
+        findViewById(R.id.button_stop).setOnClickListener(getDirectionalListener());
+        findViewById(R.id.button_go_home).setOnClickListener(getHomeButtonListener());
+        findViewById(R.id.button_set_home).setOnClickListener(getHomeButtonListener());
+        findViewById(R.id.button_set_altitude).setOnClickListener(setAltitudeListener());
+        findViewById(R.id.button_set_region).setOnClickListener(setRegionClickListener());
+        findViewById(R.id.button_start_survey).setOnClickListener(getStartSurveyListener());
+        findViewById(R.id.button_switch_mode).setOnClickListener(getSwitchModeListener());
+        findViewById(R.id.button_status).setOnClickListener(getStatusButtonListener());
+        findViewById(R.id.button_pid).setOnClickListener(getPIDButtonListener());
+        findViewById(R.id.button_special1).setOnClickListener(getSpecialButtonListener());
+        findViewById(R.id.button_special2).setOnClickListener(getSpecialButtonListener());
+        findViewById(R.id.button_special3).setOnClickListener(getSpecialButtonListener());
+        findViewById(R.id.DjiSurfaceView_02).setOnClickListener(getCameraViewListener());
+        findViewById(R.id.CVPreview).setOnClickListener(getCameraViewListener());
+    }
 }
