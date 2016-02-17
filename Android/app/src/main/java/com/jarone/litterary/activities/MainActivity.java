@@ -184,21 +184,22 @@ public class MainActivity extends DJIBaseActivity {
         };
     }
 
-    private interface BitmapReadyCallbacks {
-        void onBitmapReady(Bitmap bitmap);
+    private interface BitmapCreatedCallback {
+        void onBitmapCreated(Bitmap bitmap);
     }
 
-    // supporting methods
-    private void captureBitmap(final BitmapReadyCallbacks bitmapReadyCallbacks) {
+    // Create a bitmap from the current surface frame.
+    private void createBitmapFromFrame(final BitmapCreatedCallback bitmapCreatedCallback) {
 
         mDjiGLSurfaceView.queueEvent(new Runnable() {
             @Override
             public void run() {
                 EGL10 egl = (EGL10) EGLContext.getEGL();
+                //Get GL10 object from EGL context.
                 GL10 gl = (GL10) egl.eglGetCurrentContext().getGL();
-                final Bitmap snapshotBitmap = createBitmapFromGLSurface(0, 0, mDjiGLSurfaceView.getWidth(), mDjiGLSurfaceView.getHeight(), gl);
+                Bitmap frame = createBitmapFromGLSurface(0, 0, mDjiGLSurfaceView.getWidth(), mDjiGLSurfaceView.getHeight(), gl);
 
-                bitmapReadyCallbacks.onBitmapReady(snapshotBitmap);
+                bitmapCreatedCallback.onBitmapCreated(frame);
 
 
             }
@@ -214,16 +215,19 @@ public class MainActivity extends DJIBaseActivity {
         intBuffer.position(0);
 
         try {
+            //Pull the pixels from the surface
             gl.glReadPixels(x, y, w, h, GL10.GL_RGBA, GL10.GL_UNSIGNED_BYTE, intBuffer);
             int offset1, offset2;
             for (int i = 0; i < h; i++) {
                 offset1 = i * w;
                 offset2 = (h - i - 1) * w;
                 for (int j = 0; j < w; j++) {
+                    //Go through each pixel and offset it the appropriate amount to be understood as a bitmap by android
                     int texturePixel = bitmapBuffer[offset1 + j];
                     int blue = (texturePixel >> 16) & 0xff;
                     int red = (texturePixel << 16) & 0x00ff0000;
                     int pixel = (texturePixel & 0xff00ff00) | red | blue;
+                    //Set that pixel in the bitmap as the pixel created above.
                     bitmapSource[offset2 + j] = pixel;
                 }
             }
@@ -232,6 +236,7 @@ public class MainActivity extends DJIBaseActivity {
             return null;
         }
 
+        //Actually make the bitmap from the pixel array.
         return Bitmap.createBitmap(bitmapSource, w, h, Bitmap.Config.ARGB_8888);
     }
 
@@ -353,11 +358,11 @@ public class MainActivity extends DJIBaseActivity {
                 mDjiGLSurfaceView.setDataToDecoder(videoBuffer, size);
 
                 if (buttonPress) {
-                    captureBitmap(new BitmapReadyCallbacks() {
+                    createBitmapFromFrame(new BitmapCreatedCallback() {
                         @Override
-                        public void onBitmapReady(Bitmap bitmap) {
+                        public void onBitmapCreated(Bitmap bitmap) {
                             count++;
-                            MessageHandler.d("Bitmap: "+count);
+                            MessageHandler.d("Bitmap: " + count);
                         }
                     });
                 }
@@ -366,7 +371,6 @@ public class MainActivity extends DJIBaseActivity {
         };
         DJIDrone.getDjiCamera().setReceivedVideoDataCallBack(mReceivedVideoDataCallBack);
     }
-
 
 
     private View.OnClickListener setRegionClickListener() {
@@ -449,7 +453,7 @@ public class MainActivity extends DJIBaseActivity {
 
     /**
      * Checks if the app has permission to write to device storage
-     * <p/>
+     * <p>
      * If the app does not has permission then the user will be prompted to grant permissions
      *
      * @param activity
