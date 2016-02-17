@@ -36,6 +36,7 @@ proguard/
 .DS_Store
 /build
 Android/Lib/DJI-SDK-LIB/build/
+Android/Lib/DJI-SDK-LIB/build/*
 
 #built application files
 *.apk
