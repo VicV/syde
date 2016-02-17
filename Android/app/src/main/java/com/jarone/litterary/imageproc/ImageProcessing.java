@@ -80,6 +80,13 @@ public class ImageProcessing {
         readFrame(BitmapFactory.decodeByteArray(videoBuffer, 0, videoBuffer.length));
     }
 
+    public static Bitmap processImage(Bitmap image) {
+        readFrame(image);
+        detectBlobs();
+        convertLatestFrame();
+        return CVPreview;
+    }
+    
     public static void readFrame(Bitmap image) {
         Utils.bitmapToMat(image, currentMat);
     }
@@ -99,12 +106,12 @@ public class ImageProcessing {
         processingMat = currentMat;
         Imgproc.cvtColor(processingMat, processingMat, Imgproc.COLOR_BGR2GRAY);
         double cannyThresh = determineCannyThreshold();
-        Imgproc.Canny(processingMat, processingMat, cannyThresh / 2, cannyThresh);
+        Imgproc.Canny(processingMat, processingMat, 150, 250);
         closeImage();
         Imgproc.threshold(processingMat, processingMat, 0, 255, Imgproc.THRESH_BINARY);
         fillImage();
-        eliminateSmallBlobs(4);
-        clearBorders();
+        //eliminateSmallBlobs(4);
+        //clearBorders();
         Imgproc.medianBlur(processingMat, processingMat, 31);
         currentMat = processingMat;
     }
