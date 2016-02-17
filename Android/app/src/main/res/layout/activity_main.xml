@@ -4,19 +4,18 @@
     android:layout_height="match_parent"
     android:orientation="vertical">
 
-
-    <dji.sdk.widget.DjiGLSurfaceView
-        android:id="@+id/DjiSurfaceView_02"
+    <RelativeLayout
         android:layout_width="fill_parent"
-        android:layout_height="212dp"
-        android:elevation="5dp" />
+        android:layout_height="212dp">
 
-    <ImageView
-        android:id="@+id/CVPreview"
-        android:layout_width="fill_parent"
-        android:layout_height="212dp"
-        android:elevation="5dp"
-        android:visibility="gone" />
+        <dji.sdk.widget.DjiGLSurfaceView
+            android:id="@+id/DjiSurfaceView_02"
+            android:layout_width="fill_parent"
+            android:layout_height="212dp"
+            android:elevation="5dp" />
+
+
+    </RelativeLayout>
 
 
     <RelativeLayout
@@ -32,8 +31,7 @@
             android:layout_alignParentTop="true"
             android:layout_centerHorizontal="true"
             android:gravity="center"
-            android:orientation="horizontal"
-            android:visibility="visible">
+            android:orientation="horizontal">
 
 
             <EditText
@@ -266,12 +264,14 @@
 
         <LinearLayout
             android:id="@+id/infoLayout"
-            android:layout_width="match_parent"
+            android:layout_width="wrap_content"
             android:layout_height="match_parent"
+            android:layout_alignParentEnd="true"
+            android:layout_alignParentStart="true"
             android:background="#000"
             android:orientation="vertical"
-            android:paddingLeft="20dp"
-            android:paddingTop="20dp"
+            android:paddingStart="20dp"
+            android:paddingTop="10dp"
             android:visibility="invisible">
 
             <LinearLayout
@@ -279,153 +279,187 @@
                 android:layout_height="wrap_content"
                 android:orientation="horizontal">
 
-                <TextView
-                    android:layout_width="fill_parent"
+                <LinearLayout
+                    android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_column="1"
-                    android:layout_gravity="left"
                     android:layout_weight="1"
-                    android:text="GPS Location"
-                    android:textColor="#FFFFFF"></TextView>
 
-                <TextView
-                    android:id="@+id/currentLocation"
-                    android:layout_width="fill_parent"
+                    android:orientation="vertical">
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+
+                        android:layout_gravity="center_horizontal"
+                        android:layout_weight="1"
+                        android:gravity="center_horizontal"
+                        android:orientation="horizontal"
+                        android:paddingTop="5dp">
+
+                        <TextView
+                            android:layout_width="fill_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:text="GPS Location"
+
+                            android:textColor="#FFFFFF" />
+
+                        <TextView
+                            android:id="@+id/currentLocation"
+                            android:layout_width="fill_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:padding="1dip"
+
+                            android:text="0, 0"
+                            android:textColor="#FFFFFF" />
+                    </LinearLayout>
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal">
+
+                        <TextView
+                            android:layout_width="fill_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:text="Target Location"
+                            android:textColor="#FFFFFF" />
+
+                        <TextView
+                            android:id="@+id/targetLocation"
+                            android:layout_width="fill_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_gravity="end"
+                            android:layout_weight="1"
+                            android:padding="1dip"
+                            android:text="0, 0"
+                            android:textAlignment="gravity"
+                            android:textColor="#FFFFFF" />
+                    </LinearLayout>
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal">
+
+                        <TextView
+                            android:layout_width="fill_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_gravity="start"
+                            android:layout_weight="1"
+                            android:text="Current Mode"
+                            android:textColor="#FFFFFF" />
+
+                        <TextView
+                            android:id="@+id/currentMode"
+                            android:layout_width="fill_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_gravity="bottom|end"
+                            android:layout_marginStart="0dp"
+                            android:layout_weight="1"
+                            android:padding="1dip"
+                            android:text="GPS"
+                            android:textColor="#FFFFFF" />
+
+                    </LinearLayout>
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal">
+
+                        <TextView
+                            android:layout_width="fill_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_gravity="start"
+                            android:layout_weight="1"
+                            android:text="Connected"
+                            android:textColor="#FFFFFF" />
+
+                        <TextView
+                            android:id="@+id/droneConnected"
+                            android:layout_width="fill_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_gravity="bottom|end"
+                            android:layout_marginStart="0dp"
+                            android:layout_weight="1"
+                            android:padding="1dip"
+                            android:text="Nope"
+                            android:textColor="#FFFFFF" />
+                    </LinearLayout>
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal">
+
+                        <TextView
+                            android:layout_width="fill_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_gravity="start"
+                            android:layout_weight="1"
+                            android:text="Message"
+                            android:textColor="#FFFFFF" />
+
+                        <TextView
+                            android:id="@+id/message"
+                            android:layout_width="fill_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_gravity="bottom|end"
+                            android:layout_marginLeft="0dp"
+                            android:layout_weight="1"
+                            android:padding="1dip"
+                            android:text="Nope"
+                            android:textColor="#FFFFFF" />
+                    </LinearLayout>
+                </LinearLayout>
+
+                <LinearLayout
+                    android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_column="2"
-                    android:layout_gravity="right"
-                    android:layout_weight="1"
-                    android:padding="3dip"
-                    android:text="0, 0"
-                    android:textColor="#FFFFFF" />
+                    android:layout_gravity="end"
+                    android:layout_marginEnd="5dp"
+                    android:gravity="end"
+                    android:orientation="vertical">
+
+                    <Button
+                        android:id="@+id/button_special1"
+                        android:layout_width="wrap_content"
+                        android:layout_height="40dp"
+                        android:layout_gravity="end"
+                        android:fontFeatureSettings="smcp"
+                        android:text="special 1"
+                        android:textColor="#999" />
+
+                    <Button
+                        android:id="@+id/button_special2"
+                        android:layout_width="wrap_content"
+                        android:layout_height="40dp"
+                        android:fontFeatureSettings="smcp"
+                        android:text="special 2"
+
+                        android:textColor="#999" />
+
+                    <Button
+                        android:id="@+id/button_special3"
+                        android:layout_width="wrap_content"
+                        android:layout_height="40dp"
+                        android:fontFeatureSettings="smcp"
+                        android:text="special 3"
+
+                        android:textColor="#999" />
+                </LinearLayout>
             </LinearLayout>
 
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="horizontal">
-
-                <TextView
-                    android:layout_width="fill_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_column="1"
-                    android:layout_weight="1"
-                    android:text="Target Location"
-                    android:textColor="#FFFFFF" />
-
-                <TextView
-                    android:id="@+id/targetLocation"
-                    android:layout_width="fill_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_column="2"
-                    android:layout_gravity="right"
-                    android:layout_weight="1"
-                    android:padding="3dip"
-                    android:text="0, 0"
-                    android:textAlignment="gravity"
-                    android:textColor="#FFFFFF" />
-            </LinearLayout>
-
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="horizontal">
-
-                <TextView
-                    android:layout_width="fill_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_column="1"
-                    android:layout_gravity="left"
-                    android:layout_weight="1"
-                    android:text="Current Mode"
-                    android:textColor="#FFFFFF" />
-
-                <TextView
-                    android:id="@+id/currentMode"
-                    android:layout_width="fill_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_column="2"
-                    android:layout_gravity="bottom|right"
-                    android:layout_marginLeft="0dp"
-                    android:layout_weight="1"
-                    android:padding="3dip"
-                    android:text="GPS"
-                    android:textColor="#FFFFFF" />
-
-            </LinearLayout>
-
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="horizontal">
-
-                <TextView
-                    android:layout_width="fill_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_column="1"
-                    android:layout_gravity="left"
-                    android:layout_weight="1"
-                    android:text="Connected"
-                    android:textColor="#FFFFFF" />
-
-                <TextView
-                    android:id="@+id/droneConnected"
-                    android:layout_width="fill_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_column="2"
-                    android:layout_gravity="bottom|right"
-                    android:layout_marginLeft="0dp"
-                    android:layout_weight="1"
-                    android:padding="3dip"
-                    android:text="Nope"
-                    android:textColor="#FFFFFF" />
-            </LinearLayout>
-
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="horizontal">
-
-                <TextView
-                    android:layout_width="fill_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_column="1"
-                    android:layout_gravity="left"
-                    android:layout_weight="1"
-                    android:text="Message"
-                    android:textColor="#FFFFFF" />
-
-                <TextView
-                    android:id="@+id/message"
-                    android:layout_width="fill_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_column="2"
-                    android:layout_gravity="bottom|right"
-                    android:layout_marginLeft="0dp"
-                    android:layout_weight="1"
-                    android:padding="3dip"
-                    android:text="Nope"
-                    android:textColor="#FFFFFF" />
-            </LinearLayout>
-
-            <Button
-                android:id="@+id/button_special1"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="60dp"
-                android:text="Special 1" />
-
-            <Button
-                android:id="@+id/button_special2"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Special 2" />
-
-            <Button
-                android:id="@+id/button_special3"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Special 3" />
+            <ImageView
+                android:id="@+id/CVPreview"
+                android:layout_width="fill_parent"
+                android:layout_height="212dp"
+                android:alpha="128"
+                android:elevation="5dp"
+                android:visibility="visible" />
 
         </LinearLayout>
     </RelativeLayout>

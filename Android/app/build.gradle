@@ -22,14 +22,15 @@ android {
 //            jniLibs.srcDirs = ['..\\Lib\\DJI-SDK-LIB\\libs']
         }
     }
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_1_7
+        targetCompatibility JavaVersion.VERSION_1_7
+    }
 }
 
 dependencies {
     compile project(':Lib:DJI-SDK-LIB')
     compile project(':Lib:opencv-android')
-
-
     compile 'com.google.android.gms:play-services-maps:8.4.0'
     compile 'com.google.android.gms:play-services-location:8.4.0'
-
 }
