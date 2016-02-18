@@ -98,11 +98,36 @@ public class AngularController {
         executeAction(action);
     }
 
+    /**
+     *  Command the drone to fly at the specified angle for the given amount of time
+     * @param angle Angle to fly at
+     * @param time Time to fly at given angle
+     * @param isPitch True if controlling pitch angle, false if controlling roll
+     */
+    public void flyAtAngleForTime(final double angle, final double time, final boolean isPitch) {
+        GroundStation.engageJoystick(new Runnable() {
+            @Override
+            public void run() {
+                if (isPitch) {
+                    GroundStation.setAngles(angle, 0, 0);
+                } else {
+                    GroundStation.setAngles(0, 0, angle);
+                }
+                taskScheduler.schedule(new Runnable() {
+                    @Override
+                    public void run() {
+                        GroundStation.setAngles(0, 0, 0);
+                    }
+                }, (int)time, TimeUnit.MILLISECONDS);
+            }
+        });
+    }
+
     public void generateControlTable() {
         GroundStation.engageJoystick(new Runnable() {
             @Override
             public void run() {
-                generateEntriesForAngle(0, 1);
+                generateEntriesForAngle(0, 0);
             }
         });
     }
@@ -111,12 +136,12 @@ public class AngularController {
      * Recursively generate table entries containing distances travelled for angles up to 45 degrees
      * and times from 1 second to 10 seconds
      * @param angle
-     * @param time
+     * @param timeIndex
      */
-    private void generateEntriesForAngle(final double angle, final double time) {
+    private void generateEntriesForAngle(final double angle, final int timeIndex) {
         //If times from 1 to 10 seconds have been generated for this angle, move to the next angle
-        if (time > 10) {
-            generateEntriesForAngle(angle + 5, 1);
+        if (timeIndex >= ControlTable.POSSIBLE_TIMES.length) {
+            generateEntriesForAngle(angle + 5, 0);
             return;
         }
         //If all angles from 5 to 45 have been tested, exit the method because the table is done
@@ -143,17 +168,17 @@ public class AngularController {
                 GroundStation.setAngles(0, 0, 0);
                 LatLng endLoc = DroneState.getLatLng();
                 double distance = LocationHelper.distanceBetween(startLoc, endLoc);
-                ControlTable.addEntry(new TableEntry(angle, time, distance));
+                ControlTable.addEntry(new TableEntry(angle, ControlTable.POSSIBLE_TIMES[timeIndex], distance));
                 //Put a 3-second delay between test runs to give the drone time to settle
                 generateTasks.add(taskScheduler.schedule(new Runnable() {
                     @Override
                     public void run() {
                         //Generate an entry for the current angle with one more second of time
-                        generateEntriesForAngle(angle, time + 1);
+                        generateEntriesForAngle(angle, timeIndex + 1);
                     }
                 }, 3, TimeUnit.SECONDS));
             }
-        }, (int)time, TimeUnit.SECONDS));
+        }, (int)ControlTable.POSSIBLE_TIMES[timeIndex], TimeUnit.MILLISECONDS));
     }
 
     public void cancelTableGeneration() {

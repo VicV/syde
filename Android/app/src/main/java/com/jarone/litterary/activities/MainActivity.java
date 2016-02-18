@@ -20,6 +20,7 @@ import android.widget.ToggleButton;
 
 import com.google.android.gms.maps.model.LatLng;
 import com.jarone.litterary.R;
+import com.jarone.litterary.control.ControlTable;
 import com.jarone.litterary.drone.DroneState;
 import com.jarone.litterary.drone.GroundStation;
 import com.jarone.litterary.handlers.MessageHandler;
@@ -344,7 +345,7 @@ public class MainActivity extends DJIBaseActivity {
             public void onClick(View view) {
                 switch (view.getId()) {
                     case R.id.button_special1:
-                        ImageProcessing.initializeOpenCV();
+                        ControlTable.testSaveLoad();
                         break;
                     case R.id.button_special2:
                         long start = System.currentTimeMillis();
