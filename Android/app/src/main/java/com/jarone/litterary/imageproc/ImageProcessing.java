@@ -1,9 +1,7 @@
 package com.jarone.litterary.imageproc;
 
-import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
-import android.util.Pair;
 
 import com.google.android.gms.maps.model.LatLng;
 import com.jarone.litterary.handlers.MessageHandler;
@@ -13,12 +11,14 @@ import org.opencv.android.BaseLoaderCallback;
 import org.opencv.android.LoaderCallbackInterface;
 import org.opencv.android.OpenCVLoader;
 import org.opencv.android.Utils;
+import org.opencv.core.Core;
 import org.opencv.core.Mat;
 import org.opencv.core.MatOfPoint;
 import org.opencv.core.Point;
 import org.opencv.core.Scalar;
 import org.opencv.core.Size;
 import org.opencv.imgproc.Imgproc;
+import org.opencv.imgproc.Moments;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -60,13 +60,6 @@ public class ImageProcessing {
         OpenCVLoader.initAsync("2.4.8", ContextManager.getActivity(), loaderCallback);
     }
 
-    public static Pair calculateGPSPoints(Bitmap image, int pw, int py, Context context) {
-        Pair points = new Pair<>(0, 0);
-        int counter = 0, top = 0, bottom = 0, left = 0, right = 0;
-
-        return points;
-    }
-
     public static void setSourceImage(String source) {
         try {
             InputStream i = ContextManager.getActivity().getAssets().open(source);
@@ -86,7 +79,7 @@ public class ImageProcessing {
         convertLatestFrame();
         return CVPreview;
     }
-    
+
     public static void readFrame(Bitmap image) {
         Utils.bitmapToMat(image, currentMat);
     }
@@ -102,18 +95,23 @@ public class ImageProcessing {
     /**
      * Detect blobs in an image using edge detection, closing, filling and thresholding
      */
-    public static void detectBlobs() {
+    public static ArrayList<Point> detectBlobs() {
         processingMat = currentMat;
         Imgproc.cvtColor(processingMat, processingMat, Imgproc.COLOR_BGR2GRAY);
         double cannyThresh = determineCannyThreshold();
-        Imgproc.Canny(processingMat, processingMat, 150, 250);
+        Imgproc.Canny(processingMat, processingMat, cannyThresh, cannyThresh*2);
         closeImage();
         Imgproc.threshold(processingMat, processingMat, 0, 255, Imgproc.THRESH_BINARY);
         fillImage();
-        //eliminateSmallBlobs(4);
-        //clearBorders();
+        eliminateSmallBlobs(600);
+        clearBorders();
         Imgproc.medianBlur(processingMat, processingMat, 31);
-        currentMat = processingMat;
+        ArrayList<Point> centres = findBlobCentres();
+        for (Point centre : centres) {
+            Core.circle(processingMat, centre, 100, new Scalar(255, 0 ,255));
+        }
+        currentMat = processingMat.clone();
+        return centres;
     }
 
     /**
@@ -131,8 +129,9 @@ public class ImageProcessing {
     }
 
     public static void fillImage() {
+        Mat temp = processingMat.clone();
         ArrayList<MatOfPoint> contours = new ArrayList<>();
-        Imgproc.findContours(processingMat, contours, new Mat(), Imgproc.RETR_CCOMP, Imgproc.CHAIN_APPROX_SIMPLE);
+        Imgproc.findContours(temp, contours, new Mat(), Imgproc.RETR_CCOMP, Imgproc.CHAIN_APPROX_SIMPLE);
         fillContours(contours, 255);
     }
 
@@ -164,11 +163,14 @@ public class ImageProcessing {
      * Eliminate objects that are too small (noise)
      */
     public static void eliminateSmallBlobs(double threshold) {
+        Mat temp = processingMat.clone();
         ArrayList<MatOfPoint> contours = new ArrayList<>();
-        Imgproc.findContours(processingMat, contours, new Mat(), Imgproc.RETR_CCOMP, Imgproc.CHAIN_APPROX_SIMPLE);
+        ArrayList<Double> areas = new ArrayList<>();
+        Imgproc.findContours(temp, contours, new Mat(), Imgproc.RETR_CCOMP, Imgproc.CHAIN_APPROX_SIMPLE);
         ArrayList<MatOfPoint> badContours = new ArrayList<>();
         for (MatOfPoint contour : contours) {
-            if (Imgproc.contourArea(contour) > threshold) {
+            areas.add(Imgproc.contourArea(contour));
+            if (Imgproc.contourArea(contour) < threshold) {
                 badContours.add(contour);
             }
         }
@@ -179,20 +181,35 @@ public class ImageProcessing {
      * Eliminate shapes which touch the border of the image
      */
     public static void clearBorders() {
+        Mat temp = processingMat.clone();
         ArrayList<MatOfPoint> contours = new ArrayList<>();
-        Imgproc.findContours(processingMat, contours, new Mat(), Imgproc.RETR_CCOMP, Imgproc.CHAIN_APPROX_SIMPLE);
+        Imgproc.findContours(temp, contours, new Mat(), Imgproc.RETR_CCOMP, Imgproc.CHAIN_APPROX_SIMPLE);
         int width = processingMat.width();
         int height = processingMat.height();
 
         ArrayList<MatOfPoint> badContours = new ArrayList<>();
         for (MatOfPoint contour : contours) {
             for (Point p : contour.toArray()) {
-                if (p.x == 0 || p.x == width || p.y == 0 || p.y == height) {
+                if (p.x == 0 || p.x >= width || p.y == 0 || p.y >= height) {
                     badContours.add(contour);
                 }
             }
         }
         fillContours(badContours, 0);
+    }
+
+    public static ArrayList<Point> findBlobCentres() {
+        Mat temp = processingMat.clone();
+        ArrayList<MatOfPoint> contours = new ArrayList<>();
+        Imgproc.findContours(temp, contours, new Mat(), Imgproc.RETR_CCOMP, Imgproc.CHAIN_APPROX_SIMPLE);
+        ArrayList<Point> centres = new ArrayList<>();
+        for (MatOfPoint contour : contours) {
+            Moments moment = Imgproc.moments(contour);
+            int x = (int)moment.get_m10() / (int)moment.get_m00();
+            int y = (int)moment.get_m01() / (int)moment.get_m00();
+            centres.add(new Point(x, y));
+        }
+        return centres;
     }
 
     public static void fillContours(ArrayList<MatOfPoint> contours, int colour) {

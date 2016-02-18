@@ -6,6 +6,9 @@ import android.content.Context;
 import com.jarone.litterary.drone.DroneState;
 import com.jarone.litterary.handlers.MessageHandler;
 
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+
 import dji.sdk.api.DJIDrone;
 import dji.sdk.api.DJIDroneTypeDef;
 import dji.sdk.api.DJIError;
@@ -27,6 +30,11 @@ public class LitterApplication extends Application {
         return instance;
     }
 
+    public static LitterApplication getInstance() { return instance; }
+
+    private ScheduledExecutorService taskScheduler;
+
+
     /**
      * The log tag
      **/
@@ -41,8 +49,13 @@ public class LitterApplication extends Application {
         activateDJI();
         initSDK();
         DroneState.droneConnected = DJIDrone.connectToDrone();
+        taskScheduler = Executors.newScheduledThreadPool(10);
     }
 
+
+    public ScheduledExecutorService getScheduler() {
+        return taskScheduler;
+    }
 
     private void initSDK() {
         DJIDrone.initWithType(this.getApplicationContext(), DJIDroneTypeDef.DJIDroneType.DJIDrone_Vision);

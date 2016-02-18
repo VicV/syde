@@ -273,6 +273,15 @@ public class GroundStation {
      * Result should be the drone holding its current position until new commands are issued
      */
     public static void engageJoystick() {
+        engageJoystick(new Runnable() {
+            @Override
+            public void run() {
+
+            }
+        });
+    }
+
+    public static void engageJoystick(final Runnable onSuccess) {
         withConnection(new Runnable() {
             @Override
             public void run() {
@@ -286,6 +295,7 @@ public class GroundStation {
                                 MessageHandler.d("Engage Joystick: " + groundStationResult.toString());
                                 if (resultSuccess(groundStationResult)) {
                                     DroneState.setMode(DroneState.DIRECT_MODE);
+                                    onSuccess.run();
                                 }
                             }
                         });
@@ -293,7 +303,6 @@ public class GroundStation {
                 });
             }
         });
-
     }
 
     /**
