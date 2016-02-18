@@ -27,7 +27,10 @@ import com.jarone.litterary.helpers.ContextManager;
 import com.jarone.litterary.helpers.LocationHelper;
 import com.jarone.litterary.imageproc.ImageProcessing;
 
+import java.nio.ByteBuffer;
+import java.nio.ByteOrder;
 import java.nio.IntBuffer;
+import java.nio.ShortBuffer;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.concurrent.Executors;
@@ -53,15 +56,15 @@ public class MainActivity extends DJIBaseActivity {
     };
 
     boolean buttonPress = false;
-
     public static final int POINTS_REQUEST_CODE = 130;
     public static final int POINTS_RESULT_CODE = 230;
 
     private DjiGLSurfaceView mDjiGLSurfaceView;
 
     private static final String TAG = MainActivity.class.toString();
-
     int count = 0;
+
+    private ImageView CPreview;
 
     private Context mainActivity;
 
@@ -89,6 +92,9 @@ public class MainActivity extends DJIBaseActivity {
 
         DroneState.registerConnectedTimer();
         GroundStation.registerPhantom2Callback();
+
+        CPreview = ((ImageView) findViewById(R.id.CVPreview));
+
     }
 
     private void registerUpdateInterface() {
@@ -197,14 +203,44 @@ public class MainActivity extends DJIBaseActivity {
                 EGL10 egl = (EGL10) EGLContext.getEGL();
                 //Get GL10 object from EGL context.
                 GL10 gl = (GL10) egl.eglGetCurrentContext().getGL();
-                Bitmap frame = createBitmapFromGLSurface(0, 0, mDjiGLSurfaceView.getWidth(), mDjiGLSurfaceView.getHeight(), gl);
+                Bitmap frame = smallerTest(0, 0, mDjiGLSurfaceView.getWidth(), mDjiGLSurfaceView.getHeight(), gl);
 
                 bitmapCreatedCallback.onBitmapCreated(frame);
-
-
             }
         });
 
+    }
+
+    private Bitmap smallerTest(int x, int y, int w, int h, GL10 gl) {
+
+        if (gl != null && w != 0 && h != 0) {
+            int screenshotSize = w * h;
+            ByteBuffer bb = ByteBuffer.allocateDirect(screenshotSize * 4);
+            bb.order(ByteOrder.nativeOrder());
+            gl.glReadPixels(0, 0, w, h, GL10.GL_RGBA, GL10.GL_UNSIGNED_BYTE, bb);
+            int pixelsBuffer[] = new int[screenshotSize];
+            bb.asIntBuffer().get(pixelsBuffer);
+            Bitmap bitmap = Bitmap.createBitmap(w, h,
+                    Bitmap.Config.RGB_565);
+
+            bitmap.setPixels(pixelsBuffer, screenshotSize - w, -w, 0,
+                    0, w, h);
+
+            short sBuffer[] = new short[screenshotSize];
+            ShortBuffer sb = ShortBuffer.wrap(sBuffer);
+            bitmap.copyPixelsToBuffer(sb);
+
+            // Making created bitmap (from OpenGL points) compatible with
+            // Android bitmap
+            for (int i = 0; i < screenshotSize; ++i) {
+                short v = sBuffer[i];
+                sBuffer[i] = (short) (((v & 0x1f) << 11) | (v & 0x7e0) | ((v & 0xf800) >> 11));
+            }
+            sb.rewind();
+            bitmap.copyPixelsFromBuffer(sb);
+            return bitmap.copy(Bitmap.Config.ARGB_8888, false);
+        }
+        return null;
     }
 
     private Bitmap createBitmapFromGLSurface(int x, int y, int w, int h, GL10 gl) {
@@ -312,17 +348,18 @@ public class MainActivity extends DJIBaseActivity {
                         break;
                     case R.id.button_special2:
                         long start = System.currentTimeMillis();
-                        int count = 10;
-                        for (int i = 0; i < count; i++) {
+                        int blobCount = 10;
+                        for (int i = 0; i < blobCount; i++) {
                             ImageProcessing.setSourceImage("charger.jpg");
                             ImageProcessing.detectBlobs();
                         }
                         long end = System.currentTimeMillis();
-                        MessageHandler.d("Average: " + ((end - start) / count));
+                        MessageHandler.d("Average: " + ((end - start) / blobCount));
 
                         break;
                     case R.id.button_special3:
                         buttonPress = true;
+                        count = 0;
                         break;
                 }
             }
@@ -333,45 +370,67 @@ public class MainActivity extends DJIBaseActivity {
         return new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                switch (v.getId()) {
-                    case R.id.DjiSurfaceView_02:
-                        v.setVisibility(View.GONE);
-                        findViewById(R.id.CVPreview).setVisibility(View.VISIBLE);
-                        break;
-                    case R.id.CVPreview:
-                        v.setVisibility(View.GONE);
-                        findViewById(R.id.DjiSurfaceView_02).setVisibility(View.VISIBLE);
-                        break;
-                }
+                //TODO: REMOVE
+//                switch (v.getId()) {
+//                    case R.id.DjiSurfaceView_02:
+//                        v.setVisibility(View.INVISIBLE);
+//                        findViewById(R.id.CVPreview).setVisibility(View.VISIBLE);
+//                        break;
+//                    case R.id.CVPreview:
+//                        v.setVisibility(View.INVISIBLE);
+//                        findViewById(R.id.DjiSurfaceView_02).setVisibility(View.VISIBLE);
+//                        break;
+//                }
             }
         };
     }
 
+    private boolean processing = false;
+
     private void registerCamera() {
         mDjiGLSurfaceView = (DjiGLSurfaceView) findViewById(R.id.DjiSurfaceView_02);
         mDjiGLSurfaceView.start();
-
 
         DJIReceivedVideoDataCallBack mReceivedVideoDataCallBack = new DJIReceivedVideoDataCallBack() {
             @Override
             public void onResult(byte[] videoBuffer, int size) {
                 mDjiGLSurfaceView.setDataToDecoder(videoBuffer, size);
 
-                if (buttonPress) {
-                    createBitmapFromFrame(new BitmapCreatedCallback() {
-                        @Override
-                        public void onBitmapCreated(Bitmap bitmap) {
-                            count++;
-                            MessageHandler.d("Bitmap: " + count);
-                        }
-                    });
+                if (buttonPress && !processing && count < 20) {
+                    processing = true;
+                    new ImageAsyncTask().execute();
+                } else if (count >= 20 && processing) {
+                    processing = false;
+                    buttonPress = false;
                 }
-
             }
         };
         DJIDrone.getDjiCamera().setReceivedVideoDataCallBack(mReceivedVideoDataCallBack);
     }
 
+    private class ImageAsyncTask extends AsyncTask<Void, Void, Void> {
+        @Override
+        protected Void doInBackground(Void... params) {
+            createBitmapFromFrame(new BitmapCreatedCallback() {
+                @Override
+                public void onBitmapCreated(final Bitmap bitmap) {
+                    count++;
+                    processing = false;
+                    CPreview.postDelayed(new Runnable() {
+                        @Override
+                        public void run() {
+                            if (bitmap != null) {
+                                CPreview.setImageBitmap(ImageProcessing.processImage(bitmap));
+                            }
+                        }
+                    }, 200);
+                    // MessageHandler.d("Bitmap: " + count);
+                }
+
+            });
+            return null;
+        }
+    }
 
     private View.OnClickListener setRegionClickListener() {
         return new View.OnClickListener() {
@@ -453,7 +512,7 @@ public class MainActivity extends DJIBaseActivity {
 
     /**
      * Checks if the app has permission to write to device storage
-     * <p>
+     * <p/>
      * If the app does not has permission then the user will be prompted to grant permissions
      *
      * @param activity
