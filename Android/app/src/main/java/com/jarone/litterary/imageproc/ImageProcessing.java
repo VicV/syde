@@ -110,7 +110,7 @@ public class ImageProcessing {
         for (Point centre : centres) {
             Core.circle(processingMat, centre, 100, new Scalar(255, 0 ,255));
         }
-        currentMat = processingMat.clone();
+        currentMat = processingMat;
         return centres;
     }
 
