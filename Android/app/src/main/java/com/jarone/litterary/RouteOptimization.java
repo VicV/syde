@@ -1,11 +1,9 @@
 package com.jarone.litterary;
 
 import com.google.android.gms.maps.model.LatLng;
-import com.jarone.litterary.activities.MainActivity;
 import com.jarone.litterary.drone.DroneState;
 import com.jarone.litterary.drone.GroundStation;
 import com.jarone.litterary.handlers.MessageHandler;
-import com.jarone.litterary.helpers.ContextManager;
 import com.jarone.litterary.helpers.LocationHelper;
 import com.jarone.litterary.optimization.GA;
 import com.jarone.litterary.optimization.PhotoPoint;
@@ -20,23 +18,22 @@ import java.util.Arrays;
 
 /**
  * Created by Adam on 2015-11-23.
- * <p/>
+ * <p>
  * Optimizin routes.
  */
 public class RouteOptimization {
 
     public static LatLng[] createOptimizedSurveyRoute(LatLng[] points, float altitude) {
 
-
-        ArrayList<LatLng> latLngs = new ArrayList<>();
+        ArrayList<LatLng> coordinates = new ArrayList<>();
 
         if (points != null && points.length > 0) {
-            latLngs = new ArrayList<>(Arrays.asList(points));
+            coordinates = new ArrayList<>(Arrays.asList(points));
         }
 
         if (validateBoundary(points)) {
 
-            ArrayList<LatLng> picturePoints = getPhotoPoints(latLngs, altitude);
+            ArrayList<LatLng> picturePoints = getPhotoPoints(coordinates, altitude);
 
             ArrayList<LatLng> orderedPoints = optimizePhotoRoute(picturePoints);
 
@@ -60,114 +57,120 @@ public class RouteOptimization {
     }
 
 
-    private static ArrayList<LatLng> getPhotoPoints(ArrayList<LatLng> originalArray, float altitude) {
+    /**
+     * Get an ArrayList of coordinates which are the points to take photos.
+     *
+     * @param vertices Vertex coordinates of defined boundary to take photos within.
+     * @param altitude Height at which the drone will be flown.
+     * @return ArrayList of {@link LatLng}
+     */
+    private static ArrayList<LatLng> getPhotoPoints(ArrayList<LatLng> vertices, float altitude) {
         Polygon.Builder builder = new Polygon.Builder();
-//        ArrayList<LatLng> points = new ArrayList();
-        ArrayList<Point> polyPoints = new ArrayList();
-
+        ArrayList<Point> polyPoints = new ArrayList<>();
 
         //Whether or not the latitude/longitude are negative
-        boolean longNeg;
-        boolean latNeg;
+        boolean haveNegativeLong;
+        boolean haveNegativeLat;
 
-        //Current step size. At 0.0001 we'll get around 15 points. Right now we get about 250.
+        //Current step size. This is how much we move around when testing whether or not a point overlaps.
+        //At 0.0001 we'll get around 15 points. Right now we get about 250.
+        //TODO: Test for this number
         double stepSize = .000005;
 
+        //If for some reason we didn't type anything, assume we're taking it from 5m
         if (altitude == -1) {
-            altitude = 4;
+            altitude = 5;
         }
 
-        //x-distance between image capture points
-        double distX = (altitude * Math.tan(Math.toRadians(60)) * 2) / 200000;
+        //x-distance between image capture points.
+        double xDistanceBetweenCapturePoints = (altitude * Math.tan(Math.toRadians(60)) * 2) / 200000;
 
         //y-distance between image capture points
-        double distY = (altitude * Math.tan(Math.toRadians(42.5)) * 2) / 200000;
+        double yDistanceBetweenCapturePoints = (altitude * Math.tan(Math.toRadians(42.5)) * 2) / 200000;
 
         //Number of rows.
-        int m = originalArray.size();
+        int m = vertices.size();
 
-        double xi;
-        double yi;
 
         ArrayList<LatLng> GPS = new ArrayList<>();
 
-        // inputting all the vertices of polygon P4 to the xv and yv array
+        // inputting all the vertices of surveyArea P4 to the xv and yv array
         double maxLat = Double.NEGATIVE_INFINITY;
         double maxLong = Double.NEGATIVE_INFINITY;
         double minLat = Double.POSITIVE_INFINITY;
         double minLong = Double.POSITIVE_INFINITY;
 
         int lowestLngIndex = -1;
+        double currentLat, currentLong;
 
+        //Find the max and mins of our longitutes and latitudes
         for (int i = 0; i < m; i++) {
-            xi = originalArray.get(i).latitude;
-            yi = originalArray.get(i).longitude;
+            currentLat = vertices.get(i).latitude;
+            currentLong = vertices.get(i).longitude;
 
-            if (xi > maxLat) {
-                maxLat = xi;
+            if (currentLat > maxLat) {
+                maxLat = currentLat;
             }
-            if (xi < minLat) {
-                minLat = xi;
-
+            if (currentLat < minLat) {
+                minLat = currentLat;
             }
-            if (yi > maxLong) {
-                maxLong = yi;
+            if (currentLong > maxLong) {
+                maxLong = currentLong;
             }
-            if (yi < minLong) {
-                minLong = yi;
+            if (currentLong < minLong) {
+                minLong = currentLong;
                 lowestLngIndex = i;
             }
         }
 
         //Set if these are negative.
-        longNeg = minLong < 0;
-        latNeg = minLat < 0;
+        haveNegativeLong = minLong < 0;
+        haveNegativeLat = minLat < 0;
 
-        maxLat = latNeg ? maxLat + (-minLat) : maxLat;
-        maxLong = longNeg ? maxLong + (-minLong) : maxLong;
+        maxLat = haveNegativeLat ? maxLat + (-minLat) : maxLat;
+        maxLong = haveNegativeLong ? maxLong + (-minLong) : maxLong;
 
         //Copy original array into a new array of Points. If the latitude or longitude were negative, add the inverse of
         // the min of them to each point so we start at 0.0;
-        for (LatLng pt : originalArray) {
-            Point p = new Point((latNeg ? pt.latitude + (-minLat) : pt.latitude), (longNeg ? pt.longitude + (-minLong) : pt.longitude));
+        for (LatLng pt : vertices) {
+            Point p = new Point((haveNegativeLat ? pt.latitude + (-minLat) : pt.latitude), (haveNegativeLong ? pt.longitude + (-minLong) : pt.longitude));
             polyPoints.add(p);
             builder.addVertex(new Point(p.latitude, p.longitude));
         }
 
-        //Create our polygon.
-        Polygon polygon = builder.close().build();
+        //Create our surveyArea.
+        Polygon surveyArea = builder.close().build();
 
         //Start at the first point.
-        double x = polyPoints.get(lowestLngIndex).latitude;
-        double y = polyPoints.get(lowestLngIndex).longitude;
+        double currentX = polyPoints.get(lowestLngIndex).latitude;
+        double currentY = polyPoints.get(lowestLngIndex).longitude;
 
         //Add a new point to our final array. If it WAS negative, we now subtract that minimum value because
         // We would have added it previously.
-        GPS.add(new LatLng(latNeg ? x + minLat : x, longNeg ? y + minLong : y));
+        GPS.add(new LatLng(haveNegativeLat ? currentX + minLat : currentX, haveNegativeLong ? currentY + minLong : currentY));
 
         // break counter for upcoming for loop
-        double y1 = 0;
+        double nextY = 0;
         int mFlag = 0;
-        while (polygon.contains(new Point(x, y))) {
+        while (surveyArea.contains(new Point(currentX, currentY))) {
+
             //last loop break clause
             if (mFlag == 1)
                 mFlag = 2;
 
-            //case where next y point is greater than the top of the polygon
-            if ((y + distY) > maxLong) {
-                y1 = y + distY;
-                while (y1 > maxLong) {
-                    //iterate down until you are in the polygon
-                    y1 = y1 - stepSize;
+            //case where next y point is greater than the top of the surveyArea
+            if ((currentY + yDistanceBetweenCapturePoints) > maxLong) {
+                nextY = currentY + yDistanceBetweenCapturePoints;
+                while (nextY > maxLong) {
+                    //iterate down until you are in the surveyArea
+                    nextY = nextY - stepSize;
                 }
             }
-            //general case where the x and y test value is in the polygon
-            while (polygon.contains(new Point(x, y))) {
-                if (polygon.contains(new Point(x, y))) {
-                    GPS.add(new LatLng(latNeg ? x + minLat : x, longNeg ? y + minLong : y));
-                }
-
-                x = x + distX;
+            //general case where the x and y test value is in the surveyArea
+            while (surveyArea.contains(new Point(currentX, currentY))) {
+                //TODO: Make more understandable
+                GPS.add(new LatLng(haveNegativeLat ? currentX + minLat : currentX, haveNegativeLong ? currentY + minLong : currentY));
+                currentX = currentX + xDistanceBetweenCapturePoints;
             }
             //the out clause for the last case
             if (mFlag == 2)
@@ -175,59 +178,53 @@ public class RouteOptimization {
 
             //case where you reach the far right-most point, iterate back until
             //you are in region
-            if (!polygon.contains(new Point(x, y))) {
-                while (!polygon.contains(new Point(x, y))) {
-                    x = x - stepSize;
-                    if (x < minLat) {
-                        x = polyPoints.get(lowestLngIndex).latitude;
-                        break;
-                    }
+            while (!surveyArea.contains(new Point(currentX, currentY))) {
+                currentX = currentX - stepSize;
+                if (currentX < minLat) {
+                    currentX = polyPoints.get(lowestLngIndex).latitude;
+                    break;
                 }
-                GPS.add(new LatLng(latNeg ? x + minLat : x, longNeg ? y + minLong : y));
             }
+            GPS.add(new LatLng(haveNegativeLat ? currentX + minLat : currentX, haveNegativeLong ? currentY + minLong : currentY));
+
 
             //iterate upwards to the next row of points
-            x = polyPoints.get(lowestLngIndex).latitude;
-            y = y + distY;
+            currentX = polyPoints.get(lowestLngIndex).latitude;
+            currentY = currentY + yDistanceBetweenCapturePoints;
 
             //iterate left until you find the left-most edge of the space
-            if (polygon.contains(new Point(x, y))) {
-                while (polygon.contains(new Point(x, y))) {
-                    if (y > maxLong) {
-                        y = y1;
-                        mFlag = 1;
-                        if (x < minLat) {
-                            x = polyPoints.get(lowestLngIndex).latitude;
-                            break;
-                        }
-                        if (!polygon.contains(new Point(x, y))) {
-                            break;
-                        }
-
-                    }
-
-                    x = x - stepSize;
-                }
-            }
-
-            //if you iterate up, and it's outside the area, iterate right until
-            //you find inside the polygon
-            if (!polygon.contains(new Point(x, y))) {
-                while (!polygon.contains(new Point(x, y))) {
-                    if (y > maxLong) {
-                        y = y1;
-                        mFlag = 1;
-                        if (polygon.contains(new Point(x, y))) {
-                            break;
-                        }
-                    }
-                    if (x > maxLat) {
-                        x = polyPoints.get(lowestLngIndex).latitude;
+            while (surveyArea.contains(new Point(currentX, currentY))) {
+                if (currentY > maxLong) {
+                    currentY = nextY;
+                    mFlag = 1;
+                    if (currentX < minLat) {
+                        currentX = polyPoints.get(lowestLngIndex).latitude;
                         break;
                     }
-                    x = x + stepSize;
+                    if (!surveyArea.contains(new Point(currentX, currentY))) {
+                        break;
+                    }
 
                 }
+                currentX = currentX - stepSize;
+            }
+
+
+            //if you iterate up, and it's outside the area, iterate right until
+            //you find inside the surveyArea
+            while (!surveyArea.contains(new Point(currentX, currentY))) {
+                if (currentY > maxLong) {
+                    currentY = nextY;
+                    mFlag = 1;
+                    if (surveyArea.contains(new Point(currentX, currentY))) {
+                        break;
+                    }
+                }
+                if (currentX > maxLat) {
+                    currentX = polyPoints.get(lowestLngIndex).latitude;
+                    break;
+                }
+                currentX = currentX + stepSize;
             }
         }
 
@@ -251,7 +248,7 @@ public class RouteOptimization {
         // Evolve population for 300 generations
         pop = GA.evolvePopulation(pop);
 
-        int iterations = 300;
+        int iterations = 100;//300;
         MessageHandler.d("Iterations: " + iterations);
 
         for (int i = 0; i < iterations; i++) {

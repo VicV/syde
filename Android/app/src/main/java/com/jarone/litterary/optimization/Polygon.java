@@ -204,8 +204,6 @@ public class Polygon {
             }
         }
 
-        // System.out.println("Ray: " + ray.toString() + " ,Side: " + side);
-        // System.out.println("Intersect point: " + intersectPoint.toString());
 
         return side.isInside(intersectPoint) && ray.isInside(intersectPoint);
 
