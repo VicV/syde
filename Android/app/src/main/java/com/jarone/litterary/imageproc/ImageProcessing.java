@@ -40,6 +40,7 @@ public class ImageProcessing {
     //The Bitmap representation of the current result image
     private static Bitmap CVPreview = null;
 
+
     public static BaseLoaderCallback loaderCallback = new BaseLoaderCallback(ContextManager.getContext()) {
         @Override
         public void onManagerConnected(int status) {
@@ -74,8 +75,7 @@ public class ImageProcessing {
     }
 
     public static Bitmap processImage(Bitmap image) {
-        readFrame(image);
-        detectBlobs();
+        identifyLitter(image);
         convertLatestFrame();
         return CVPreview;
     }
@@ -85,7 +85,9 @@ public class ImageProcessing {
     }
 
     public static ArrayList<LatLng> identifyLitter(Bitmap photo) {
-        return new ArrayList<>();
+        readFrame(photo);
+        ArrayList<Point> points = detectBlobs();
+        return calculateGPSCoords(points);
     }
 
     public static Bitmap getCVPreview() {
@@ -94,6 +96,7 @@ public class ImageProcessing {
 
     /**
      * Detect blobs in an image using edge detection, closing, filling and thresholding
+     * Returns a list of blob centres in terms of points on the image
      */
     public static ArrayList<Point> detectBlobs() {
         processingMat = currentMat;
@@ -103,6 +106,7 @@ public class ImageProcessing {
         closeImage();
         Imgproc.threshold(processingMat, processingMat, 0, 255, Imgproc.THRESH_BINARY);
         fillImage();
+        //TODO determine below threshold parameter from the drone's altitude and FOV
         eliminateSmallBlobs(600);
         clearBorders();
         Imgproc.medianBlur(processingMat, processingMat, 31);
@@ -156,7 +160,7 @@ public class ImageProcessing {
      */
     public static double determineCannyThreshold() {
         Mat _ = new Mat();
-        return Imgproc.threshold(currentMat, _, 0, 255, Imgproc.THRESH_BINARY | Imgproc.THRESH_OTSU);
+        return Imgproc.threshold(currentMat, _, 0, 255, Imgproc.THRESH_OTSU);
     }
 
     /**
@@ -198,18 +202,31 @@ public class ImageProcessing {
         fillContours(badContours, 0);
     }
 
+    /**
+     * Determine the centroid of each detected blob
+     * @return
+     */
     public static ArrayList<Point> findBlobCentres() {
         Mat temp = processingMat.clone();
         ArrayList<MatOfPoint> contours = new ArrayList<>();
         Imgproc.findContours(temp, contours, new Mat(), Imgproc.RETR_CCOMP, Imgproc.CHAIN_APPROX_SIMPLE);
         ArrayList<Point> centres = new ArrayList<>();
         for (MatOfPoint contour : contours) {
-            Moments moment = Imgproc.moments(contour);
-            int x = (int)moment.get_m10() / (int)moment.get_m00();
-            int y = (int)moment.get_m01() / (int)moment.get_m00();
-            centres.add(new Point(x, y));
+            centres.add(contourCentroid(contour));
         }
         return centres;
+    }
+
+    /**
+     * Uses images moments to determine the centroid of the given contour
+     * @param contour
+     * @return
+     */
+    public static Point contourCentroid(MatOfPoint contour) {
+        Moments moment = Imgproc.moments(contour);
+        int x = (int)moment.get_m10() / (int)moment.get_m00();
+        int y = (int)moment.get_m01() / (int)moment.get_m00();
+        return new Point(x, y);
     }
 
     public static void fillContours(ArrayList<MatOfPoint> contours, int colour) {
@@ -217,88 +234,23 @@ public class ImageProcessing {
             Imgproc.drawContours(processingMat, contours, i, new Scalar(colour), -1);
         }
     }
-}
 
-/**
- * function [distx, disty] = calculateGPSPoints(image, pw, ph)
- * % image is a binary image
- * [h, w, z] = size(image);
- * counter = 0;
- * top = 0;
- * bottom = 0;
- * left = 0;
- * right = 0;
- * % determine top of object
- * for i=1:h
- * counter = 0;
- * for j=1:w
- * if (image(i,j) == 1)
- * counter = counter +1;
- * if (counter > 10)
- * top = i;
- * break;
- * end
- * end
- * end
- * if (top ~= 0)
- * break;
- * end
- * end
- * % determine bottom of object
- * for i=h:-1:1
- * counter = 0;
- * for j=1:w
- * if (image(i,j) == 1)
- * counter = counter +1;
- * if (counter > 10)
- * bottom = i;
- * break;
- * end
- * end
- * end
- * if (bottom ~= 0)
- * break;
- * end
- * end
- * % determine left side of object
- * for j=1:w
- * counter = 0;
- * for i=top:bottom
- * if (image(i,j) == 1)
- * counter = counter+1;
- * if (counter > 10)
- * left = j;
- * break;
- * end
- * end
- * end
- * if (left ~= 0)
- * break;
- * end
- * end
- * % determine right side of object
- * for j=w:-1:1
- * counter = 0;
- * for i=top:bottom
- * if (image(i,j) == 1)
- * counter = counter +1;
- * if (counter > 5)
- * right = j;
- * break;
- * end
- * end
- * end
- * if (right ~= 0)
- * break;
- * end
- * end
- * % determine location of centre of detected object
- * row = round((bottom+top)/2);
- * col = round((right+left)/2);
- * % calculate distance from the centre of the image to the centre of the
- * % detected oject
- * distx = (col - w/2)/pw; %distance in the x direction from the centre
- * disty = (row - h/2)/ph; %distance in the y direction from the centre
- * end
- */
+    public static ArrayList<LatLng> calculateGPSCoords(ArrayList<Point> points) {
+        //TODO Implement this proper
+        ArrayList<LatLng> coords = new ArrayList<>();
+        for (Point point : points) {
+            coords.add(new LatLng(point.x, point.y));
+        }
+        return coords;
+    }
+
+    /**
+     * TODO Implement this
+     * Return the current distance of the drone from the target being tracked
+     * @return
+     */
+    public static double distanceFromTarget() {
+        return 10;
+    }
+}
 

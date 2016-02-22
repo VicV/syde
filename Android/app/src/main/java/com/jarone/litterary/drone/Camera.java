@@ -1,18 +1,24 @@
 package com.jarone.litterary.drone;
 
+import android.os.Environment;
+
 import com.jarone.litterary.handlers.MessageHandler;
 
-import java.util.ArrayList;
+import java.io.BufferedOutputStream;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.OutputStream;
+import java.util.List;
 
 import dji.sdk.api.Camera.DJICameraSettingsTypeDef;
 import dji.sdk.api.DJIDrone;
 import dji.sdk.api.DJIError;
 import dji.sdk.api.Gimbal.DJIGimbalRotation;
-import dji.sdk.api.media.DJIMediaDirInfo;
-import dji.sdk.api.media.DJIMediaInfo;
-import dji.sdk.interfaces.DJIDownloadListener;
+import dji.sdk.api.media.DJIMedia;
 import dji.sdk.interfaces.DJIExecuteResultCallback;
-import dji.sdk.interfaces.DJIFileDownloadCallBack;
+import dji.sdk.interfaces.DJIMediaFetchCallBack;
+import dji.sdk.interfaces.DJIReceivedFileDataCallBack;
 import dji.sdk.util.DjiLocationCoordinate2D;
 
 /**
@@ -67,69 +73,48 @@ public class Camera {
      * Downloads the latest photo on the SD card and labels it with the drone's current GPS coords
      */
     public static void downloadLatestPhoto() {
-        DJIDrone.getDjiCamera().fetchMediaList(new DJIDownloadListener<DJIMediaDirInfo>() {
+        DJIDrone.getDjiCamera().fetchMediaList(new DJIMediaFetchCallBack() {
             @Override
-            public void onStart() {
+            public void onResult(List<DJIMedia> list, DJIError djiError) {
+                if (djiError.errorCode == 0) {
+                    try {
+                        FileOutputStream out = new FileOutputStream(Environment.getExternalStorageDirectory()+ "/" + formatFileName());
+                        final OutputStream outFile = new BufferedOutputStream(out);
 
-            }
-
-            @Override
-            public void onRateUpdate(long l, long l1, long l2) {
-
-            }
-
-            @Override
-            public void onProgress(long l, long l1) {
-
-            }
-
-            @Override
-            public void onSuccess(DJIMediaDirInfo djiMediaDirInfo) {
-                ArrayList<DJIMediaInfo> fileList = djiMediaDirInfo.fileInfoList;
-                int index = fileList.get(fileList.size()).index;
-
-                DJIDrone.getDjiCamera().selectFileAtIndex(index, new DJIExecuteResultCallback() {
-                    @Override
-                    public void onResult(DJIError djiError) {
-                        DJIDrone.getDjiCamera().downloadAllSelectedFiles(formatFileName(), new DJIFileDownloadCallBack() {
+                        DJIDrone.getDjiCamera().fetchMediaData(list.get(0), new DJIReceivedFileDataCallBack() {
                             @Override
-                            public void OnStart() {
+                            public void onResult(byte[] bytes, int size, int progress, DJIError djiError) {
+                                if (djiError.errorCode == DJIError.RESULT_OK) {
+                                    try {
+                                        outFile.write(bytes, 0, size);
+                                        if (progress % 10 == 0) {
+                                            MessageHandler.d(size + " " + progress + " " + djiError.errorDescription);
+                                        }
 
-                            }
+                                        if (progress == 100) {
+                                            outFile.close();
+                                            DJIDrone.getDjiCamera().setCameraMode(DJICameraSettingsTypeDef.CameraMode.Camera_Camera_Mode, new DJIExecuteResultCallback() {
+                                                @Override
+                                                public void onResult(DJIError djiError) {
 
-                            @Override
-                            public void OnEnd() {
-                                DJIDrone.getDjiCamera().unselectAllFiles(new DJIExecuteResultCallback() {
-                                    @Override
-                                    public void onResult(DJIError djiError) {
+                                                }
+                                            });
+                                        }
+                                    } catch (IOException e) {
 
                                     }
-                                });
-                            }
-
-                            @Override
-                            public void OnError(Exception e) {
-
-                            }
-
-                            @Override
-                            public void OnProgressUpdate(int i) {
-
+                                }
                             }
                         });
+                    } catch (FileNotFoundException e) {
                     }
-                });
-            }
-
-            @Override
-            public void onFailure(DJIError djiError) {
-
+                }
             }
         });
     }
 
     public static String formatFileName() {
-        return "survey/" + System.currentTimeMillis() + "|" + DroneState.getLatitude() + "|" + DroneState.getLongitude();
+        return "Litterary/survey/" + System.currentTimeMillis(); //+ "-" + DroneState.getLatitude() + "-" + DroneState.getLongitude();
     }
 
     public static void setGimbalPitch(int angle) {

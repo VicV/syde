@@ -65,7 +65,7 @@ public class SurveyRoute extends NavigationRoute{
     }
 
     public ArrayList<File> findSurveyPhotos() {
-        String path = Environment.getExternalStorageDirectory().toString()+"/survey";
+        String path = Environment.getExternalStorageDirectory().toString()+"/Litterary/survey";
         File f = new File(path);
         File files[] = f.listFiles();
 

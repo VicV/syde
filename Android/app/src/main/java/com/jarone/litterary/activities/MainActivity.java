@@ -21,6 +21,7 @@ import android.widget.ToggleButton;
 import com.google.android.gms.maps.model.LatLng;
 import com.jarone.litterary.R;
 import com.jarone.litterary.control.ControlTable;
+import com.jarone.litterary.drone.Camera;
 import com.jarone.litterary.drone.DroneState;
 import com.jarone.litterary.drone.GroundStation;
 import com.jarone.litterary.handlers.MessageHandler;
@@ -348,19 +349,24 @@ public class MainActivity extends DJIBaseActivity {
                         ControlTable.testSaveLoad();
                         break;
                     case R.id.button_special2:
-                        long start = System.currentTimeMillis();
-                        int blobCount = 10;
-                        for (int i = 0; i < blobCount; i++) {
-                            ImageProcessing.setSourceImage("charger.jpg");
-                            ImageProcessing.detectBlobs();
-                        }
-                        long end = System.currentTimeMillis();
-                        MessageHandler.d("Average: " + ((end - start) / blobCount));
+//                        AngularController ctrl = new AngularController();
+//                        ctrl.generateControlTable();
+                        ControlTable.testSaveLoad();
+                        //ControlTable.testSaveLoad();
+//                        long start = System.currentTimeMillis();
+//                        int blobCount = 10;
+//                        for (int i = 0; i < blobCount; i++) {
+//                            ImageProcessing.setSourceImage("charger.jpg");
+//                            ImageProcessing.detectBlobs();
+//                        }
+//                        long end = System.currentTimeMillis();
+//                        MessageHandler.d("Average: " + ((end - start) / blobCount));
 
                         break;
                     case R.id.button_special3:
-                        buttonPress = true;
-                        count = 0;
+//                        buttonPress = true;
+//                        count = 0;
+                        Camera.downloadLatestPhoto();
                         break;
                 }
             }

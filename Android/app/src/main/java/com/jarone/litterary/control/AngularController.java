@@ -1,14 +1,12 @@
 package com.jarone.litterary.control;
 
-import android.app.AlertDialog;
-import android.content.DialogInterface;
-
 import com.google.android.gms.maps.model.LatLng;
 import com.jarone.litterary.LitterApplication;
 import com.jarone.litterary.drone.DroneState;
 import com.jarone.litterary.drone.GroundStation;
-import com.jarone.litterary.helpers.ContextManager;
+import com.jarone.litterary.handlers.MessageHandler;
 import com.jarone.litterary.helpers.LocationHelper;
+import com.jarone.litterary.imageproc.ImageProcessing;
 
 import java.util.ArrayList;
 import java.util.concurrent.ScheduledExecutorService;
@@ -38,6 +36,14 @@ public class AngularController {
 
     private boolean flip = false;
     boolean canFlip = true;
+
+
+    private boolean generatorFlip = false;
+
+    //Determine if the current control action is directing pitch or roll
+    public enum ActiveAngle { PITCH, ROLL}
+
+    private ActiveAngle activeAngle = ActiveAngle.PITCH;
 
 
 
@@ -99,6 +105,20 @@ public class AngularController {
     }
 
     /**
+     * Based on the given distance, determine the next action for the drone to undertake and perform it
+     * @param distance
+     */
+    public void performNextAction(double distance) {
+        TableEntry action = ControlTable.findMatchForDistance(distance);
+        flyAtAngleForTime(action.angle, action.time,  activeAngle == ActiveAngle.PITCH);
+        if (activeAngle == ActiveAngle.PITCH) {
+            activeAngle = ActiveAngle.ROLL;
+        } else {
+            activeAngle = ActiveAngle.PITCH;
+        }
+    }
+
+    /**
      *  Command the drone to fly at the specified angle for the given amount of time
      * @param angle Angle to fly at
      * @param time Time to fly at given angle
@@ -117,17 +137,26 @@ public class AngularController {
                     @Override
                     public void run() {
                         GroundStation.setAngles(0, 0, 0);
+                        performNextAction(ImageProcessing.distanceFromTarget());
                     }
                 }, (int)time, TimeUnit.MILLISECONDS);
             }
         });
     }
 
+    public void pickupLitter(Runnable callback) {
+        //TODO Implement this
+        //determine tracking target
+        //calulate error from target
+        //execute control step
+        callback.run();
+    }
+
     public void generateControlTable() {
         GroundStation.engageJoystick(new Runnable() {
             @Override
             public void run() {
-                generateEntriesForAngle(0, 0);
+                generateEntriesForAngle(5, 0);
             }
         });
     }
@@ -146,21 +175,22 @@ public class AngularController {
         }
         //If all angles from 5 to 45 have been tested, exit the method because the table is done
         if (angle > 45) {
-            new AlertDialog.Builder(ContextManager.getContext())
-                    .setMessage("Save this Table?")
-                    .setPositiveButton("Save", new DialogInterface.OnClickListener() {
-                        @Override
-                        public void onClick(DialogInterface dialog, int which) {
-                            ControlTable.save();
-                        }
-                    })
-                    .setNegativeButton("Cancel", null)
-                    .show();
+            ControlTable.displaySaveDialog();
             return;
         }
 
+        //Alternate direction of testing angles so drone doesn't fly in one long direction
+        final double testAngle;
+        if (generatorFlip) {
+            testAngle = -angle;
+        } else {
+            testAngle = angle;
+        }
+        generatorFlip = !generatorFlip;
+
+        MessageHandler.d("Proccessing Entry for " + angle + " " + ControlTable.POSSIBLE_TIMES[timeIndex]);
         final LatLng startLoc = DroneState.getLatLng();
-        GroundStation.setAngles(angle, 0, 0);
+        GroundStation.setAngles(testAngle, 0, 0);
         //Keep the drone at this angle for the given amount of time, then record an entry
         generateTasks.add(taskScheduler.schedule(new Runnable() {
             @Override
