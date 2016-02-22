@@ -20,8 +20,8 @@ import android.widget.ToggleButton;
 
 import com.google.android.gms.maps.model.LatLng;
 import com.jarone.litterary.R;
+import com.jarone.litterary.control.AngularController;
 import com.jarone.litterary.control.ControlTable;
-import com.jarone.litterary.drone.Camera;
 import com.jarone.litterary.drone.DroneState;
 import com.jarone.litterary.drone.GroundStation;
 import com.jarone.litterary.handlers.MessageHandler;
@@ -349,9 +349,8 @@ public class MainActivity extends DJIBaseActivity {
                         ControlTable.testSaveLoad();
                         break;
                     case R.id.button_special2:
-//                        AngularController ctrl = new AngularController();
-//                        ctrl.generateControlTable();
-                        ControlTable.testSaveLoad();
+                        AngularController ctrl = new AngularController();
+                        ctrl.generateControlTable();
                         //ControlTable.testSaveLoad();
 //                        long start = System.currentTimeMillis();
 //                        int blobCount = 10;
@@ -366,7 +365,9 @@ public class MainActivity extends DJIBaseActivity {
                     case R.id.button_special3:
 //                        buttonPress = true;
 //                        count = 0;
-                        Camera.downloadLatestPhoto();
+                       // Camera.takePhoto();
+                        ControlTable.testSaveLoad();
+                        //Camera.downloadLatestPhoto();
                         break;
                 }
             }

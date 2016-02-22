@@ -188,9 +188,11 @@ public class AngularController {
         }
         generatorFlip = !generatorFlip;
 
-        MessageHandler.d("Proccessing Entry for " + angle + " " + ControlTable.POSSIBLE_TIMES[timeIndex]);
+        final double time = ControlTable.POSSIBLE_TIMES[timeIndex];
+        MessageHandler.d("Proccessing Entry for " + angle + " " + time);
         final LatLng startLoc = DroneState.getLatLng();
         GroundStation.setAngles(testAngle, 0, 0);
+
         //Keep the drone at this angle for the given amount of time, then record an entry
         generateTasks.add(taskScheduler.schedule(new Runnable() {
             @Override
@@ -198,7 +200,7 @@ public class AngularController {
                 GroundStation.setAngles(0, 0, 0);
                 LatLng endLoc = DroneState.getLatLng();
                 double distance = LocationHelper.distanceBetween(startLoc, endLoc);
-                ControlTable.addEntry(new TableEntry(angle, ControlTable.POSSIBLE_TIMES[timeIndex], distance));
+                ControlTable.addEntry(new TableEntry(angle, time, distance));
                 //Put a 3-second delay between test runs to give the drone time to settle
                 generateTasks.add(taskScheduler.schedule(new Runnable() {
                     @Override
@@ -208,7 +210,7 @@ public class AngularController {
                     }
                 }, 3, TimeUnit.SECONDS));
             }
-        }, (int)ControlTable.POSSIBLE_TIMES[timeIndex], TimeUnit.MILLISECONDS));
+        }, (int)time, TimeUnit.MILLISECONDS));
     }
 
     public void cancelTableGeneration() {

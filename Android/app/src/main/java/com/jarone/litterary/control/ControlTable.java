@@ -2,19 +2,15 @@ package com.jarone.litterary.control;
 
 import android.app.AlertDialog;
 import android.content.DialogInterface;
-import android.os.Environment;
 
 import com.jarone.litterary.handlers.MessageHandler;
 import com.jarone.litterary.helpers.ContextManager;
+import com.jarone.litterary.helpers.FileAccess;
 
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.io.BufferedInputStream;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
-import java.io.IOException;
 import java.util.ArrayList;
 
 /**
@@ -22,7 +18,7 @@ import java.util.ArrayList;
  */
 public class ControlTable {
 
-    private static final String file ="table_values.txt";
+    private static final String file ="table_values";
 
     private static ArrayList<TableEntry> entries = new ArrayList<>();
 
@@ -37,36 +33,19 @@ public class ControlTable {
         try {
             JSONArray entryArray = new JSONArray(entryList);
             String jsonString = entryArray.toString();
-            FileOutputStream out = new FileOutputStream(Environment.getExternalStorageDirectory() + "/Litterary/control/" + file);
-            out.write(jsonString.getBytes());
-            out.close();
+            FileAccess.saveToFile("control", file, jsonString);
             MessageHandler.d("Table Saved Successfully!");
         } catch (JSONException e) {
             MessageHandler.d("JSON Serialization Failed!");
-        } catch (FileNotFoundException e) {
-            MessageHandler.d("Failed to Open Output File");
-        } catch (IOException e) {
-            MessageHandler.d("Failed to write to output file");
         }
     }
 
     public static void load() {
         try {
-            BufferedInputStream in = new BufferedInputStream(ContextManager.getContext().openFileInput(file));
-            StringBuilder sb = new StringBuilder();
-            int readByte = in.read();
-            while (readByte != -1) {
-                sb.append((char)readByte);
-                readByte = in.read();
-            }
-            String jsonString = sb.toString();
+            String jsonString = FileAccess.loadFromFile("control", file);
             JSONArray tableArray = new JSONArray(jsonString);
             entries = fromJSON(tableArray);
             MessageHandler.d("Table Loaded Successfully!");
-        } catch (FileNotFoundException e) {
-            MessageHandler.d("No table has been saved!");
-        } catch (IOException e) {
-            MessageHandler.d("Failed to read table input stream");
         } catch (JSONException e) {
             MessageHandler.d("JSON Parsing Error");
         }

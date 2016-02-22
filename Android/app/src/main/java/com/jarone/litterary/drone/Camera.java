@@ -5,6 +5,7 @@ import android.os.Environment;
 import com.jarone.litterary.handlers.MessageHandler;
 
 import java.io.BufferedOutputStream;
+import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -52,6 +53,10 @@ public class Camera {
                         new DJIExecuteResultCallback() {
                             @Override
                             public void onResult(DJIError djiError) {
+                                if (djiError.errorCode != DJIError.RESULT_OK) {
+                                    engageCameraMode();
+                                    return;
+                                }
                                 MessageHandler.d("Take Photo: " + djiError.errorDescription);
                                 downloadLatestPhoto();
                                 photoCallback.run();
@@ -78,43 +83,60 @@ public class Camera {
             public void onResult(List<DJIMedia> list, DJIError djiError) {
                 if (djiError.errorCode == 0) {
                     try {
-                        FileOutputStream out = new FileOutputStream(Environment.getExternalStorageDirectory()+ "/" + formatFileName());
+                        FileOutputStream out = new FileOutputStream(formatFileName());
                         final OutputStream outFile = new BufferedOutputStream(out);
-
+                        final int[] curProgress = {0};
                         DJIDrone.getDjiCamera().fetchMediaData(list.get(0), new DJIReceivedFileDataCallBack() {
                             @Override
                             public void onResult(byte[] bytes, int size, int progress, DJIError djiError) {
                                 if (djiError.errorCode == DJIError.RESULT_OK) {
                                     try {
                                         outFile.write(bytes, 0, size);
-                                        if (progress % 10 == 0) {
+                                        if (progress % 10 == 0 && progress > curProgress[0]) {
                                             MessageHandler.d(size + " " + progress + " " + djiError.errorDescription);
+                                            curProgress[0] = progress;
                                         }
 
                                         if (progress == 100) {
                                             outFile.close();
-                                            DJIDrone.getDjiCamera().setCameraMode(DJICameraSettingsTypeDef.CameraMode.Camera_Camera_Mode, new DJIExecuteResultCallback() {
-                                                @Override
-                                                public void onResult(DJIError djiError) {
-
-                                                }
-                                            });
+                                            engageCameraMode();
                                         }
                                     } catch (IOException e) {
-
+                                        engageCameraMode();
                                     }
                                 }
                             }
                         });
                     } catch (FileNotFoundException e) {
+                        MessageHandler.d(e.getMessage());
+                        engageCameraMode();
                     }
                 }
             }
         });
     }
 
+    public static void engageCameraMode() {
+        engageCameraMode(new Runnable() {
+            @Override
+            public void run() {
+
+            }
+        });
+    }
+    public static void engageCameraMode(final Runnable callback) {
+        DJIDrone.getDjiCamera().setCameraMode(DJICameraSettingsTypeDef.CameraMode.Camera_Camera_Mode, new DJIExecuteResultCallback() {
+            @Override
+            public void onResult(DJIError djiError) {
+                callback.run();
+            }
+        });
+    }
+
     public static String formatFileName() {
-        return "Litterary/survey/" + System.currentTimeMillis(); //+ "-" + DroneState.getLatitude() + "-" + DroneState.getLongitude();
+        File directory = new File(Environment.getExternalStorageDirectory() + "/Litterary/survey/");
+        directory.mkdirs();
+        return (new File(directory, System.currentTimeMillis() + ".jpg")).toString(); //+ "-" + DroneState.getLatitude() + "-" + DroneState.getLongitude();
     }
 
     public static void setGimbalPitch(int angle) {

@@ -93,6 +93,8 @@ public class SurveyRoute extends NavigationRoute{
             );
         }
         litterPoints = LocationHelper.removeDuplicates(litter);
+        NavigationRoute pickup = new NavigationRoute((LatLng[]) litterPoints.toArray(), altitude, heading);
+        pickup.save();
     }
 
 }

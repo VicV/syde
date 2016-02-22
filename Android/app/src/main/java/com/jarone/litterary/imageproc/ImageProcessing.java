@@ -40,6 +40,11 @@ public class ImageProcessing {
     //The Bitmap representation of the current result image
     private static Bitmap CVPreview = null;
 
+    //measured result 114.8 degrees
+    private static final double CAMERA_FOVX = 110;
+
+    private static final double imageX = 4384;
+    private static final double imageY = 2466;
 
     public static BaseLoaderCallback loaderCallback = new BaseLoaderCallback(ContextManager.getContext()) {
         @Override
