@@ -9,16 +9,16 @@ public class Point
 {
 	public Point(double x, double y)
 	{
-		this.latitude = x;
-		this.longitude = y;
+		this.longitude = x;
+		this.latitude = y;
 	}
 
-	public double latitude;
 	public double longitude;
+	public double latitude;
 
 	@Override
 	public String toString()
 	{
-		return String.format("(%.2f,%.2f)", latitude, longitude);
+		return String.format("(%.2f,%.2f)", longitude, latitude);
 	}
 }

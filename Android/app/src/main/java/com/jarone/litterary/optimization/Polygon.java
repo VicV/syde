@@ -107,23 +107,23 @@ public class Polygon {
         private void updateBoundingBox(Point point) {
             if (_firstPoint) {
                 _boundingBox = new BoundingBox();
-                _boundingBox.latitudeMax = point.latitude;
-                _boundingBox.latitudeMin = point.latitude;
-                _boundingBox.longitudeMax = point.longitude;
-                _boundingBox.longitudeMin = point.longitude;
+                _boundingBox.latitudeMax = point.longitude;
+                _boundingBox.latitudeMin = point.longitude;
+                _boundingBox.longitudeMax = point.latitude;
+                _boundingBox.longitudeMin = point.latitude;
 
                 _firstPoint = false;
             } else {
                 // set bounding box
-                if (point.latitude > _boundingBox.latitudeMax) {
-                    _boundingBox.latitudeMax = point.latitude;
-                } else if (point.latitude < _boundingBox.latitudeMin) {
-                    _boundingBox.latitudeMin = point.latitude;
+                if (point.longitude > _boundingBox.latitudeMax) {
+                    _boundingBox.latitudeMax = point.longitude;
+                } else if (point.longitude < _boundingBox.latitudeMin) {
+                    _boundingBox.latitudeMin = point.longitude;
                 }
-                if (point.longitude > _boundingBox.longitudeMax) {
-                    _boundingBox.longitudeMax = point.longitude;
-                } else if (point.longitude < _boundingBox.longitudeMin) {
-                    _boundingBox.longitudeMin = point.longitude;
+                if (point.latitude > _boundingBox.longitudeMax) {
+                    _boundingBox.longitudeMax = point.latitude;
+                } else if (point.latitude < _boundingBox.longitudeMin) {
+                    _boundingBox.longitudeMin = point.latitude;
                 }
             }
         }
@@ -151,7 +151,7 @@ public class Polygon {
                     // System.out.println("intersection++");
                     intersection++;
                 }
-                if ((side.getStart().latitude == point.latitude && side.getStart().longitude == point.longitude) || (side.getEnd().latitude == point.latitude && side.getEnd().longitude == point.longitude)) {
+                if ((side.getStart().longitude == point.longitude && side.getStart().latitude == point.latitude) || (side.getEnd().longitude == point.longitude && side.getEnd().latitude == point.latitude)) {
                     isVertex = true;
                 }
             }
@@ -180,23 +180,23 @@ public class Polygon {
     private boolean intersect(Line ray, Line side) {
         Point intersectPoint = null;
 
-        // if both vectors aren't from the kind of latitude=1 lines then go into
+        // if both vectors aren't from the kind of longitude=1 lines then go into
         if (!ray.isVertical() && !side.isVertical()) {
             // check if both vectors are parallel. If they are parallel then no intersection point will exist
             if (ray.getA() - side.getA() == 0) {
                 return false;
             }
 
-            double x = ((side.getB() - ray.getB()) / (ray.getA() - side.getA())); // latitude = (b2-b1)/(a1-a2)
-            double y = side.getA() * x + side.getB(); // longitude = a2*latitude+b2
+            double x = ((side.getB() - ray.getB()) / (ray.getA() - side.getA())); // longitude = (b2-b1)/(a1-a2)
+            double y = side.getA() * x + side.getB(); // latitude = a2*longitude+b2
             intersectPoint = new Point(x, y);
         } else if (ray.isVertical() && !side.isVertical()) {
-            double x = ray.getStart().latitude;
+            double x = ray.getStart().longitude;
             double y = side.getA() * x + side.getB();
             intersectPoint = new Point(x, y);
         } else {
             if (!ray.isVertical() && side.isVertical()) {
-                double x = side.getStart().latitude;
+                double x = side.getStart().longitude;
                 double y = ray.getA() * x + ray.getB();
                 intersectPoint = new Point(x, y);
             } else {
@@ -231,7 +231,7 @@ public class Polygon {
      * @return <code>True</code> if the point in bounding box, otherwise return <code>False</code>
      */
     private boolean inBoundingBox(Point point) {
-        return !(point.latitude < _boundingBox.latitudeMin || point.latitude > _boundingBox.latitudeMax || point.longitude < _boundingBox.longitudeMin || point.longitude > _boundingBox.longitudeMax);
+        return !(point.longitude < _boundingBox.latitudeMin || point.longitude > _boundingBox.latitudeMax || point.latitude < _boundingBox.longitudeMin || point.latitude > _boundingBox.longitudeMax);
     }
 
     private static class BoundingBox {

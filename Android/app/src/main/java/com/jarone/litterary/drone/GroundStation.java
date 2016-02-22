@@ -434,7 +434,7 @@ public class GroundStation {
 //                    GroundStation.taskDoneCallback.run();
 //                }
 ////                DJIGroundStationWaypoint wp = groundTask.getWaypointAtIndex(djiGroundStationMissionPushInfo.targetWayPointIndex + 1);
-////                currentTarget = new LatLng(wp.latitude, wp.longitude);
+////                currentTarget = new LatLng(wp.longitude, wp.latitude);
 //            }
 //        });
 //    }
