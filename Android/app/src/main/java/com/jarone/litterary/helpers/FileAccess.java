@@ -83,8 +83,12 @@ public class FileAccess {
      * @return
      */
     public static LatLng coordsFromPhoto(String directory, String name) {
+        return coordsFromPhoto(formatFileName(directory, name));
+    }
+
+    public static LatLng coordsFromPhoto(File file) {
         try {
-            ExifInterface exif = new ExifInterface(formatFileName(directory, name).toString());
+            ExifInterface exif = new ExifInterface(file.toString());
             float[] latlng = new float[2];
             exif.getLatLong(latlng);
             return new LatLng(latlng[0], latlng[1]);

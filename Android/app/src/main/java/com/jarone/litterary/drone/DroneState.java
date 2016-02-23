@@ -149,4 +149,6 @@ public class DroneState {
     public static double getRoll() {
         return roll;
     }
+
+    public static double getAltitude() { return altitude; }
 }

@@ -19,7 +19,6 @@ public class MessageHandler {
             }
         });
         Log.d("MessageHandler", message);
-
     }
 
 }

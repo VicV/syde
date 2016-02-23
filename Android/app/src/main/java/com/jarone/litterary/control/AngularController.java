@@ -108,9 +108,9 @@ public class AngularController {
      * Based on the given distance, determine the next action for the drone to undertake and perform it
      * @param distance
      */
-    public void performNextAction(double distance) {
+    public void performNextAction(double distance, Runnable callback) {
         TableEntry action = ControlTable.findMatchForDistance(distance);
-        flyAtAngleForTime(action.angle, action.time,  activeAngle == ActiveAngle.PITCH);
+        flyAtAngleForTime(action.angle, action.time,  activeAngle == ActiveAngle.PITCH, callback);
         if (activeAngle == ActiveAngle.PITCH) {
             activeAngle = ActiveAngle.ROLL;
         } else {
@@ -124,7 +124,12 @@ public class AngularController {
      * @param time Time to fly at given angle
      * @param isPitch True if controlling pitch angle, false if controlling roll
      */
-    public void flyAtAngleForTime(final double angle, final double time, final boolean isPitch) {
+    public void flyAtAngleForTime(final double angle, final double time, final boolean isPitch, final Runnable callback) {
+        if (DroneState.getAltitude() < 0.2) {
+            //Drone is at a height to pick up the litter, run the callback
+            callback.run();
+            return;
+        }
         GroundStation.engageJoystick(new Runnable() {
             @Override
             public void run() {
@@ -137,7 +142,13 @@ public class AngularController {
                     @Override
                     public void run() {
                         GroundStation.setAngles(0, 0, 0);
-                        performNextAction(ImageProcessing.distanceFromTarget());
+                        GroundStation.taskDoneCallback = new Runnable() {
+                            @Override
+                            public void run() {
+                                performNextAction(ImageProcessing.distanceFromTarget(), callback);
+                            }
+                        };
+                        GroundStation.setAltitude((float)(DroneState.getAltitude() * 0.5));
                     }
                 }, (int)time, TimeUnit.MILLISECONDS);
             }
@@ -146,10 +157,11 @@ public class AngularController {
 
     public void pickupLitter(Runnable callback) {
         //TODO Implement this
+        double dist = ImageProcessing.distanceFromTarget();
+        performNextAction(dist, callback);
         //determine tracking target
         //calulate error from target
         //execute control step
-        callback.run();
     }
 
     public void generateControlTable() {

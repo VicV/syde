@@ -4,6 +4,7 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 
 import com.google.android.gms.maps.model.LatLng;
+import com.jarone.litterary.drone.DroneState;
 import com.jarone.litterary.handlers.MessageHandler;
 import com.jarone.litterary.helpers.ContextManager;
 
@@ -80,7 +81,7 @@ public class ImageProcessing {
     }
 
     public static Bitmap processImage(Bitmap image) {
-        identifyLitter(image);
+        identifyLitter(image, DroneState.getLatLng());
         convertLatestFrame();
         return CVPreview;
     }
@@ -89,10 +90,10 @@ public class ImageProcessing {
         Utils.bitmapToMat(image, currentMat);
     }
 
-    public static ArrayList<LatLng> identifyLitter(Bitmap photo) {
+    public static ArrayList<LatLng> identifyLitter(Bitmap photo, LatLng origin) {
         readFrame(photo);
         ArrayList<Point> points = detectBlobs();
-        return calculateGPSCoords(points);
+        return calculateGPSCoords(points, origin);
     }
 
     public static Bitmap getCVPreview() {
@@ -199,7 +200,7 @@ public class ImageProcessing {
         ArrayList<MatOfPoint> badContours = new ArrayList<>();
         for (MatOfPoint contour : contours) {
             for (Point p : contour.toArray()) {
-                if (p.x == 0 || p.x >= width || p.y == 0 || p.y >= height) {
+                if (p.x <= 0 || p.x >= width || p.y <= 0 || p.y >= height) {
                     badContours.add(contour);
                 }
             }
@@ -240,7 +241,7 @@ public class ImageProcessing {
         }
     }
 
-    public static ArrayList<LatLng> calculateGPSCoords(ArrayList<Point> points) {
+    public static ArrayList<LatLng> calculateGPSCoords(ArrayList<Point> points, LatLng origin) {
         //TODO Implement this proper
         ArrayList<LatLng> coords = new ArrayList<>();
         for (Point point : points) {

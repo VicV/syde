@@ -384,6 +384,7 @@ public class GroundStation {
             } else {
                 MessageHandler.d("No Survey Route is Ready!");
             }
+            return null;
         }
         return currentSurveyRoute.getRoute();
     }

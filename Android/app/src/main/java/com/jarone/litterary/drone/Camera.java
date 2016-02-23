@@ -102,6 +102,8 @@ public class Camera {
                                     } catch (IOException e) {
                                         engageCameraMode();
                                     }
+                                } else {
+                                    engageCameraMode();
                                 }
                             }
                         });
@@ -122,6 +124,11 @@ public class Camera {
             }
         });
     }
+
+    /**
+     * Switch camera to camera mode instead of file transfer mode)
+     * @param callback
+     */
     public static void engageCameraMode(final Runnable callback) {
         DJIDrone.getDjiCamera().setCameraMode(DJICameraSettingsTypeDef.CameraMode.Camera_Camera_Mode, new DJIExecuteResultCallback() {
             @Override
@@ -136,7 +143,7 @@ public class Camera {
     }
 
     /**
-     * Set gimbal angle to a value between 1000 (horizontal) and 0 (straight down)
+     * Set gimbal angle to a value between 1000 (straight down) and 0 (horizontal)
      * @param angle
      */
     public static void setGimbalPitch(int angle) {
