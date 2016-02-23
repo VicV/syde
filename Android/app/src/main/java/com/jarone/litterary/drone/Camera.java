@@ -1,11 +1,9 @@
 package com.jarone.litterary.drone;
 
-import android.os.Environment;
-
 import com.jarone.litterary.handlers.MessageHandler;
+import com.jarone.litterary.helpers.FileAccess;
 
 import java.io.BufferedOutputStream;
-import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -134,11 +132,13 @@ public class Camera {
     }
 
     public static String formatFileName() {
-        File directory = new File(Environment.getExternalStorageDirectory() + "/Litterary/survey/");
-        directory.mkdirs();
-        return (new File(directory, System.currentTimeMillis() + ".jpg")).toString(); //+ "-" + DroneState.getLatitude() + "-" + DroneState.getLongitude();
+        return FileAccess.formatFileName("survey", System.currentTimeMillis() + ".jpg").toString();
     }
 
+    /**
+     * Set gimbal angle to a value between 1000 (horizontal) and 0 (straight down)
+     * @param angle
+     */
     public static void setGimbalPitch(int angle) {
         DJIDrone.getDjiGimbal().updateGimbalAttitude(
                 getGimbalRotation(angle),
