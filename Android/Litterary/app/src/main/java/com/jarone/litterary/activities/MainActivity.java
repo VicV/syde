@@ -10,6 +10,7 @@ import android.opengl.GLException;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Parcelable;
+import android.support.design.widget.TabLayout;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.view.ViewPager;
 import android.util.Log;
@@ -100,6 +101,10 @@ public class MainActivity extends DJIBaseActivity {
                 CPreview = ((ImageView) findViewById(R.id.CVPreview));
             }
         });
+
+        TabLayout tabLayout = (TabLayout) findViewById(R.id.tab_layout);
+        tabLayout.setTabGravity(TabLayout.GRAVITY_FILL);
+        tabLayout.setupWithViewPager(viewPager);
 
         verifyStoragePermissions(this);
         registerCamera();

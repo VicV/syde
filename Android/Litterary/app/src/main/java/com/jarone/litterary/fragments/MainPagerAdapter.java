@@ -54,7 +54,7 @@ public class MainPagerAdapter extends PagerAdapter {
 
 enum CustomPagerEnum {
 
-    DEBUG("debug", R.layout.debug_queue_layout_page),
+    DEBUG("messages", R.layout.debug_queue_layout_page),
     MAIN("main", R.layout.main_layout_page),
     STATUS("status", R.layout.info_layout_page);
 
