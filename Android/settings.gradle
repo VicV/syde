@@ -1,2 +1,0 @@
-include ':app', ':Lib:DJI-SDK-LIB', ':Lib:opencv-android'
-

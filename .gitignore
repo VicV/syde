@@ -77,4 +77,4 @@ build/
 obj/
 
 #SDK Keys
-Android/app/src/main/res/values/keys.xml
+Android/Litterary/app/src/main/res/values/keys.xml
