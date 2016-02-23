@@ -1,8 +1,16 @@
 package com.jarone.litterary;
 
+import android.os.Environment;
+
 import com.google.android.gms.maps.model.LatLng;
 import com.jarone.litterary.drone.GroundStation;
 import com.jarone.litterary.handlers.MessageHandler;
+import com.jarone.litterary.helpers.FileAccess;
+
+import org.json.JSONArray;
+import org.json.JSONException;
+
+import java.io.File;
 
 /**
  * Created by Adam on 2016-01-21.
@@ -34,6 +42,10 @@ public class NavigationRoute {
         index = 0;
         executing = false;
         finished = false;
+    }
+
+    public NavigationRoute(String timestamp) {
+        load(timestamp);
     }
 
     public void executeRoute() {
@@ -83,4 +95,50 @@ public class NavigationRoute {
     public boolean isFinished() {
         return finished;
     }
+
+    /**
+     * Save list of GPS points in the navigation route
+     */
+    public void save() {
+        JSONArray list = new JSONArray();
+        JSONArray saveObj = new JSONArray();
+        for (LatLng point : route) {
+            list.put(point.latitude + "," + point.longitude);
+        }
+        try {
+            saveObj.put(list);
+            saveObj.put(altitude);
+            saveObj.put(heading);
+
+            FileAccess.saveToFile("survey", System.currentTimeMillis() + "-survey", saveObj.toString());
+        } catch (JSONException e) {
+
+        }
+    }
+
+    public void load(String timestamp) {
+        try {
+            String jsonString = FileAccess.loadFromFile("survey", timestamp + "-survey");
+            JSONArray array = new JSONArray(jsonString);
+            altitude = (float) array.getDouble(1);
+            heading = (short) array.getLong(2);
+            JSONArray points = array.getJSONArray(0);
+            route = new LatLng[points.length()];
+            for (int i = 0; i < points.length(); i++) {
+                String value = points.getString(i);
+                String[] coords = value.split(",");
+                route[i] = new LatLng(Double.parseDouble(coords[0]), Double.parseDouble(coords[1]));
+            }
+
+        } catch (Exception e) {
+
+        }
+    }
+
+    public File formatFilename(String timestamp) {
+        File file = new File(Environment.getExternalStorageDirectory() + "/Litterary/survey/");
+        file.mkdirs();
+        return new File(file, timestamp + "-survey");
+    }
+
 }

@@ -65,7 +65,7 @@ public class SurveyRoute extends NavigationRoute{
     }
 
     public ArrayList<File> findSurveyPhotos() {
-        String path = Environment.getExternalStorageDirectory().toString()+"/survey";
+        String path = Environment.getExternalStorageDirectory().toString()+"/Litterary/survey";
         File f = new File(path);
         File files[] = f.listFiles();
 
@@ -93,6 +93,8 @@ public class SurveyRoute extends NavigationRoute{
             );
         }
         litterPoints = LocationHelper.removeDuplicates(litter);
+        NavigationRoute pickup = new NavigationRoute((LatLng[]) litterPoints.toArray(), altitude, heading);
+        pickup.save();
     }
 
 }
