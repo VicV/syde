@@ -22,11 +22,11 @@ import android.widget.ToggleButton;
 
 import com.google.android.gms.maps.model.LatLng;
 import com.jarone.litterary.R;
+import com.jarone.litterary.adapters.ViewPagerAdapter;
 import com.jarone.litterary.control.AngularController;
 import com.jarone.litterary.control.ControlTable;
 import com.jarone.litterary.drone.DroneState;
 import com.jarone.litterary.drone.GroundStation;
-import com.jarone.litterary.fragments.MainPagerAdapter;
 import com.jarone.litterary.handlers.MessageHandler;
 import com.jarone.litterary.helpers.ContextManager;
 import com.jarone.litterary.helpers.LocationHelper;
@@ -89,7 +89,7 @@ public class MainActivity extends DJIBaseActivity {
 
         //Forces all views to be loaded.
         viewPager.setOffscreenPageLimit(10);
-        viewPager.setAdapter(new MainPagerAdapter(this));
+        viewPager.setAdapter(new ViewPagerAdapter(this));
         viewPager.setCurrentItem(1);
         viewPager.post(new Runnable() {
             @Override

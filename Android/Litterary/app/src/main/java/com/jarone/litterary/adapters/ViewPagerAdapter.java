@@ -1,4 +1,4 @@
-package com.jarone.litterary.fragments;
+package com.jarone.litterary.adapters;
 
 import android.content.Context;
 import android.support.v4.view.PagerAdapter;
@@ -11,10 +11,10 @@ import com.jarone.litterary.R;
 /**
  * Created by V on 2/23/2016.
  */
-public class MainPagerAdapter extends PagerAdapter {
+public class ViewPagerAdapter extends PagerAdapter {
     private Context mContext;
 
-    public MainPagerAdapter(Context context) {
+    public ViewPagerAdapter(Context context) {
         mContext = context;
     }
 
@@ -48,29 +48,30 @@ public class MainPagerAdapter extends PagerAdapter {
         return customPagerEnum.getTitle();
     }
 
+    enum CustomPagerEnum {
+
+        DEBUG("messages", R.layout.debug_queue_layout_page),
+        MAIN("main", R.layout.main_layout_page),
+        STATUS("status", R.layout.info_layout_page);
+
+        private String mTitle;
+        private int mLayoutResId;
+
+        CustomPagerEnum(String title, int layoutResId) {
+            mTitle = title;
+            mLayoutResId = layoutResId;
+        }
+
+        public String getTitle() {
+            return mTitle;
+        }
+
+        public int getLayoutResId() {
+            return mLayoutResId;
+        }
+    }
 
 }
 
 
-enum CustomPagerEnum {
 
-    DEBUG("messages", R.layout.debug_queue_layout_page),
-    MAIN("main", R.layout.main_layout_page),
-    STATUS("status", R.layout.info_layout_page);
-
-    private String mTitle;
-    private int mLayoutResId;
-
-    CustomPagerEnum(String title, int layoutResId) {
-        mTitle = title;
-        mLayoutResId = layoutResId;
-    }
-
-    public String getTitle() {
-        return mTitle;
-    }
-
-    public int getLayoutResId() {
-        return mLayoutResId;
-    }
-}
