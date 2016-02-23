@@ -40,7 +40,8 @@
 
         <activity
             android:name=".activities.MainActivity"
-            android:label="@string/title_activity_djiaoa">
+            android:label="@string/title_activity_djiaoa"
+            android:windowSoftInputMode="stateHidden">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 

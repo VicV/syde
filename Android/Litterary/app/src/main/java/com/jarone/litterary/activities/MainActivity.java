@@ -11,6 +11,7 @@ import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Parcelable;
 import android.support.v4.app.ActivityCompat;
+import android.support.v4.view.ViewPager;
 import android.util.Log;
 import android.view.View;
 import android.widget.EditText;
@@ -24,6 +25,7 @@ import com.jarone.litterary.control.AngularController;
 import com.jarone.litterary.control.ControlTable;
 import com.jarone.litterary.drone.DroneState;
 import com.jarone.litterary.drone.GroundStation;
+import com.jarone.litterary.fragments.MainPagerAdapter;
 import com.jarone.litterary.handlers.MessageHandler;
 import com.jarone.litterary.helpers.ContextManager;
 import com.jarone.litterary.helpers.LocationHelper;
@@ -74,7 +76,7 @@ public class MainActivity extends DJIBaseActivity {
 
     private LatLng[] currentPolygon = null;
     private ArrayList<LatLng> currentPhotoPoints = null;
-
+    private ViewPager viewPager;
 
     //Activity is starting.
     @Override
@@ -82,21 +84,28 @@ public class MainActivity extends DJIBaseActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         mainActivity = this;
+        viewPager = (ViewPager) findViewById(R.id.viewPager);
+
+        //Forces all views to be loaded.
+        viewPager.setOffscreenPageLimit(10);
+        viewPager.setAdapter(new MainPagerAdapter(this));
+        viewPager.setCurrentItem(1);
+        viewPager.post(new Runnable() {
+            @Override
+            public void run() {
+                //This is done as a post on the viewpager because we must wait for it to
+                //Be initialized before interacting with the views.
+                setOnClickListeners();
+                registerUpdateInterface();
+                CPreview = ((ImageView) findViewById(R.id.CVPreview));
+            }
+        });
+
         verifyStoragePermissions(this);
-        setOnClickListeners();
-
         registerCamera();
-
-        registerUpdateInterface();
-
         ContextManager.setContext(this);
-
-
         DroneState.registerConnectedTimer();
         GroundStation.registerPhantom2Callback();
-
-        CPreview = ((ImageView) findViewById(R.id.CVPreview));
-
     }
 
     private void registerUpdateInterface() {
@@ -578,11 +587,10 @@ public class MainActivity extends DJIBaseActivity {
 
     @Override
     public void onBackPressed() {
-        View infoLayout = findViewById(R.id.infoLayout);
-        if (infoLayout.getVisibility() == View.INVISIBLE) {
+        if (viewPager.getCurrentItem() == 1) {
             super.onBackPressed();
         } else {
-            infoLayout.setVisibility(View.INVISIBLE);
+            viewPager.setCurrentItem(1);
         }
     }
 
