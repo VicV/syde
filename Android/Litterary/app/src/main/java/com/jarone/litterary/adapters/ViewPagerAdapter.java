@@ -10,6 +10,9 @@ import com.jarone.litterary.R;
 
 /**
  * Created by V on 2/23/2016.
+ * <p/>
+ * Adapter for viewpages. Note that in {@link com.jarone.litterary.activities.MainActivity } we specify
+ * that all view pages will be loaded at all times.
  */
 public class ViewPagerAdapter extends PagerAdapter {
     private Context mContext;
@@ -18,15 +21,12 @@ public class ViewPagerAdapter extends PagerAdapter {
         mContext = context;
     }
 
-
     /**
      * Create the item to fill the page
-     * @param collection
-     *  Viewgroup of the page
-     * @param position
-     *  Position on viewpager (see enum order)
-     * @return
-     *  View
+     *
+     * @param collection Viewgroup of the page
+     * @param position   Position on viewpager (see enum order)
+     * @return View
      */
     @Override
     public Object instantiateItem(ViewGroup collection, int position) {
