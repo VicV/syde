@@ -1,5 +1,8 @@
 package com.jarone.litterary.adapters;
 
+import java.text.SimpleDateFormat;
+import java.util.Date;
+
 /**
  * Created by V on 2/23/2016.
  */
@@ -9,9 +12,10 @@ public class DebugItem {
         DEBUG, WARN, ERROR
     }
 
-    public DebugItem(DebugLevel debugLevel, String text) {
+    public DebugItem(DebugLevel debugLevel, String text, long time) {
         this.debugLevel = debugLevel;
         this.text = text;
+        this.dateText = new SimpleDateFormat("hh:mm:ss.SSS").format(new Date(time));
     }
 
     public DebugLevel getDebugLevel() {
@@ -32,6 +36,11 @@ public class DebugItem {
 
     private DebugLevel debugLevel;
     private String text;
-    private long date;
+
+    public String getDateString() {
+        return dateText;
+    }
+
+    private String dateText;
 
 }

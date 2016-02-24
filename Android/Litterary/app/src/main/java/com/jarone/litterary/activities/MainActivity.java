@@ -26,6 +26,7 @@ import com.google.android.gms.maps.model.LatLng;
 import com.jarone.litterary.R;
 import com.jarone.litterary.adapters.DebugItem;
 import com.jarone.litterary.adapters.DebugMessageRecyclerAdapter;
+import com.jarone.litterary.adapters.DividerItemDecoration;
 import com.jarone.litterary.adapters.ViewPagerAdapter;
 import com.jarone.litterary.control.AngularController;
 import com.jarone.litterary.control.ControlTable;
@@ -68,12 +69,19 @@ public class MainActivity extends DJIBaseActivity {
     public static final int POINTS_REQUEST_CODE = 130;
     public static final int POINTS_RESULT_CODE = 230;
 
+    public ArrayList getMessageList() {
+        return messageList;
+    }
+
+    private ArrayList messageList;
+
     private DjiGLSurfaceView mDjiGLSurfaceView;
 
     private static final String TAG = MainActivity.class.toString();
     int count = 0;
 
     private ImageView CPreview;
+
     private RecyclerView debugMessageList;
     private Context mainActivity;
 
@@ -90,7 +98,7 @@ public class MainActivity extends DJIBaseActivity {
         setContentView(R.layout.activity_main);
         mainActivity = this;
         viewPager = (ViewPager) findViewById(R.id.viewPager);
-
+        messageList = new ArrayList();
         //Forces all views to be loaded.
         viewPager.setOffscreenPageLimit(10);
         viewPager.setAdapter(new ViewPagerAdapter(this));
@@ -104,8 +112,9 @@ public class MainActivity extends DJIBaseActivity {
                 registerUpdateInterface();
                 CPreview = ((ImageView) findViewById(R.id.CVPreview));
                 debugMessageList = (RecyclerView) findViewById(R.id.message_list_view);
-                debugMessageList.setAdapter(new DebugMessageRecyclerAdapter(mainActivity, new ArrayList<DebugItem>()));
+                debugMessageList.setAdapter(new DebugMessageRecyclerAdapter(mainActivity, messageList));
                 debugMessageList.setLayoutManager(new LinearLayoutManager(mainActivity));
+                debugMessageList.addItemDecoration(new DividerItemDecoration(mainActivity, DividerItemDecoration.VERTICAL_LIST));
 
             }
         });
@@ -483,8 +492,8 @@ public class MainActivity extends DJIBaseActivity {
         }
     }
 
-    public void updateMessageList(DebugItem.DebugLevel level, String message) {
-        ((DebugMessageRecyclerAdapter) debugMessageList.getAdapter()).getDebugItemList().add(new DebugItem(level, message));
+    public void updateMessageList(DebugItem.DebugLevel level, String message, long time) {
+        ((DebugMessageRecyclerAdapter) debugMessageList.getAdapter()).getDebugItemList().add(new DebugItem(level, message, time));
     }
 
     @Override

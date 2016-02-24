@@ -52,8 +52,10 @@ public class DebugMessageRecyclerAdapter extends RecyclerView.Adapter<DebugMessa
 
     @Override
     public void onBindViewHolder(CustomViewHolder holder, int position) {
-        holder.textView.setText(debugItemList.get(position).getText());
-        holder.textView.setTextColor(getColorFromLevel(debugItemList.get(position).debugLevel));
+        DebugItem item = debugItemList.get(position);
+        holder.textView.setText(item.getDateString() + ": " + item.getText());
+        holder.textView.setTextColor(getColorFromLevel(item.getDebugLevel()));
+
     }
 
 
