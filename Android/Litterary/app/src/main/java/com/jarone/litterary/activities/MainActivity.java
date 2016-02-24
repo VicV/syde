@@ -13,6 +13,8 @@ import android.os.Parcelable;
 import android.support.design.widget.TabLayout;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.view.ViewPager;
+import android.support.v7.widget.LinearLayoutManager;
+import android.support.v7.widget.RecyclerView;
 import android.util.Log;
 import android.view.View;
 import android.widget.EditText;
@@ -22,6 +24,8 @@ import android.widget.ToggleButton;
 
 import com.google.android.gms.maps.model.LatLng;
 import com.jarone.litterary.R;
+import com.jarone.litterary.adapters.DebugItem;
+import com.jarone.litterary.adapters.DebugMessageRecyclerAdapter;
 import com.jarone.litterary.adapters.ViewPagerAdapter;
 import com.jarone.litterary.control.AngularController;
 import com.jarone.litterary.control.ControlTable;
@@ -70,7 +74,7 @@ public class MainActivity extends DJIBaseActivity {
     int count = 0;
 
     private ImageView CPreview;
-
+    private RecyclerView debugMessageList;
     private Context mainActivity;
 
     private ScheduledExecutorService taskScheduler;
@@ -99,6 +103,10 @@ public class MainActivity extends DJIBaseActivity {
                 setOnClickListeners();
                 registerUpdateInterface();
                 CPreview = ((ImageView) findViewById(R.id.CVPreview));
+                debugMessageList = (RecyclerView) findViewById(R.id.message_list_view);
+                debugMessageList.setAdapter(new DebugMessageRecyclerAdapter(mainActivity, new ArrayList<DebugItem>()));
+                debugMessageList.setLayoutManager(new LinearLayoutManager(mainActivity));
+
             }
         });
 
@@ -475,6 +483,10 @@ public class MainActivity extends DJIBaseActivity {
         }
     }
 
+    public void updateMessageList(DebugItem.DebugLevel level, String message) {
+        ((DebugMessageRecyclerAdapter) debugMessageList.getAdapter()).getDebugItemList().add(new DebugItem(level, message));
+    }
+
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
@@ -485,8 +497,6 @@ public class MainActivity extends DJIBaseActivity {
             if (parcel.length > 2) {
                 currentPolygon = parcel;
             }
-
-
             new DoRouteTask().execute();
         }
     }
