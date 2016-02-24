@@ -21,7 +21,6 @@ import android.widget.ToggleButton;
 import com.google.android.gms.maps.model.LatLng;
 import com.jarone.litterary.R;
 import com.jarone.litterary.control.AngularController;
-import com.jarone.litterary.control.ControlTable;
 import com.jarone.litterary.drone.Camera;
 import com.jarone.litterary.drone.DroneState;
 import com.jarone.litterary.drone.GroundStation;
@@ -367,8 +366,8 @@ public class MainActivity extends DJIBaseActivity {
 //                        buttonPress = true;
 //                        count = 0;
                         // Camera.takePhoto();
-                        ControlTable.testSaveLoad();
-                        //Camera.downloadLatestPhoto();
+                        //ControlTable.testSaveLoad();
+                        Camera.downloadLatestPhoto();
                         break;
                 }
             }

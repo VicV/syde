@@ -426,34 +426,6 @@ public class GroundStation {
      * callback when the drone has reached the target waypoint. This method is called one time
      * to set up callback path, but taskDoneCallback can be changed elsewhere to modify behaviour
      */
-//    public static void registerMissionCallback() {
-//        DJIDrone.getDjiGroundStation().setGroundStationMissionPushInfoCallBack(new DJIGroundStationMissionPushInfoCallBack() {
-//            @Override
-//            public void onResult(DJIGroundStationMissionPushInfo djiGroundStationMissionPushInfo) {
-//                //MessageHandler.d("Mission Code" + djiGroundStationMissionPushInfo.currState);
-//                if (djiGroundStationMissionPushInfo.currState == MissionStatusCodes.REACHED_WAYPOINT_FINISHED_ACTION.ordinal()) {
-//                    GroundStation.taskDoneCallback.run();
-//                }
-////                DJIGroundStationWaypoint wp = groundTask.getWaypointAtIndex(djiGroundStationMissionPushInfo.targetWayPointIndex + 1);
-////                currentTarget = new LatLng(wp.latitude, wp.longitude);
-//            }
-//        });
-//    }
-//
-//    /*** TEST DIFFERENT CALLBACKS TO FIND THE ONE THAT WORKS */
-//    public static void registerStatusCallback() {
-//        DJIDrone.getDjiGroundStation().setGroundStationExecutionPushInfoCallBack(new DJIGroundStationExecutionPushInfoCallBack() {
-//            @Override
-//            public void onResult(DJIGroundStationExecutionPushInfo djiGroundStationExecutionPushInfo) {
-//                //MessageHandler.d("Ground Station Update");
-//                Log.d("EXECUTE GROUND STATION", djiGroundStationExecutionPushInfo.eventType.name());
-//                if (djiGroundStationExecutionPushInfo.eventType == DJIGroundStationTypeDef.GroundStationExecutionPushType.Navi_Mission_Finish) {
-//                    GroundStation.taskDoneCallback.run();
-//                    currentTarget = new LatLng(-1, -1);
-//                }
-//            }
-//        });
-//    }
     public static void registerPhantom2Callback() {
         DJIDrone.getDjiGroundStation().setGroundStationFlyingInfoCallBack(new DJIGroundStationFlyingInfoCallBack() {
             @Override

@@ -2,11 +2,13 @@ package com.jarone.litterary.imageproc;
 
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.util.Pair;
 
 import com.google.android.gms.maps.model.LatLng;
 import com.jarone.litterary.drone.DroneState;
 import com.jarone.litterary.handlers.MessageHandler;
 import com.jarone.litterary.helpers.ContextManager;
+import com.jarone.litterary.helpers.LocationHelper;
 
 import org.opencv.android.BaseLoaderCallback;
 import org.opencv.android.LoaderCallbackInterface;
@@ -40,6 +42,8 @@ public class ImageProcessing {
 
     //The Bitmap representation of the current result image
     private static Bitmap CVPreview = null;
+
+    private static TrackingObject trackingObject;
 
     //measured result 114.8 degrees
     private static final double CAMERA_FOVX = 110;
@@ -258,4 +262,10 @@ public class ImageProcessing {
     public static double distanceFromTarget() {
         return 10;
     }
+
+    public static Point trackObject() {
+
+        trackingObject.predictPositionAndSize(DroneState.getLatLng(), DroneState.getAltitude());
+    }
+
 }
