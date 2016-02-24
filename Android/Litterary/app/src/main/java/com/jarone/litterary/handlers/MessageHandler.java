@@ -52,8 +52,6 @@ public class MessageHandler {
         Log.w("MessageHandler", message);
 
         ContextManager.getMainActivityInstance().updateMessageList(new DebugItem(DebugItem.DebugLevel.WARN, message, System.currentTimeMillis()));
-
-
     }
 
 

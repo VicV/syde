@@ -81,7 +81,7 @@ public class MainActivity extends DJIBaseActivity {
 
 
     private ImageView CPreview;
-    private RecyclerView debugMessageList;
+    private RecyclerView debugMessageRecyclerView;
     private Context mainActivity;
     private ScheduledExecutorService taskScheduler;
 
@@ -113,16 +113,16 @@ public class MainActivity extends DJIBaseActivity {
                 CPreview = ((ImageView) findViewById(R.id.CVPreview));
 
                 //Set up our debug message lest
-                debugMessageList = (RecyclerView) findViewById(R.id.message_list_view);
-                debugMessageList.setAdapter(new DebugMessageRecyclerAdapter(mainActivity, messageList));
-                debugMessageList.setLayoutManager(new LinearLayoutManager(mainActivity));
+                debugMessageRecyclerView = (RecyclerView) findViewById(R.id.message_list_view);
+                debugMessageRecyclerView.setAdapter(new DebugMessageRecyclerAdapter(mainActivity, messageList));
+                debugMessageRecyclerView.setLayoutManager(new LinearLayoutManager(mainActivity));
 
                 //Forces scroll to bottom on every update.
-                debugMessageList.getAdapter().registerAdapterDataObserver(new RecyclerView.AdapterDataObserver() {
+                debugMessageRecyclerView.getAdapter().registerAdapterDataObserver(new RecyclerView.AdapterDataObserver() {
                     @Override
                     public void onChanged() {
                         super.onChanged();
-                        debugMessageList.scrollToPosition(debugMessageList.getAdapter().getItemCount() - 1);
+                        debugMessageRecyclerView.scrollToPosition(debugMessageRecyclerView.getAdapter().getItemCount() - 1);
                     }
                 });
 
@@ -504,12 +504,21 @@ public class MainActivity extends DJIBaseActivity {
         }
     }
 
+    /**
+     * Update the debug message list.
+     * Note that there are two states;
+     * if the recyclerView is null, that means the adapter hasn't been initialized.
+     * <p/>
+     * If this is true, just hand it to the arraylist that will be used to initialize the view.
+     *
+     * @param item
+     */
     public void updateMessageList(DebugItem item) {
-        if (debugMessageList == null) {
+        if (debugMessageRecyclerView == null) {
             messageList.add(item);
         } else {
-            ((DebugMessageRecyclerAdapter) debugMessageList.getAdapter()).getDebugItemList().add(item);
-            debugMessageList.getAdapter().notifyDataSetChanged();
+            ((DebugMessageRecyclerAdapter) debugMessageRecyclerView.getAdapter()).getDebugItemList().add(item);
+            debugMessageRecyclerView.getAdapter().notifyDataSetChanged();
         }
     }
 
