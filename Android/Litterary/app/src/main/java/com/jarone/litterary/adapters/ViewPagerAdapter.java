@@ -18,11 +18,23 @@ public class ViewPagerAdapter extends PagerAdapter {
         mContext = context;
     }
 
+
+    /**
+     * Create the item to fill the page
+     * @param collection
+     *  Viewgroup of the page
+     * @param position
+     *  Position on viewpager (see enum order)
+     * @return
+     *  View
+     */
     @Override
     public Object instantiateItem(ViewGroup collection, int position) {
-        CustomPagerEnum customPagerEnum = CustomPagerEnum.values()[position];
+        ViewPage viewPageEnum = ViewPage.values()[position];
         LayoutInflater inflater = LayoutInflater.from(mContext);
-        ViewGroup layout = (ViewGroup) inflater.inflate(customPagerEnum.getLayoutResId(), collection, false);
+
+        //Inflate the appropriate layout for the respective page.
+        ViewGroup layout = (ViewGroup) inflater.inflate(viewPageEnum.getLayoutResId(), collection, false);
         collection.addView(layout);
         return layout;
     }
@@ -34,7 +46,7 @@ public class ViewPagerAdapter extends PagerAdapter {
 
     @Override
     public int getCount() {
-        return CustomPagerEnum.values().length;
+        return ViewPage.values().length;
     }
 
     @Override
@@ -44,11 +56,12 @@ public class ViewPagerAdapter extends PagerAdapter {
 
     @Override
     public CharSequence getPageTitle(int position) {
-        CustomPagerEnum customPagerEnum = CustomPagerEnum.values()[position];
+        ViewPage customPagerEnum = ViewPage.values()[position];
         return customPagerEnum.getTitle();
     }
 
-    enum CustomPagerEnum {
+    //Little enumerator for easy creation of view pages
+    enum ViewPage {
 
         DEBUG("messages", R.layout.debug_queue_layout_page),
         MAIN("main", R.layout.main_layout_page),
@@ -57,7 +70,7 @@ public class ViewPagerAdapter extends PagerAdapter {
         private String mTitle;
         private int mLayoutResId;
 
-        CustomPagerEnum(String title, int layoutResId) {
+        ViewPage(String title, int layoutResId) {
             mTitle = title;
             mLayoutResId = layoutResId;
         }

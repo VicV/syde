@@ -24,7 +24,7 @@ import android.widget.ToggleButton;
 
 import com.google.android.gms.maps.model.LatLng;
 import com.jarone.litterary.R;
-import com.jarone.litterary.adapters.DebugItem;
+import com.jarone.litterary.datatypes.DebugItem;
 import com.jarone.litterary.adapters.DebugMessageRecyclerAdapter;
 import com.jarone.litterary.adapters.ViewPagerAdapter;
 import com.jarone.litterary.control.AngularController;
@@ -57,6 +57,7 @@ import dji.sdk.widget.DjiGLSurfaceView;
 
 public class MainActivity extends DJIBaseActivity {
 
+
     // Storage Permissions
     private static final int REQUEST_EXTERNAL_STORAGE = 1;
     private static String[] PERMISSIONS_STORAGE = {
@@ -64,20 +65,24 @@ public class MainActivity extends DJIBaseActivity {
             Manifest.permission.WRITE_EXTERNAL_STORAGE
     };
 
-    boolean buttonPress = false;
+    private static final String TAG = MainActivity.class.toString();
+
+
     public static final int POINTS_REQUEST_CODE = 130;
     public static final int POINTS_RESULT_CODE = 230;
     public static ArrayList<DebugItem> messageList;
 
     private DjiGLSurfaceView mDjiGLSurfaceView;
 
-    private static final String TAG = MainActivity.class.toString();
+
+    //TODO: remove (just limits the frame processing atm);
     int count = 0;
+    boolean buttonPress = false;
+
 
     private ImageView CPreview;
     private RecyclerView debugMessageList;
     private Context mainActivity;
-
     private ScheduledExecutorService taskScheduler;
 
     private LatLng[] currentPolygon = null;
@@ -91,6 +96,7 @@ public class MainActivity extends DJIBaseActivity {
         setContentView(R.layout.activity_main);
         mainActivity = this;
         messageList = new ArrayList<>();
+
         viewPager = (ViewPager) findViewById(R.id.viewPager);
 
         //Forces all views to be loaded.
@@ -105,10 +111,13 @@ public class MainActivity extends DJIBaseActivity {
                 setOnClickListeners();
                 registerUpdateInterface();
                 CPreview = ((ImageView) findViewById(R.id.CVPreview));
+
+                //Set up our debug message lest
                 debugMessageList = (RecyclerView) findViewById(R.id.message_list_view);
                 debugMessageList.setAdapter(new DebugMessageRecyclerAdapter(mainActivity, messageList));
-
                 debugMessageList.setLayoutManager(new LinearLayoutManager(mainActivity));
+
+                //Forces scroll to bottom on every update.
                 debugMessageList.getAdapter().registerAdapterDataObserver(new RecyclerView.AdapterDataObserver() {
                     @Override
                     public void onChanged() {
@@ -116,13 +125,14 @@ public class MainActivity extends DJIBaseActivity {
                         debugMessageList.scrollToPosition(debugMessageList.getAdapter().getItemCount() - 1);
                     }
                 });
-////                debugMessageList.addItemDecoration(new DividerItemDecoration(mainActivity, DividerItemDecoration.VERTICAL_LIST));
 
             }
         });
 
+        //Tabs for viewpager
         TabLayout tabLayout = (TabLayout) findViewById(R.id.tab_layout);
         tabLayout.setTabGravity(TabLayout.GRAVITY_FILL);
+        //This automatically sets up the tabs and everything for us.
         tabLayout.setupWithViewPager(viewPager);
 
         verifyStoragePermissions(this);

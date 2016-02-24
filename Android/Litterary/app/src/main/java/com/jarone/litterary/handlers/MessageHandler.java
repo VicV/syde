@@ -3,7 +3,7 @@ package com.jarone.litterary.handlers;
 import android.util.Log;
 import android.widget.Toast;
 
-import com.jarone.litterary.adapters.DebugItem;
+import com.jarone.litterary.datatypes.DebugItem;
 import com.jarone.litterary.helpers.ContextManager;
 
 /**

@@ -1,10 +1,12 @@
-package com.jarone.litterary.adapters;
+package com.jarone.litterary.datatypes;
 
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
 /**
  * Created by V on 2/23/2016.
+ * <p/>
+ * Model for a message from the debugger.
  */
 public class DebugItem {
 

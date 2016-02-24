@@ -9,12 +9,15 @@ import android.view.ViewGroup;
 import android.widget.TextView;
 
 import com.jarone.litterary.R;
-import com.jarone.litterary.adapters.DebugItem.DebugLevel;
+import com.jarone.litterary.datatypes.DebugItem;
+import com.jarone.litterary.datatypes.DebugItem.DebugLevel;
 
 import java.util.List;
 
 /**
  * Created by V on 2/23/2016.
+ * <p/>
+ * RecyclerAdapter for the debug messages.
  */
 public class DebugMessageRecyclerAdapter extends RecyclerView.Adapter<DebugMessageRecyclerAdapter.CustomViewHolder> {
 
@@ -30,17 +33,13 @@ public class DebugMessageRecyclerAdapter extends RecyclerView.Adapter<DebugMessa
         this.mContext = context;
     }
 
-
-
-
     @Override
     public CustomViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
-        View view = LayoutInflater.from(parent.getContext()).inflate(R.layout.debug_item, null);
-
-        return new CustomViewHolder(view);
+        return new CustomViewHolder(LayoutInflater.from(parent.getContext()).inflate(R.layout.debug_item, null));
     }
 
     private int getColorFromLevel(DebugLevel level) {
+        //Changes color based on the debug level.
         switch (level) {
             case DEBUG:
                 return ContextCompat.getColor(mContext, R.color.white);
@@ -51,22 +50,26 @@ public class DebugMessageRecyclerAdapter extends RecyclerView.Adapter<DebugMessa
             default:
                 return ContextCompat.getColor(mContext, R.color.white);
         }
+        //TODO: Actually mark messages appropriately with level
     }
 
     @Override
     public void onBindViewHolder(CustomViewHolder holder, int position) {
         DebugItem item = debugItemList.get(position);
+        //Format the string as Time: Message
         holder.textView.setText(item.getDateString() + ": " + item.getText());
+        //Set the color
         holder.textView.setTextColor(getColorFromLevel(item.getDebugLevel()));
-
     }
-
 
     @Override
     public int getItemCount() {
         return debugItemList.size();
     }
 
+    /**
+     * View holder for the textview for recycling.
+     */
     public class CustomViewHolder extends RecyclerView.ViewHolder {
         protected TextView textView;
 
