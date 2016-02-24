@@ -30,6 +30,9 @@ public class DebugMessageRecyclerAdapter extends RecyclerView.Adapter<DebugMessa
         this.mContext = context;
     }
 
+
+
+
     @Override
     public CustomViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
         View view = LayoutInflater.from(parent.getContext()).inflate(R.layout.debug_item, null);

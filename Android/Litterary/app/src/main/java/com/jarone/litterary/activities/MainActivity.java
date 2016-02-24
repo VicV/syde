@@ -26,7 +26,6 @@ import com.google.android.gms.maps.model.LatLng;
 import com.jarone.litterary.R;
 import com.jarone.litterary.adapters.DebugItem;
 import com.jarone.litterary.adapters.DebugMessageRecyclerAdapter;
-import com.jarone.litterary.adapters.DividerItemDecoration;
 import com.jarone.litterary.adapters.ViewPagerAdapter;
 import com.jarone.litterary.control.AngularController;
 import com.jarone.litterary.control.ControlTable;
@@ -68,12 +67,7 @@ public class MainActivity extends DJIBaseActivity {
     boolean buttonPress = false;
     public static final int POINTS_REQUEST_CODE = 130;
     public static final int POINTS_RESULT_CODE = 230;
-
-    public ArrayList getMessageList() {
-        return messageList;
-    }
-
-    private ArrayList messageList;
+    public static ArrayList<DebugItem> messageList;
 
     private DjiGLSurfaceView mDjiGLSurfaceView;
 
@@ -81,7 +75,6 @@ public class MainActivity extends DJIBaseActivity {
     int count = 0;
 
     private ImageView CPreview;
-
     private RecyclerView debugMessageList;
     private Context mainActivity;
 
@@ -97,8 +90,9 @@ public class MainActivity extends DJIBaseActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         mainActivity = this;
+        messageList = new ArrayList<>();
         viewPager = (ViewPager) findViewById(R.id.viewPager);
-        messageList = new ArrayList();
+
         //Forces all views to be loaded.
         viewPager.setOffscreenPageLimit(10);
         viewPager.setAdapter(new ViewPagerAdapter(this));
@@ -113,8 +107,16 @@ public class MainActivity extends DJIBaseActivity {
                 CPreview = ((ImageView) findViewById(R.id.CVPreview));
                 debugMessageList = (RecyclerView) findViewById(R.id.message_list_view);
                 debugMessageList.setAdapter(new DebugMessageRecyclerAdapter(mainActivity, messageList));
+
                 debugMessageList.setLayoutManager(new LinearLayoutManager(mainActivity));
-                debugMessageList.addItemDecoration(new DividerItemDecoration(mainActivity, DividerItemDecoration.VERTICAL_LIST));
+                debugMessageList.getAdapter().registerAdapterDataObserver(new RecyclerView.AdapterDataObserver() {
+                    @Override
+                    public void onChanged() {
+                        super.onChanged();
+                        debugMessageList.scrollToPosition(debugMessageList.getAdapter().getItemCount() - 1);
+                    }
+                });
+////                debugMessageList.addItemDecoration(new DividerItemDecoration(mainActivity, DividerItemDecoration.VERTICAL_LIST));
 
             }
         });
@@ -492,8 +494,13 @@ public class MainActivity extends DJIBaseActivity {
         }
     }
 
-    public void updateMessageList(DebugItem.DebugLevel level, String message, long time) {
-        ((DebugMessageRecyclerAdapter) debugMessageList.getAdapter()).getDebugItemList().add(new DebugItem(level, message, time));
+    public void updateMessageList(DebugItem item) {
+        if (debugMessageList == null) {
+            messageList.add(item);
+        } else {
+            ((DebugMessageRecyclerAdapter) debugMessageList.getAdapter()).getDebugItemList().add(item);
+            debugMessageList.getAdapter().notifyDataSetChanged();
+        }
     }
 
     @Override
