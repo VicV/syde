@@ -3,6 +3,7 @@ package com.jarone.litterary.handlers;
 import android.util.Log;
 import android.widget.Toast;
 
+import com.jarone.litterary.datatypes.DebugItem;
 import com.jarone.litterary.helpers.ContextManager;
 
 /**
@@ -10,7 +11,7 @@ import com.jarone.litterary.helpers.ContextManager;
  */
 public class MessageHandler {
 
-    public static void d (final String message) {
+    public static void d(final String message) {
         ContextManager.getActivity().runOnUiThread(new Runnable() {
             @Override
             public void run() {
@@ -19,6 +20,39 @@ public class MessageHandler {
             }
         });
         Log.d("MessageHandler", message);
+
+        ContextManager.getMainActivityInstance().updateMessageList(new DebugItem(DebugItem.DebugLevel.DEBUG, message, System.currentTimeMillis()));
     }
+
+    public static void e(final String message) {
+        ContextManager.getActivity().runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                Toast toast = Toast.makeText(ContextManager.getContext(), message, Toast.LENGTH_SHORT);
+                toast.show();
+            }
+        });
+
+        Log.w("MessageHandler", message);
+
+
+        ContextManager.getMainActivityInstance().updateMessageList(new DebugItem(DebugItem.DebugLevel.ERROR, message, System.currentTimeMillis()));
+
+
+    }
+
+    public static void w(final String message) {
+        ContextManager.getActivity().runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                Toast toast = Toast.makeText(ContextManager.getContext(), message, Toast.LENGTH_SHORT);
+                toast.show();
+            }
+        });
+        Log.w("MessageHandler", message);
+
+        ContextManager.getMainActivityInstance().updateMessageList(new DebugItem(DebugItem.DebugLevel.WARN, message, System.currentTimeMillis()));
+    }
+
 
 }

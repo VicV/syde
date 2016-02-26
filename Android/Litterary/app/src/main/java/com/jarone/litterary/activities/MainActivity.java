@@ -10,7 +10,11 @@ import android.opengl.GLException;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Parcelable;
+import android.support.design.widget.TabLayout;
 import android.support.v4.app.ActivityCompat;
+import android.support.v4.view.ViewPager;
+import android.support.v7.widget.LinearLayoutManager;
+import android.support.v7.widget.RecyclerView;
 import android.util.Log;
 import android.view.View;
 import android.widget.EditText;
@@ -20,6 +24,9 @@ import android.widget.ToggleButton;
 
 import com.google.android.gms.maps.model.LatLng;
 import com.jarone.litterary.R;
+import com.jarone.litterary.datatypes.DebugItem;
+import com.jarone.litterary.adapters.DebugMessageRecyclerAdapter;
+import com.jarone.litterary.adapters.ViewPagerAdapter;
 import com.jarone.litterary.control.AngularController;
 import com.jarone.litterary.drone.Camera;
 import com.jarone.litterary.drone.DroneState;
@@ -50,6 +57,7 @@ import dji.sdk.widget.DjiGLSurfaceView;
 
 public class MainActivity extends DJIBaseActivity {
 
+
     // Storage Permissions
     private static final int REQUEST_EXTERNAL_STORAGE = 1;
     private static String[] PERMISSIONS_STORAGE = {
@@ -57,24 +65,29 @@ public class MainActivity extends DJIBaseActivity {
             Manifest.permission.WRITE_EXTERNAL_STORAGE
     };
 
-    boolean buttonPress = false;
+    private static final String TAG = MainActivity.class.toString();
+
+
     public static final int POINTS_REQUEST_CODE = 130;
     public static final int POINTS_RESULT_CODE = 230;
+    public static ArrayList<DebugItem> messageList;
 
     private DjiGLSurfaceView mDjiGLSurfaceView;
 
-    private static final String TAG = MainActivity.class.toString();
+
+    //TODO: remove (just limits the frame processing atm);
     int count = 0;
+    boolean buttonPress = false;
+
 
     private ImageView CPreview;
-
+    private RecyclerView debugMessageRecyclerView;
     private Context mainActivity;
-
     private ScheduledExecutorService taskScheduler;
 
     private LatLng[] currentPolygon = null;
     private ArrayList<LatLng> currentPhotoPoints = null;
-
+    private ViewPager viewPager;
 
     //Activity is starting.
     @Override
@@ -82,21 +95,51 @@ public class MainActivity extends DJIBaseActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         mainActivity = this;
+        messageList = new ArrayList<>();
+
+        viewPager = (ViewPager) findViewById(R.id.viewPager);
+
+        //Forces all views to be loaded.
+        viewPager.setOffscreenPageLimit(10);
+        viewPager.setAdapter(new ViewPagerAdapter(this));
+        viewPager.setCurrentItem(1);
+        viewPager.post(new Runnable() {
+            @Override
+            public void run() {
+                //This is done as a post on the viewpager because we must wait for it to
+                //Be initialized before interacting with the views.
+                setOnClickListeners();
+                registerUpdateInterface();
+                CPreview = ((ImageView) findViewById(R.id.CVPreview));
+
+                //Set up our debug message lest
+                debugMessageRecyclerView = (RecyclerView) findViewById(R.id.message_list_view);
+                debugMessageRecyclerView.setAdapter(new DebugMessageRecyclerAdapter(mainActivity, messageList));
+                debugMessageRecyclerView.setLayoutManager(new LinearLayoutManager(mainActivity));
+
+                //Forces scroll to bottom on every update.
+                debugMessageRecyclerView.getAdapter().registerAdapterDataObserver(new RecyclerView.AdapterDataObserver() {
+                    @Override
+                    public void onChanged() {
+                        super.onChanged();
+                        debugMessageRecyclerView.scrollToPosition(debugMessageRecyclerView.getAdapter().getItemCount() - 1);
+                    }
+                });
+
+            }
+        });
+
+        //Tabs for viewpager
+        TabLayout tabLayout = (TabLayout) findViewById(R.id.tab_layout);
+        tabLayout.setTabGravity(TabLayout.GRAVITY_FILL);
+        //This automatically sets up the tabs and everything for us.
+        tabLayout.setupWithViewPager(viewPager);
+
         verifyStoragePermissions(this);
-        setOnClickListeners();
-
         registerCamera();
-
-        registerUpdateInterface();
-
         ContextManager.setContext(this);
-
-
         DroneState.registerConnectedTimer();
         GroundStation.registerPhantom2Callback();
-
-        CPreview = ((ImageView) findViewById(R.id.CVPreview));
-
     }
 
     private void registerUpdateInterface() {
@@ -461,6 +504,24 @@ public class MainActivity extends DJIBaseActivity {
         }
     }
 
+    /**
+     * Update the debug message list.
+     * Note that there are two states;
+     * if the recyclerView is null, that means the adapter hasn't been initialized.
+     * <p/>
+     * If this is true, just hand it to the arraylist that will be used to initialize the view.
+     *
+     * @param item
+     */
+    public void updateMessageList(DebugItem item) {
+        if (debugMessageRecyclerView == null) {
+            messageList.add(item);
+        } else {
+            ((DebugMessageRecyclerAdapter) debugMessageRecyclerView.getAdapter()).getDebugItemList().add(item);
+            debugMessageRecyclerView.getAdapter().notifyDataSetChanged();
+        }
+    }
+
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
@@ -471,8 +532,6 @@ public class MainActivity extends DJIBaseActivity {
             if (parcel.length > 2) {
                 currentPolygon = parcel;
             }
-
-
             new DoRouteTask().execute();
         }
     }
@@ -578,11 +637,10 @@ public class MainActivity extends DJIBaseActivity {
 
     @Override
     public void onBackPressed() {
-        View infoLayout = findViewById(R.id.infoLayout);
-        if (infoLayout.getVisibility() == View.INVISIBLE) {
+        if (viewPager.getCurrentItem() == 1) {
             super.onBackPressed();
         } else {
-            infoLayout.setVisibility(View.INVISIBLE);
+            viewPager.setCurrentItem(1);
         }
     }
 
