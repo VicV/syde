@@ -6,8 +6,10 @@ import android.os.Environment;
 import com.google.android.gms.maps.model.LatLng;
 import com.jarone.litterary.drone.Camera;
 import com.jarone.litterary.drone.GroundStation;
+import com.jarone.litterary.helpers.FileAccess;
 import com.jarone.litterary.helpers.LocationHelper;
 import com.jarone.litterary.imageproc.ImageProcessing;
+import com.jarone.litterary.optimization.RouteOptimization;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -72,7 +74,7 @@ public class SurveyRoute extends NavigationRoute{
         ArrayList<File> surveyPhotos = new ArrayList<>();
 
         for (File file : files) {
-            long timestamp = Long.parseLong(file.getName().split("|")[0]);
+            long timestamp = Long.parseLong(file.getName().split("-")[0]);
             if (timestamp > startTime && timestamp < endTime) {
                 surveyPhotos.add(file);
             }
@@ -85,15 +87,15 @@ public class SurveyRoute extends NavigationRoute{
         ArrayList<LatLng> litter = new ArrayList<>();
         for (File photo : photos) {
             litter.addAll(
-                    ImageProcessing.identifyLitter(
-                            BitmapFactory.decodeFile(
-                                    photo.getAbsolutePath()
-                            )
-                    )
+                ImageProcessing.identifyLitter(
+                    BitmapFactory.decodeFile(photo.getAbsolutePath()),
+                    FileAccess.coordsFromPhoto(photo)
+                )
             );
         }
         litterPoints = LocationHelper.removeDuplicates(litter);
-        NavigationRoute pickup = new NavigationRoute((LatLng[]) litterPoints.toArray(), altitude, heading);
+        LatLng[] points = RouteOptimization.createOptimizedCollectionRoute(litterPoints);
+        NavigationRoute pickup = new NavigationRoute(points, altitude, heading);
         pickup.save();
     }
 

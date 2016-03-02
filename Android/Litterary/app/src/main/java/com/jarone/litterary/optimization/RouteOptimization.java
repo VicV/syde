@@ -29,7 +29,7 @@ public class RouteOptimization {
 
             ArrayList<LatLng> picturePoints = getPhotoPoints(latLngs, altitude);
 
-            ArrayList<LatLng> orderedPoints = optimizePhotoRoute(picturePoints);
+            ArrayList<LatLng> orderedPoints = optimizePointRoute(picturePoints);
 
             Object[] route = orderedPoints.toArray();
 
@@ -38,6 +38,12 @@ public class RouteOptimization {
             MessageHandler.d("Boundary Points Are Too Far From Drone!");
             return new LatLng[0];
         }
+    }
+
+    public static LatLng[] createOptimizedCollectionRoute(ArrayList<LatLng> points) {
+        ArrayList<LatLng> orderedPoints = optimizePointRoute(points);
+        Object[] route = orderedPoints.toArray();
+        return (Arrays.copyOf(route, route.length, LatLng[].class));
     }
 
 
@@ -225,7 +231,7 @@ public class RouteOptimization {
         return GPS;
     }
 
-    private static ArrayList<LatLng> optimizePhotoRoute(ArrayList<LatLng> picturePoints) {
+    private static ArrayList<LatLng> optimizePointRoute(ArrayList<LatLng> picturePoints) {
 
         ArrayList<LatLng> bestRoute = new ArrayList();
 

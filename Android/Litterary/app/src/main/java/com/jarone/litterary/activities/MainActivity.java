@@ -28,7 +28,7 @@ import com.jarone.litterary.datatypes.DebugItem;
 import com.jarone.litterary.adapters.DebugMessageRecyclerAdapter;
 import com.jarone.litterary.adapters.ViewPagerAdapter;
 import com.jarone.litterary.control.AngularController;
-import com.jarone.litterary.control.ControlTable;
+import com.jarone.litterary.drone.Camera;
 import com.jarone.litterary.drone.DroneState;
 import com.jarone.litterary.drone.GroundStation;
 import com.jarone.litterary.handlers.MessageHandler;
@@ -354,22 +354,6 @@ public class MainActivity extends DJIBaseActivity {
         };
     }
 
-    public View.OnClickListener getStatusButtonListener() {
-        return new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                View infoLayout = findViewById(R.id.infoLayout);
-                if (infoLayout.getVisibility() == View.INVISIBLE) {
-                    infoLayout.setVisibility(View.VISIBLE);
-                    //Camera.requestedGimbalAngle = 1000;
-                } else {
-                    infoLayout.setVisibility(View.INVISIBLE);
-                    //Camera.requestedGimbalAngle = 0;
-                }
-            }
-        };
-    }
-
     public View.OnClickListener getPIDButtonListener() {
         return new View.OnClickListener() {
             @Override
@@ -389,7 +373,7 @@ public class MainActivity extends DJIBaseActivity {
             public void onClick(View view) {
                 switch (view.getId()) {
                     case R.id.button_special1:
-                        ControlTable.testSaveLoad();
+                        Camera.takePhoto();
                         break;
                     case R.id.button_special2:
                         AngularController ctrl = new AngularController();
@@ -408,9 +392,9 @@ public class MainActivity extends DJIBaseActivity {
                     case R.id.button_special3:
 //                        buttonPress = true;
 //                        count = 0;
-                        // Camera.takePhoto();
-                        ControlTable.testSaveLoad();
-                        //Camera.downloadLatestPhoto();
+                         Camera.takePhoto();
+                        //ControlTable.testSaveLoad();
+//                        Camera.downloadLatestPhoto();
                         break;
                 }
             }
@@ -657,7 +641,6 @@ public class MainActivity extends DJIBaseActivity {
         findViewById(R.id.button_set_region).setOnClickListener(setRegionClickListener());
         findViewById(R.id.button_start_survey).setOnClickListener(getStartSurveyListener());
         findViewById(R.id.button_switch_mode).setOnClickListener(getSwitchModeListener());
-        findViewById(R.id.button_status).setOnClickListener(getStatusButtonListener());
         findViewById(R.id.button_pid).setOnClickListener(getPIDButtonListener());
         findViewById(R.id.button_special1).setOnClickListener(getSpecialButtonListener());
         findViewById(R.id.button_special2).setOnClickListener(getSpecialButtonListener());
