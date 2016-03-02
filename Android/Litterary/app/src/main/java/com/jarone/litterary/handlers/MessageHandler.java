@@ -20,8 +20,12 @@ public class MessageHandler {
             }
         });
         Log.d("MessageHandler", message);
-
-        ContextManager.getMainActivityInstance().updateMessageList(new DebugItem(DebugItem.DebugLevel.DEBUG, message, System.currentTimeMillis()));
+        ContextManager.getMainActivityInstance().runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                ContextManager.getMainActivityInstance().updateMessageList(new DebugItem(DebugItem.DebugLevel.DEBUG, message, System.currentTimeMillis()));
+            }
+        });
     }
 
     public static void e(final String message) {
@@ -36,9 +40,12 @@ public class MessageHandler {
         Log.w("MessageHandler", message);
 
 
-        ContextManager.getMainActivityInstance().updateMessageList(new DebugItem(DebugItem.DebugLevel.ERROR, message, System.currentTimeMillis()));
-
-
+        ContextManager.getMainActivityInstance().runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                ContextManager.getMainActivityInstance().updateMessageList(new DebugItem(DebugItem.DebugLevel.ERROR, message, System.currentTimeMillis()));
+            }
+        });
     }
 
     public static void w(final String message) {
@@ -50,8 +57,12 @@ public class MessageHandler {
             }
         });
         Log.w("MessageHandler", message);
-
-        ContextManager.getMainActivityInstance().updateMessageList(new DebugItem(DebugItem.DebugLevel.WARN, message, System.currentTimeMillis()));
+        ContextManager.getMainActivityInstance().runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                ContextManager.getMainActivityInstance().updateMessageList(new DebugItem(DebugItem.DebugLevel.WARN, message, System.currentTimeMillis()));
+            }
+        });
     }
 
 
