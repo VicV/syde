@@ -29,7 +29,7 @@ public class TrackingObject {
         lat_dist = ImageProcessing.metresToPixels(lat_dist, newAltitude);
         long_dist = ImageProcessing.metresToPixels(long_dist, newAltitude);
         Point predictPoint = new Point(position.x + long_dist, position.y + lat_dist);
-        double predictSize = 0;
+        double predictSize = cameraAltitude / newAltitude * size;
         return new TrackingObject(predictPoint, predictSize, newLocation, newAltitude);
     }
 

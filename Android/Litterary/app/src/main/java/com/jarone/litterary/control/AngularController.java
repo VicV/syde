@@ -168,7 +168,7 @@ public class AngularController {
         GroundStation.engageJoystick(new Runnable() {
             @Override
             public void run() {
-                generateEntriesForAngle(5, 0);
+                generateEntriesForAngle(200, 0);
             }
         });
     }
@@ -182,11 +182,11 @@ public class AngularController {
     private void generateEntriesForAngle(final double angle, final int timeIndex) {
         //If times from 1 to 10 seconds have been generated for this angle, move to the next angle
         if (timeIndex >= ControlTable.POSSIBLE_TIMES.length) {
-            generateEntriesForAngle(angle + 5, 0);
+            generateEntriesForAngle(angle + 100, 0);
             return;
         }
         //If all angles from 5 to 45 have been tested, exit the method because the table is done
-        if (angle > 45) {
+        if (angle > 700) {
             ControlTable.displaySaveDialog();
             return;
         }

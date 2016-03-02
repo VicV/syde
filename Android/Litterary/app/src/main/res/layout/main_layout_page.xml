@@ -205,14 +205,6 @@
         android:layout_below="@+id/linearLayout">
 
         <Button
-            android:id="@+id/button_status"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_alignParentEnd="true"
-            android:text="Status"
-            android:textSize="7pt" />
-
-        <Button
             android:id="@+id/button_pid"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
