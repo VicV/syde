@@ -95,54 +95,6 @@
         android:layout_centerHorizontal="true"
         android:paddingTop="20dp">
 
-        <Button
-            android:id="@+id/button_up"
-            android:layout_width="70dp"
-            android:layout_height="70dp"
-            android:layout_alignParentTop="true"
-            android:layout_centerHorizontal="true"
-            android:layout_marginBottom="10dp"
-            android:background="@drawable/button_up_state" />
-
-        <Button
-            android:id="@+id/button_left"
-            android:layout_width="70dp"
-            android:layout_height="70dp"
-            android:layout_below="@+id/button_up"
-            android:layout_marginEnd="10dp"
-            android:layout_toStartOf="@+id/button_up"
-            android:background="@drawable/button_left_state" />
-
-        <Button
-            android:id="@+id/button_right"
-            android:layout_width="70dp"
-            android:layout_height="70dp"
-            android:layout_alignTop="@+id/button_left"
-            android:layout_marginStart="10dp"
-            android:layout_toEndOf="@+id/button_up"
-            android:background="@drawable/button_right_state" />
-
-        <Button
-            android:id="@+id/button_down"
-            android:layout_width="70dp"
-            android:layout_height="70dp"
-            android:layout_below="@+id/button_left"
-            android:layout_centerHorizontal="true"
-            android:layout_marginTop="10dp"
-            android:background="@drawable/button_down_state" />
-
-        <TextView
-            android:id="@+id/button_stop"
-            android:layout_width="50dp"
-            android:layout_height="50dp"
-            android:layout_below="@+id/button_up"
-            android:layout_centerHorizontal="true"
-            android:layout_marginTop="5dp"
-            android:background="@drawable/x"
-            android:gravity="center"
-            android:text="STOP"
-            android:textColor="#ebebeb"
-            android:textSize="10sp" />
 
     </RelativeLayout>
 

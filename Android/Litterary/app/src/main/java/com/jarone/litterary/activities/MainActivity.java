@@ -33,6 +33,7 @@ import com.jarone.litterary.drone.DroneState;
 import com.jarone.litterary.drone.GroundStation;
 import com.jarone.litterary.handlers.MessageHandler;
 import com.jarone.litterary.helpers.ContextManager;
+import com.jarone.litterary.helpers.ImageHelper;
 import com.jarone.litterary.helpers.LocationHelper;
 import com.jarone.litterary.imageproc.ImageProcessing;
 
@@ -57,7 +58,6 @@ import dji.sdk.widget.DjiGLSurfaceView;
 
 public class MainActivity extends DJIBaseActivity {
 
-
     // Storage Permissions
     private static final int REQUEST_EXTERNAL_STORAGE = 1;
     private static String[] PERMISSIONS_STORAGE = {
@@ -65,20 +65,11 @@ public class MainActivity extends DJIBaseActivity {
             Manifest.permission.WRITE_EXTERNAL_STORAGE
     };
 
-    private static final String TAG = MainActivity.class.toString();
-
-
     public static final int POINTS_REQUEST_CODE = 130;
     public static final int POINTS_RESULT_CODE = 230;
     public static ArrayList<DebugItem> messageList;
 
     private DjiGLSurfaceView mDjiGLSurfaceView;
-
-
-    //TODO: remove (just limits the frame processing atm);
-    int count = 0;
-    boolean buttonPress = false;
-
 
     private ImageView CPreview;
     private RecyclerView debugMessageRecyclerView;
@@ -95,45 +86,8 @@ public class MainActivity extends DJIBaseActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         mainActivity = this;
-        messageList = new ArrayList<>();
 
-        viewPager = (ViewPager) findViewById(R.id.viewPager);
-
-        //Forces all views to be loaded.
-        viewPager.setOffscreenPageLimit(10);
-        viewPager.setAdapter(new ViewPagerAdapter(this));
-        viewPager.setCurrentItem(1);
-        viewPager.post(new Runnable() {
-            @Override
-            public void run() {
-                //This is done as a post on the viewpager because we must wait for it to
-                //Be initialized before interacting with the views.
-                setOnClickListeners();
-                registerUpdateInterface();
-                CPreview = ((ImageView) findViewById(R.id.CVPreview));
-
-                //Set up our debug message lest
-                debugMessageRecyclerView = (RecyclerView) findViewById(R.id.message_list_view);
-                debugMessageRecyclerView.setAdapter(new DebugMessageRecyclerAdapter(mainActivity, messageList));
-                debugMessageRecyclerView.setLayoutManager(new LinearLayoutManager(mainActivity));
-
-                //Forces scroll to bottom on every update.
-                debugMessageRecyclerView.getAdapter().registerAdapterDataObserver(new RecyclerView.AdapterDataObserver() {
-                    @Override
-                    public void onChanged() {
-                        super.onChanged();
-                        debugMessageRecyclerView.scrollToPosition(debugMessageRecyclerView.getAdapter().getItemCount() - 1);
-                    }
-                });
-
-            }
-        });
-
-        //Tabs for viewpager
-        TabLayout tabLayout = (TabLayout) findViewById(R.id.tab_layout);
-        tabLayout.setTabGravity(TabLayout.GRAVITY_FILL);
-        //This automatically sets up the tabs and everything for us.
-        tabLayout.setupWithViewPager(viewPager);
+        setupViewPager();
 
         verifyStoragePermissions(this);
         registerCamera();
@@ -141,6 +95,7 @@ public class MainActivity extends DJIBaseActivity {
         DroneState.registerConnectedTimer();
         GroundStation.registerPhantom2Callback();
     }
+
 
     private void registerUpdateInterface() {
         taskScheduler = Executors.newSingleThreadScheduledExecutor();
@@ -150,175 +105,6 @@ public class MainActivity extends DJIBaseActivity {
                 updateInterface();
             }
         }, 0, 200, TimeUnit.MILLISECONDS);
-    }
-
-
-    public View.OnClickListener getDirectionalListener() {
-        return new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                switch (v.getId()) {
-                    case R.id.button_up:
-                        if (DroneState.getMode() == DroneState.DIRECT_MODE) {
-                            GroundStation.setAngles(DroneState.getPitch() + 500, DroneState.getYaw(), DroneState.getRoll());
-                        }
-                        break;
-                    case R.id.button_down:
-                        if (DroneState.getMode() == DroneState.DIRECT_MODE) {
-                            GroundStation.setAngles(DroneState.getPitch() - 500, DroneState.getYaw(), DroneState.getRoll());
-                        }
-                        break;
-                    case R.id.button_left:
-                        if (DroneState.getMode() == DroneState.DIRECT_MODE) {
-                            GroundStation.setAngles(DroneState.getPitch(), DroneState.getYaw(), DroneState.getRoll() - 500);
-                        }
-                        break;
-                    case R.id.button_right:
-                        if (DroneState.getMode() == DroneState.DIRECT_MODE) {
-                            GroundStation.setAngles(DroneState.getPitch(), DroneState.getYaw(), DroneState.getRoll() + 500);
-                        }
-                        break;
-                    case R.id.button_stop:
-                        if (DroneState.getMode() == DroneState.DIRECT_MODE) {
-                            GroundStation.setAngles(0, 0, 0);
-                        } else {
-                            GroundStation.stopTask();
-                        }
-                        break;
-                }
-            }
-        };
-    }
-
-    public View.OnClickListener getHomeButtonListener() {
-        return new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                switch (v.getId()) {
-                    case R.id.button_go_home:
-                        GroundStation.goHome();
-                        break;
-                    case R.id.button_set_home:
-                        GroundStation.setHomePoint();
-                        break;
-                }
-            }
-        };
-    }
-
-    public View.OnClickListener setAltitudeListener() {
-        return new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                float altitude = getAltitudeValue();
-                if (altitude == -1) {
-                    MessageHandler.d("Please enter a valid number");
-                } else if (altitude < 100) {
-                    GroundStation.setAltitude(altitude);
-                } else {
-                    MessageHandler.d("Please choose valid altitude <100 m");
-                }
-            }
-        };
-    }
-
-    public View.OnClickListener getStartSurveyListener() {
-        return new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                LatLng[] points = GroundStation.startSurveyRoute();
-                if (points != null && points.length > 2) {
-                    currentPhotoPoints = new ArrayList<>(Arrays.asList(points));
-                    currentPhotoPoints.size();
-                }
-            }
-        };
-    }
-
-    private interface BitmapCreatedCallback {
-        void onBitmapCreated(Bitmap bitmap);
-    }
-
-    // Create a bitmap from the current surface frame.
-    private void createBitmapFromFrame(final BitmapCreatedCallback bitmapCreatedCallback) {
-
-        mDjiGLSurfaceView.queueEvent(new Runnable() {
-            @Override
-            public void run() {
-                EGL10 egl = (EGL10) EGLContext.getEGL();
-                //Get GL10 object from EGL context.
-                GL10 gl = (GL10) egl.eglGetCurrentContext().getGL();
-                Bitmap frame = smallerTest(0, 0, mDjiGLSurfaceView.getWidth(), mDjiGLSurfaceView.getHeight(), gl);
-
-                bitmapCreatedCallback.onBitmapCreated(frame);
-            }
-        });
-
-    }
-
-    private Bitmap smallerTest(int x, int y, int w, int h, GL10 gl) {
-
-        if (gl != null && w != 0 && h != 0) {
-            int screenshotSize = w * h;
-            ByteBuffer bb = ByteBuffer.allocateDirect(screenshotSize * 4);
-            bb.order(ByteOrder.nativeOrder());
-            gl.glReadPixels(0, 0, w, h, GL10.GL_RGBA, GL10.GL_UNSIGNED_BYTE, bb);
-            int pixelsBuffer[] = new int[screenshotSize];
-            bb.asIntBuffer().get(pixelsBuffer);
-            Bitmap bitmap = Bitmap.createBitmap(w, h,
-                    Bitmap.Config.RGB_565);
-
-            bitmap.setPixels(pixelsBuffer, screenshotSize - w, -w, 0,
-                    0, w, h);
-
-            short sBuffer[] = new short[screenshotSize];
-            ShortBuffer sb = ShortBuffer.wrap(sBuffer);
-            bitmap.copyPixelsToBuffer(sb);
-
-            // Making created bitmap (from OpenGL points) compatible with
-            // Android bitmap
-            for (int i = 0; i < screenshotSize; ++i) {
-                short v = sBuffer[i];
-                sBuffer[i] = (short) (((v & 0x1f) << 11) | (v & 0x7e0) | ((v & 0xf800) >> 11));
-            }
-            sb.rewind();
-            bitmap.copyPixelsFromBuffer(sb);
-            return bitmap.copy(Bitmap.Config.ARGB_8888, false);
-        }
-        return null;
-    }
-
-    private Bitmap createBitmapFromGLSurface(int x, int y, int w, int h, GL10 gl) {
-
-        int bitmapBuffer[] = new int[w * h];
-        int bitmapSource[] = new int[w * h];
-        IntBuffer intBuffer = IntBuffer.wrap(bitmapBuffer);
-        intBuffer.position(0);
-
-        try {
-            //Pull the pixels from the surface
-            gl.glReadPixels(x, y, w, h, GL10.GL_RGBA, GL10.GL_UNSIGNED_BYTE, intBuffer);
-            int offset1, offset2;
-            for (int i = 0; i < h; i++) {
-                offset1 = i * w;
-                offset2 = (h - i - 1) * w;
-                for (int j = 0; j < w; j++) {
-                    //Go through each pixel and offset it the appropriate amount to be understood as a bitmap by android
-                    int texturePixel = bitmapBuffer[offset1 + j];
-                    int blue = (texturePixel >> 16) & 0xff;
-                    int red = (texturePixel << 16) & 0x00ff0000;
-                    int pixel = (texturePixel & 0xff00ff00) | red | blue;
-                    //Set that pixel in the bitmap as the pixel created above.
-                    bitmapSource[offset2 + j] = pixel;
-                }
-            }
-        } catch (GLException e) {
-            Log.e(TAG, "createBitmapFromGLSurface: " + e.getMessage(), e);
-            return null;
-        }
-
-        //Actually make the bitmap from the pixel array.
-        return Bitmap.createBitmap(bitmapSource, w, h, Bitmap.Config.ARGB_8888);
     }
 
     public View.OnClickListener getFindLitterListener() {
@@ -392,7 +178,8 @@ public class MainActivity extends DJIBaseActivity {
                     case R.id.button_special3:
 //                        buttonPress = true;
 //                        count = 0;
-                         Camera.takePhoto();
+//                         Camera.takePhoto();
+                        MessageHandler.d("butt");
                         //ControlTable.testSaveLoad();
 //                        Camera.downloadLatestPhoto();
                         break;
@@ -431,12 +218,9 @@ public class MainActivity extends DJIBaseActivity {
             public void onResult(byte[] videoBuffer, int size) {
                 mDjiGLSurfaceView.setDataToDecoder(videoBuffer, size);
 
-                if (buttonPress && !processing && count < 20) {
+                if (!processing) {
                     processing = true;
                     new ImageAsyncTask().execute();
-                } else if (count >= 20 && processing) {
-                    processing = false;
-                    buttonPress = false;
                 }
             }
         };
@@ -446,10 +230,9 @@ public class MainActivity extends DJIBaseActivity {
     private class ImageAsyncTask extends AsyncTask<Void, Void, Void> {
         @Override
         protected Void doInBackground(Void... params) {
-            createBitmapFromFrame(new BitmapCreatedCallback() {
+            ImageHelper.createBitmapFromFrame(new ImageHelper.BitmapCreatedCallback() {
                 @Override
                 public void onBitmapCreated(final Bitmap bitmap) {
-                    count++;
                     processing = false;
                     CPreview.postDelayed(new Runnable() {
                         @Override
@@ -462,7 +245,7 @@ public class MainActivity extends DJIBaseActivity {
                     // MessageHandler.d("Bitmap: " + count);
                 }
 
-            });
+            }, mDjiGLSurfaceView);
             return null;
         }
     }
@@ -629,12 +412,95 @@ public class MainActivity extends DJIBaseActivity {
     }
 
 
+    private void setupViewPager() {
+        messageList = new ArrayList<>();
+        viewPager = (ViewPager) findViewById(R.id.viewPager);
+
+        //Forces all views to be loaded.
+        viewPager.setOffscreenPageLimit(10);
+        viewPager.setAdapter(new ViewPagerAdapter(this));
+        viewPager.setCurrentItem(1);
+        viewPager.post(new Runnable() {
+            @Override
+            public void run() {
+                //This is done as a post on the viewpager because we must wait for it to
+                //Be initialized before interacting with the views.
+                setOnClickListeners();
+                registerUpdateInterface();
+                CPreview = ((ImageView) findViewById(R.id.CVPreview));
+
+                //Set up our debug message lest
+                debugMessageRecyclerView = (RecyclerView) findViewById(R.id.message_list_view);
+                debugMessageRecyclerView.setAdapter(new DebugMessageRecyclerAdapter(mainActivity, messageList));
+                debugMessageRecyclerView.setLayoutManager(new LinearLayoutManager(mainActivity));
+
+                //Forces scroll to bottom on every update.
+                debugMessageRecyclerView.getAdapter().registerAdapterDataObserver(new RecyclerView.AdapterDataObserver() {
+                    @Override
+                    public void onChanged() {
+                        super.onChanged();
+                        debugMessageRecyclerView.scrollToPosition(debugMessageRecyclerView.getAdapter().getItemCount() - 1);
+                    }
+                });
+
+            }
+        });
+
+        //Tabs for viewpager
+        TabLayout tabLayout = (TabLayout) findViewById(R.id.tab_layout);
+        tabLayout.setTabGravity(TabLayout.GRAVITY_FILL);
+        //This automatically sets up the tabs and everything for us.
+        tabLayout.setupWithViewPager(viewPager);
+    }
+
+
+    public View.OnClickListener getHomeButtonListener() {
+        return new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                switch (v.getId()) {
+                    case R.id.button_go_home:
+                        GroundStation.goHome();
+                        break;
+                    case R.id.button_set_home:
+                        GroundStation.setHomePoint();
+                        break;
+                }
+            }
+        };
+    }
+
+    public View.OnClickListener setAltitudeListener() {
+        return new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                float altitude = getAltitudeValue();
+                if (altitude == -1) {
+                    MessageHandler.d("Please enter a valid number");
+                } else if (altitude < 100) {
+                    GroundStation.setAltitude(altitude);
+                } else {
+                    MessageHandler.d("Please choose valid altitude <100 m");
+                }
+            }
+        };
+    }
+
+    public View.OnClickListener getStartSurveyListener() {
+        return new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                LatLng[] points = GroundStation.startSurveyRoute();
+                if (points != null && points.length > 2) {
+                    currentPhotoPoints = new ArrayList<>(Arrays.asList(points));
+                    currentPhotoPoints.size();
+                }
+            }
+        };
+    }
+
+
     private void setOnClickListeners() {
-        findViewById(R.id.button_down).setOnClickListener(getDirectionalListener());
-        findViewById(R.id.button_left).setOnClickListener(getDirectionalListener());
-        findViewById(R.id.button_right).setOnClickListener(getDirectionalListener());
-        findViewById(R.id.button_up).setOnClickListener(getDirectionalListener());
-        findViewById(R.id.button_stop).setOnClickListener(getDirectionalListener());
         findViewById(R.id.button_go_home).setOnClickListener(getHomeButtonListener());
         findViewById(R.id.button_set_home).setOnClickListener(getHomeButtonListener());
         findViewById(R.id.button_set_altitude).setOnClickListener(setAltitudeListener());
