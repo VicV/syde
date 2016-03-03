@@ -7,8 +7,6 @@ import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
 import retrofit2.Retrofit;
-import retrofit2.http.GET;
-import retrofit2.http.Path;
 /**
  * Created by Adam on 2016-03-02.
  */
@@ -52,11 +50,5 @@ public class Grabber {
         public static final String HEIGHT = "height";
 
     }
-
-
-}
-
-interface Arduino {
-    @GET("/{command}")
-    Call<ResponseBody> commandRequest(@Path("command") String command);
+    
 }
