@@ -27,9 +27,10 @@ public class AngularController {
     private long SAMPLING_TIME = 200;
     double CONVERGENCE_THRESHOLD = 0.1;
 
-    float P = 50;
+    float P = 500;
     float I = 0;
     float D = 10;
+
     float errorSum = 0;
     private float lastError = 0;
     private float lastAction = 0;

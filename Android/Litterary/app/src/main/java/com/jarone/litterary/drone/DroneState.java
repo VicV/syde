@@ -40,6 +40,7 @@ public class DroneState {
     private static double battery = 0;
     private static int mode;
 
+
     public static DJIGroundStationTypeDef.GroundStationFlightMode flightMode = DJIGroundStationTypeDef.GroundStationFlightMode.GS_Mode_Assited_Takeoff;
 
     /**
