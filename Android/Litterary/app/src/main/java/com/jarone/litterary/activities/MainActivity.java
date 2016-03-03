@@ -24,12 +24,13 @@ import android.widget.ToggleButton;
 
 import com.google.android.gms.maps.model.LatLng;
 import com.jarone.litterary.R;
-import com.jarone.litterary.datatypes.DebugItem;
 import com.jarone.litterary.adapters.DebugMessageRecyclerAdapter;
 import com.jarone.litterary.adapters.ViewPagerAdapter;
 import com.jarone.litterary.control.AngularController;
+import com.jarone.litterary.datatypes.DebugItem;
 import com.jarone.litterary.drone.Camera;
 import com.jarone.litterary.drone.DroneState;
+import com.jarone.litterary.drone.Grabber;
 import com.jarone.litterary.drone.GroundStation;
 import com.jarone.litterary.handlers.MessageHandler;
 import com.jarone.litterary.helpers.ContextManager;
@@ -392,7 +393,9 @@ public class MainActivity extends DJIBaseActivity {
                     case R.id.button_special3:
 //                        buttonPress = true;
 //                        count = 0;
-                         Camera.takePhoto();
+                         //Camera.takePhoto();
+                        Grabber grabber = new Grabber();
+                        grabber.sendCommand(Grabber.Commands.OPEN);
                         //ControlTable.testSaveLoad();
 //                        Camera.downloadLatestPhoto();
                         break;

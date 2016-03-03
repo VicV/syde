@@ -289,6 +289,7 @@ public class GroundStation {
                     @Override
                     public void onResult(DJIGroundStationTypeDef.GroundStationResult groundStationResult) {
                         DJIDrone.getDjiGroundStation().setYawControlMode(DJIGroundStationTypeDef.DJINavigationFlightControlYawControlMode.Navigation_Flight_Control_Yaw_Control_Angle);
+                        DJIDrone.getDjiGroundStation().setVerticalControlMode(DJIGroundStationTypeDef.DJINavigationFlightControlVerticalControlMode.Navigation_Flight_Control_Vertical_Control_Position);
                         DJIDrone.getDjiGroundStation().setAircraftJoystick(0, 0, 0, 0, new DJIGroundStationExecuteCallBack() {
                             @Override
                             public void onResult(DJIGroundStationTypeDef.GroundStationResult groundStationResult) {
@@ -328,6 +329,10 @@ public class GroundStation {
      * @param roll
      */
     public static void setAngles(final double pitch, final double yaw, final double roll) {
+       setAngles(pitch, yaw, roll, (int)DroneState.getAltitude());
+    }
+
+    public static void setAngles(final double pitch, final double yaw, final double roll, final int altitude) {
         if (DroneState.getMode() != DroneState.DIRECT_MODE) {
             // MessageHandler.d("Not in Direct Mode!");
             return;
@@ -335,7 +340,7 @@ public class GroundStation {
         withConnection(new Runnable() {
             @Override
             public void run() {
-                DJIDrone.getDjiGroundStation().setAircraftJoystick((int) yaw, (int) pitch, (int) roll, 0, new DJIGroundStationExecuteCallBack() {
+                DJIDrone.getDjiGroundStation().setAircraftJoystick((int) yaw, (int) pitch, (int) roll, altitude, new DJIGroundStationExecuteCallBack() {
                     @Override
                     public void onResult(DJIGroundStationTypeDef.GroundStationResult groundStationResult) {
                         //MessageHandler.d("Engage Joystick: " + groundStationResult.toString());

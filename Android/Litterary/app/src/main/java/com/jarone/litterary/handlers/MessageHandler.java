@@ -51,7 +51,7 @@ public class MessageHandler {
         updateMessageList(DebugItem.DebugLevel.WARN, message);
     }
 
-    public static void updateMessageList(final DebugItem.DebugLevel level, final String message) {
+    private static void updateMessageList(final DebugItem.DebugLevel level, final String message) {
         ContextManager.getMainActivityInstance().runOnUiThread(new Runnable() {
             @Override
             public void run() {

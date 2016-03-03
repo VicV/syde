@@ -37,6 +37,8 @@ public class AngularController {
     private boolean flip = false;
     boolean canFlip = true;
 
+    private boolean isRetrieving = false;
+
 
     private boolean generatorFlip = false;
 
@@ -127,16 +129,19 @@ public class AngularController {
     public void flyAtAngleForTime(final double angle, final double time, final boolean isPitch, final Runnable callback) {
         if (DroneState.getAltitude() < 0.2) {
             //Drone is at a height to pick up the litter, run the callback
+            isRetrieving = false;
             callback.run();
+            ImageProcessing.stopTrackingObject();
             return;
         }
         GroundStation.engageJoystick(new Runnable() {
             @Override
             public void run() {
+                int newAltitude = (int) DroneState.getAltitude() / 2;
                 if (isPitch) {
-                    GroundStation.setAngles(angle, 0, 0);
+                    GroundStation.setAngles(angle, 0, 0, newAltitude);
                 } else {
-                    GroundStation.setAngles(0, 0, angle);
+                    GroundStation.setAngles(0, 0, angle, newAltitude);
                 }
                 taskScheduler.schedule(new Runnable() {
                     @Override
@@ -145,10 +150,11 @@ public class AngularController {
                         GroundStation.taskDoneCallback = new Runnable() {
                             @Override
                             public void run() {
-                                performNextAction(ImageProcessing.distanceFromTarget(), callback);
+                                if (isRetrieving) {
+                                    performNextAction(ImageProcessing.distanceFromTarget(activeAngle), callback);
+                                }
                             }
                         };
-                        GroundStation.setAltitude((float)(DroneState.getAltitude() * 0.5));
                     }
                 }, (int)time, TimeUnit.MILLISECONDS);
             }
@@ -157,7 +163,11 @@ public class AngularController {
 
     public void pickupLitter(Runnable callback) {
         //TODO Implement this
-        double dist = ImageProcessing.distanceFromTarget();
+        if (!ImageProcessing.isTracking()) {
+            ImageProcessing.startTrackingObject();
+        }
+        isRetrieving = true;
+        double dist = ImageProcessing.distanceFromTarget(activeAngle);
         performNextAction(dist, callback);
         //determine tracking target
         //calulate error from target

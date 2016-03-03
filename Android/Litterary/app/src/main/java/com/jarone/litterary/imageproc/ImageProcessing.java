@@ -4,6 +4,7 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 
 import com.google.android.gms.maps.model.LatLng;
+import com.jarone.litterary.control.AngularController;
 import com.jarone.litterary.drone.DroneState;
 import com.jarone.litterary.handlers.MessageHandler;
 import com.jarone.litterary.helpers.ContextManager;
@@ -278,7 +279,7 @@ public class ImageProcessing {
      * Return the current distance of the drone from the target being tracked
      * @return
      */
-    public static double distanceFromTarget() {
+    public static double distanceFromTarget(AngularController.ActiveAngle angle) {
         return 10;
     }
 
@@ -333,6 +334,10 @@ public class ImageProcessing {
     public static void stopTrackingObject() {
         isTracking = false;
         trackingObject = null;
+    }
+
+    public static boolean isTracking() {
+        return isTracking;
     }
 
     public static double metresToPixels(double metres, double altitude){

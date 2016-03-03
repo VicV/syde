@@ -112,6 +112,7 @@ public class NavigationRoute {
 
             FileAccess.saveToFile("survey", System.currentTimeMillis() + "-survey", saveObj.toString());
         } catch (JSONException e) {
+            MessageHandler.e(e.getMessage());
 
         }
     }
@@ -131,7 +132,7 @@ public class NavigationRoute {
             }
 
         } catch (Exception e) {
-
+            MessageHandler.e(e.getMessage());
         }
     }
 
