@@ -166,6 +166,9 @@ public class MainActivity extends DJIBaseActivity {
                         AngularController ctrl = new AngularController();
                         ctrl.generateControlTable();
                         //ControlTable.testSaveLoad();
+                        //For Testing
+                        // TODO should be run once at startup
+                        new ImageProcessing.CalibrateTask().execute();
 //                        long start = System.currentTimeMillis();
 //                        int blobCount = 10;
 //                        for (int i = 0; i < blobCount; i++) {
