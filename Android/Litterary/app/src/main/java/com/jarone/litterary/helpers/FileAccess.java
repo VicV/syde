@@ -1,5 +1,7 @@
 package com.jarone.litterary.helpers;
 
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.media.ExifInterface;
 import android.os.Environment;
 
@@ -55,6 +57,13 @@ public class FileAccess {
         return null;
     }
 
+
+    public static Bitmap loadBitmapFromFile(String directory, String name) {
+        BitmapFactory.Options options = new BitmapFactory.Options();
+        options.inPreferredConfig = Bitmap.Config.ARGB_8888;
+        return BitmapFactory.decodeFile(formatFileName(directory, name).toString(), options);
+    }
+
     /**
      * Save the contents of the given string to file
      * @param directory
@@ -74,6 +83,27 @@ public class FileAccess {
             MessageHandler.d("Couldn't write to file");
         }
         return false;
+    }
+
+    public static boolean saveToFile(String directory, String name, Bitmap data) {
+        FileOutputStream out = null;
+        boolean success = false;
+        try {
+            out = new FileOutputStream(formatFileName(directory, name));
+            data.compress(Bitmap.CompressFormat.PNG, 100, out);
+        } catch (FileNotFoundException e) {
+            MessageHandler.e(e.getMessage());
+        } finally {
+            try {
+                if (out != null) {
+                    out.close();
+                    success = true;
+                }
+            } catch (IOException e) {
+                MessageHandler.e(e.getMessage());
+            }
+        }
+        return success;
     }
 
     /**

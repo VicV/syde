@@ -10,15 +10,15 @@ import com.jarone.litterary.control.AngularController;
 import com.jarone.litterary.drone.DroneState;
 import com.jarone.litterary.handlers.MessageHandler;
 import com.jarone.litterary.helpers.ContextManager;
+import com.jarone.litterary.helpers.FileAccess;
 
 import org.opencv.android.BaseLoaderCallback;
 import org.opencv.android.LoaderCallbackInterface;
 import org.opencv.android.OpenCVLoader;
 import org.opencv.android.Utils;
-
 import org.opencv.calib3d.Calib3d;
+import org.opencv.core.Core;
 import org.opencv.core.CvType;
-
 import org.opencv.core.Mat;
 import org.opencv.core.MatOfPoint;
 import org.opencv.core.MatOfPoint2f;
@@ -97,7 +97,7 @@ public class ImageProcessing {
         objectPoints = new ArrayList<>();
         intrinsic = new Mat(3, 3, CvType.CV_32FC1);
         distCoeffs = new Mat();
-        boardsNumber = 2;
+        boardsNumber = 9;
         isCalibrated = false;
         int numSquares = numCornersHor*numCornersVer;
         for (int j = 0; j < numSquares; j++)
@@ -375,6 +375,7 @@ public class ImageProcessing {
         }
         if (trackerObj != null) {
             trackingObject = tmp;
+            Core.circle(currentMat, trackingObject.getPosition(), 100, new Scalar(255, 0, 255), 4);
             return trackerObj;
         } else {
             MessageHandler.w("Lost track of object!");
@@ -422,10 +423,10 @@ public class ImageProcessing {
             //TODO take new checkerboard images that do not fail and change boardsNumber appropriately
             for (int j = 1; j < boardsNumber+1; j++)
             {
-                InputStream i = ContextManager.getActivity().getAssets().open("calibration" + j + ".jpg");
+                InputStream i = ContextManager.getActivity().getAssets().open("c" + j + ".jpg");
                 Bitmap decoded = BitmapFactory.decodeStream(i);
-                int nh = (int) ( decoded.getHeight() * (512.0 / decoded.getWidth()) );
-                Bitmap scaled = Bitmap.createScaledBitmap(decoded, 512, nh, true);
+                int nh = (int) ( decoded.getHeight() * (2000.0 / decoded.getWidth()) );
+                Bitmap scaled = Bitmap.createScaledBitmap(decoded, 2000, nh, true);
                 readFrame(scaled);
                 savedImage = currentMat;
                 findAndDrawPoints();
@@ -443,6 +444,7 @@ public class ImageProcessing {
     private static void findAndDrawPoints()
     {
         // init
+        MessageHandler.d("Finding points");
         Mat grayImage = new Mat();
         // I would perform this operation only before starting the calibration
         // process
@@ -454,8 +456,10 @@ public class ImageProcessing {
         // look for the inner chessboard corners
         boolean found = Calib3d.findChessboardCorners(grayImage, boardSize, imageCorners,
                 Calib3d.CALIB_CB_ADAPTIVE_THRESH + Calib3d.CALIB_CB_NORMALIZE_IMAGE + Calib3d.CALIB_CB_FAST_CHECK);
+        MessageHandler.d("Done finding");
         if (found)
         {
+            MessageHandler.d("Find successful");
             TermCriteria term = new TermCriteria(TermCriteria.EPS | TermCriteria.MAX_ITER, 30, 0.1);
             Imgproc.cornerSubPix(grayImage, imageCorners, new Size(11, 11), new Size(-1, -1), term);
             // save the current frame for further elaborations
@@ -480,7 +484,26 @@ public class ImageProcessing {
         Bitmap preview = Bitmap.createBitmap(currentMat.width(), currentMat.height(), Bitmap.Config.ARGB_8888);
         Utils.matToBitmap(currentMat, preview);
         CVPreview = preview;
+        saveCalibration();
         isCalibrated = true;
+    }
+
+    public static void saveCalibration() {
+        FileAccess.saveToFile("calibration", "dist.png", bitmapFromMat(distCoeffs));
+        FileAccess.saveToFile("calibration", "intrinsic.png", bitmapFromMat(intrinsic));
+    }
+
+    public static void loadCalibration() {
+        Bitmap dist = FileAccess.loadBitmapFromFile("calibration", "dist.png");
+        Bitmap intrins = FileAccess.loadBitmapFromFile("calibration", "intrinsic.png");
+        Utils.bitmapToMat(dist, distCoeffs);
+        Utils.bitmapToMat(intrins, intrinsic);
+    }
+
+    public static Bitmap bitmapFromMat(Mat mat) {
+        Bitmap bitmap = Bitmap.createBitmap(mat.width(), mat.height(), Bitmap.Config.ARGB_8888);
+        Utils.matToBitmap(mat, bitmap);
+        return bitmap;
     }
 
     public static class CalibrateTask extends AsyncTask<Void, Void, Boolean> {
@@ -496,5 +519,6 @@ public class ImageProcessing {
             return true;
         }
     }
+
 }
 

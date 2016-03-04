@@ -156,36 +156,30 @@
         android:layout_alignRight="@+id/linearLayout"
         android:layout_below="@+id/linearLayout">
 
-        <Button
-            android:id="@+id/button_pid"
+        <LinearLayout
             android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_alignParentEnd="false"
-            android:layout_alignParentLeft="false"
-            android:layout_alignParentStart="true"
-            android:layout_alignParentTop="true"
-            android:text="PID Demo" />
+            android:layout_height="wrap_content">
+            <Button
+                android:id="@+id/button_track"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_alignParentEnd="false"
+                android:layout_alignParentLeft="false"
+                android:layout_alignParentStart="true"
+                android:layout_alignParentTop="true"
+                android:text="START TRACKING" />
 
-        <TextView
-            android:id="@+id/pid_angle"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_alignLeft="@+id/button_pid"
-            android:layout_below="@+id/button_pid"
-            android:text="400"
-            android:textSize="14pt">
+            <Button
+                android:id="@+id/button_stop_track"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_alignLeft="@+id/button_pid"
+                android:layout_below="@+id/button_pid"
+                android:text="STOP TRACKING"
+                >
 
-        </TextView>
+            </Button>
+        </LinearLayout>
 
-        <TextView
-            android:id="@+id/pid_error"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_alignLeft="@+id/button_pid"
-            android:layout_below="@+id/pid_angle"
-            android:text="10"
-            android:textSize="14pt">
-
-        </TextView>
     </RelativeLayout>
 </RelativeLayout>

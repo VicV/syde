@@ -40,6 +40,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 
 import dji.sdk.api.DJIDrone;
@@ -66,10 +67,13 @@ public class MainActivity extends DJIBaseActivity {
     private RecyclerView debugMessageRecyclerView;
     private Context mainActivity;
     private ScheduledExecutorService taskScheduler;
+    private ScheduledFuture trackFuture;
 
     private LatLng[] currentPolygon = null;
     private ArrayList<LatLng> currentPhotoPoints = null;
     private ViewPager viewPager;
+
+    Grabber grabber;
 
     //Activity is starting.
     @Override
@@ -85,11 +89,12 @@ public class MainActivity extends DJIBaseActivity {
         ContextManager.setContext(this);
         DroneState.registerConnectedTimer();
         GroundStation.registerPhantom2Callback();
+
+        taskScheduler = Executors.newSingleThreadScheduledExecutor();
     }
 
 
     private void registerUpdateInterface() {
-        taskScheduler = Executors.newSingleThreadScheduledExecutor();
         taskScheduler.scheduleAtFixedRate(new Runnable() {
             @Override
             public void run() {
@@ -173,8 +178,10 @@ public class MainActivity extends DJIBaseActivity {
 //                        buttonPress = true;
 //                        count = 0;
                          //Camera.takePhoto();
-                        Grabber grabber = new Grabber();
-                        grabber.writeSocket(Grabber.Commands.OPEN);
+                        if (grabber == null) {
+                            grabber = new Grabber();
+                        }
+                        grabber.sendCommand(Grabber.Commands.OPEN);
 //                         Camera.takePhoto();
                         //ControlTable.testSaveLoad();
 //                        Camera.downloadLatestPhoto();
@@ -387,10 +394,10 @@ public class MainActivity extends DJIBaseActivity {
 
                 );
                 ((TextView) findViewById(R.id.droneConnected)).setText("" + DroneState.droneConnected);
-                if (GroundStation.executingController()) {
-                    ((TextView) findViewById(R.id.pid_angle)).setText("" + GroundStation.getAngularController().getLastAction());
-                    ((TextView) findViewById(R.id.pid_error)).setText("" + GroundStation.getAngularController().getLastError());
-                }
+//                if (GroundStation.executingController()) {
+//                    ((TextView) findViewById(R.id.pid_angle)).setText("" + GroundStation.getAngularController().getLastAction());
+//                    ((TextView) findViewById(R.id.pid_error)).setText("" + GroundStation.getAngularController().getLastError());
+//                }
 
                 ImageProcessing.convertLatestFrame();
                 ((ImageView) findViewById(R.id.CVPreview)).setImageBitmap(ImageProcessing.getCVPreview());
@@ -495,6 +502,32 @@ public class MainActivity extends DJIBaseActivity {
         };
     }
 
+    public View.OnClickListener getTrackListener() {
+        return new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                switch(v.getId()) {
+                    case(R.id.button_track):
+                        ImageProcessing.startTrackingObject();
+                        trackFuture = taskScheduler.scheduleAtFixedRate(new Runnable() {
+                            @Override
+                            public void run() {
+                                ImageProcessing.trackObject();
+                            }
+                        }, 0, 300, TimeUnit.MILLISECONDS);
+                        break;
+                    case(R.id.button_stop_track):
+                        ImageProcessing.stopTrackingObject();
+                        if (trackFuture != null) {
+                            trackFuture.cancel(true);
+                            trackFuture = null;
+                        }
+                        break;
+                }
+            }
+        };
+    }
+
 
     private void setOnClickListeners() {
         findViewById(R.id.button_go_home).setOnClickListener(getHomeButtonListener());
@@ -503,11 +536,13 @@ public class MainActivity extends DJIBaseActivity {
         findViewById(R.id.button_set_region).setOnClickListener(setRegionClickListener());
         findViewById(R.id.button_start_survey).setOnClickListener(getStartSurveyListener());
         findViewById(R.id.button_switch_mode).setOnClickListener(getSwitchModeListener());
-        findViewById(R.id.button_pid).setOnClickListener(getPIDButtonListener());
+//        findViewById(R.id.button_pid).setOnClickListener(getPIDButtonListener());
         findViewById(R.id.button_special1).setOnClickListener(getSpecialButtonListener());
         findViewById(R.id.button_special2).setOnClickListener(getSpecialButtonListener());
         findViewById(R.id.button_special3).setOnClickListener(getSpecialButtonListener());
         findViewById(R.id.DjiSurfaceView_02).setOnClickListener(getCameraViewListener());
         findViewById(R.id.CVPreview).setOnClickListener(getCameraViewListener());
+        findViewById(R.id.button_track).setOnClickListener(getTrackListener());
+        findViewById(R.id.button_stop_track).setOnClickListener(getTrackListener());
     }
 }
