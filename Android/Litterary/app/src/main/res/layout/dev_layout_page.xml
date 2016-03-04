@@ -1,0 +1,146 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical">
+
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center"
+        android:layout_marginEnd="5dp"
+        android:layout_marginStart="5dp"
+        android:gravity="center_horizontal"
+        android:orientation="vertical">
+
+
+        <TextView
+            android:id="@+id/image_processing_title"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="2dp"
+            android:layout_marginTop="5dp"
+            android:fontFeatureSettings="smcp"
+            android:text="Image Processing"
+            android:textColor="#999" />
+
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="1dp"
+            android:layout_marginLeft="20dp"
+            android:layout_marginRight="20dp"
+            android:background="@android:color/darker_gray" />
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginEnd="5dp"
+            android:layout_marginStart="5dp"
+            android:gravity="center_horizontal"
+            android:orientation="horizontal">
+
+
+            <Button
+                android:id="@+id/button_imgproc_1"
+                android:layout_width="wrap_content"
+                android:layout_height="40dp"
+                android:fontFeatureSettings="smcp"
+                android:text="Img Proc 1"
+                android:textColor="#999" />
+
+            <Button
+                android:id="@+id/button_imgproc_2"
+                android:layout_width="wrap_content"
+                android:layout_height="40dp"
+                android:fontFeatureSettings="smcp"
+                android:text="Img Proc 2"
+
+                android:textColor="#999" />
+
+            <Button
+                android:id="@+id/button_imgproc_3"
+                android:layout_width="wrap_content"
+                android:layout_height="40dp"
+                android:fontFeatureSettings="smcp"
+                android:text="Img Proc 3"
+                android:textColor="#999" />
+        </LinearLayout>
+
+
+        <TextView
+            android:id="@+id/misc_title"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+
+            android:layout_marginBottom="5dp"
+            android:layout_marginTop="10dp"
+            android:fontFeatureSettings="smcp"
+            android:text="Miscellaneous"
+            android:textColor="#999" />
+
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="1dp"
+            android:layout_marginLeft="20dp"
+            android:layout_marginRight="20dp"
+            android:background="@android:color/darker_gray" />
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginEnd="5dp"
+            android:layout_marginStart="5dp"
+            android:gravity="center_horizontal"
+            android:orientation="horizontal">
+
+
+            <Button
+                android:id="@+id/button_special_1"
+                android:layout_width="wrap_content"
+                android:layout_height="40dp"
+                android:fontFeatureSettings="smcp"
+                android:text="Special 1"
+                android:textColor="#999" />
+
+            <Button
+                android:id="@+id/button_special_2"
+                android:layout_width="wrap_content"
+                android:layout_height="40dp"
+                android:fontFeatureSettings="smcp"
+                android:text="Special 2"
+
+                android:textColor="#999" />
+
+            <Button
+                android:id="@+id/button_special_3"
+                android:layout_width="wrap_content"
+                android:layout_height="40dp"
+                android:fontFeatureSettings="smcp"
+                android:text="Special 3"
+                android:textColor="#999" />
+        </LinearLayout>
+    </LinearLayout>
+
+    <LinearLayout
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="end"
+        android:layout_marginEnd="5dp"
+        android:gravity="end"
+        android:orientation="vertical">
+
+    </LinearLayout>
+
+
+    <ImageView
+        android:id="@+id/CVPreview"
+        android:layout_width="fill_parent"
+        android:layout_height="212dp"
+        android:layout_marginTop="15dp"
+        android:alpha="128"
+        android:elevation="5dp"
+        android:visibility="visible" />
+
+
+</LinearLayout>

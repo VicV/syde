@@ -6,6 +6,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 
+import com.jarone.litterary.LitterApplication;
 import com.jarone.litterary.R;
 
 /**
@@ -46,7 +47,11 @@ public class ViewPagerAdapter extends PagerAdapter {
 
     @Override
     public int getCount() {
-        return ViewPage.values().length;
+        if (LitterApplication.devMode) {
+            return ViewPage.values().length;
+        } else {
+            return ViewPage.values().length - 1;
+        }
     }
 
     @Override
@@ -65,7 +70,8 @@ public class ViewPagerAdapter extends PagerAdapter {
 
         DEBUG("messages", R.layout.debug_queue_layout_page),
         MAIN("main", R.layout.main_layout_page),
-        STATUS("status", R.layout.info_layout_page);
+        STATUS("status", R.layout.info_layout_page),
+        DEV("DEV", R.layout.dev_layout_page);
 
         private String mTitle;
         private int mLayoutResId;

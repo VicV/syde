@@ -20,6 +20,7 @@ import dji.sdk.interfaces.DJIGeneralListener;
  */
 public class LitterApplication extends Application {
 
+    public static boolean devMode = true;
 
     private static LitterApplication instance;
 
@@ -31,7 +32,9 @@ public class LitterApplication extends Application {
         return instance;
     }
 
-    public static LitterApplication getInstance() { return instance; }
+    public static LitterApplication getInstance() {
+        return instance;
+    }
 
     private ScheduledExecutorService taskScheduler;
 
