@@ -214,10 +214,10 @@ public class MainActivity extends DJIBaseActivity {
             public void onResult(byte[] videoBuffer, int size) {
                 mDjiGLSurfaceView.setDataToDecoder(videoBuffer, size);
 
-                if (!processing) {
-                    processing = true;
-                    new ImageAsyncTask().execute();
-                }
+//                if (!processing) {
+//                    processing = true;
+//                    new ImageAsyncTask().execute();
+//                }
             }
         };
         DJIDrone.getDjiCamera().setReceivedVideoDataCallBack(mReceivedVideoDataCallBack);
