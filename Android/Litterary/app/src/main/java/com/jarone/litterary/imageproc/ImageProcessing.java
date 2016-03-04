@@ -396,76 +396,76 @@ public class ImageProcessing {
         return degrees/CAMERA_FOVX * imageX;
     }
 
-        /**
-         * Correct distorted input stream using the chessboard pattern
-         */
-        public static void correctDistortion()
+    /**
+     * Correct distorted input stream using the chessboard pattern
+     */
+    public static void correctDistortion()
+    {
+        if (isCalibrated)
         {
-            if (isCalibrated)
-            {
-                processingMat = currentMat;
-                Mat correctedMat = new Mat();
-                Imgproc.undistort(processingMat, correctedMat, intrinsic, distCoeffs);
-                currentMat = correctedMat;
-                //For testing
-                /*
-                Bitmap preview = Bitmap.createBitmap(processingMat.width(), processingMat.height(), Bitmap.Config.ARGB_8888);
-                Utils.matToBitmap(correctedMat, preview);
-                CVPreview = preview;*/
-            }
+            processingMat = currentMat;
+            Mat correctedMat = new Mat();
+            Imgproc.undistort(processingMat, correctedMat, intrinsic, distCoeffs);
+            currentMat = correctedMat;
+            //For testing
+            /*
+            Bitmap preview = Bitmap.createBitmap(processingMat.width(), processingMat.height(), Bitmap.Config.ARGB_8888);
+            Utils.matToBitmap(correctedMat, preview);
+            CVPreview = preview;*/
         }
+    }
 
-        private static void loadCalibrationImages()
-        {
-            init();
-            try {
-                //TODO take new checkerboard images that do not fail and change boardsNumber appropriately
-                for (int j = 1; j < boardsNumber+1; j++)
-                {
-                    InputStream i = ContextManager.getActivity().getAssets().open("calibration" + j + ".jpg");
-                    Bitmap decoded = BitmapFactory.decodeStream(i);
-                    int nh = (int) ( decoded.getHeight() * (512.0 / decoded.getWidth()) );
-                    Bitmap scaled = Bitmap.createScaledBitmap(decoded, 512, nh, true);
-                    readFrame(scaled);
-                    savedImage = currentMat;
-                    findAndDrawPoints();
-                }
-            } catch (IOException e) {
-                MessageHandler.d("Error Loading Calibration Images: " + e);
-            }
-            // reach the correct number of images needed for the calibration
-            calibrateCamera();
-        }
-        /**
-         * Find and draws the points needed for the calibration on the chessboard
-         *
-         */
-        private static void findAndDrawPoints()
-        {
-            // init
-            Mat grayImage = new Mat();
-            // I would perform this operation only before starting the calibration
-            // process
-            // convert the frame in gray scale
-            Imgproc.cvtColor(savedImage, grayImage, Imgproc.COLOR_BGR2GRAY);
-            // the size of the chessboard
-            Size boardSize = new Size(numCornersHor, numCornersVer);
-
-            // look for the inner chessboard corners
-            boolean found = Calib3d.findChessboardCorners(grayImage, boardSize, imageCorners,
-                    Calib3d.CALIB_CB_ADAPTIVE_THRESH + Calib3d.CALIB_CB_NORMALIZE_IMAGE + Calib3d.CALIB_CB_FAST_CHECK);
-            if (found)
+    private static void loadCalibrationImages()
+    {
+        init();
+        try {
+            //TODO take new checkerboard images that do not fail and change boardsNumber appropriately
+            for (int j = 1; j < boardsNumber+1; j++)
             {
-                TermCriteria term = new TermCriteria(TermCriteria.EPS | TermCriteria.MAX_ITER, 30, 0.1);
-                Imgproc.cornerSubPix(grayImage, imageCorners, new Size(11, 11), new Size(-1, -1), term);
-                // save the current frame for further elaborations
-                grayImage.copyTo(savedImage);
-                // show the chessboard inner corners on screen
-                Calib3d.drawChessboardCorners(savedImage, boardSize, imageCorners, found);
-                imagePoints.add(imageCorners);
-                objectPoints.add(obj);
+                InputStream i = ContextManager.getActivity().getAssets().open("calibration" + j + ".jpg");
+                Bitmap decoded = BitmapFactory.decodeStream(i);
+                int nh = (int) ( decoded.getHeight() * (512.0 / decoded.getWidth()) );
+                Bitmap scaled = Bitmap.createScaledBitmap(decoded, 512, nh, true);
+                readFrame(scaled);
+                savedImage = currentMat;
+                findAndDrawPoints();
             }
+        } catch (IOException e) {
+            MessageHandler.d("Error Loading Calibration Images: " + e);
         }
+        // reach the correct number of images needed for the calibration
+        calibrateCamera();
+    }
+    /**
+     * Find and draws the points needed for the calibration on the chessboard
+     *
+     */
+    private static void findAndDrawPoints()
+    {
+        // init
+        Mat grayImage = new Mat();
+        // I would perform this operation only before starting the calibration
+        // process
+        // convert the frame in gray scale
+        Imgproc.cvtColor(savedImage, grayImage, Imgproc.COLOR_BGR2GRAY);
+        // the size of the chessboard
+        Size boardSize = new Size(numCornersHor, numCornersVer);
+
+        // look for the inner chessboard corners
+        boolean found = Calib3d.findChessboardCorners(grayImage, boardSize, imageCorners,
+                Calib3d.CALIB_CB_ADAPTIVE_THRESH + Calib3d.CALIB_CB_NORMALIZE_IMAGE + Calib3d.CALIB_CB_FAST_CHECK);
+        if (found)
+        {
+            TermCriteria term = new TermCriteria(TermCriteria.EPS | TermCriteria.MAX_ITER, 30, 0.1);
+            Imgproc.cornerSubPix(grayImage, imageCorners, new Size(11, 11), new Size(-1, -1), term);
+            // save the current frame for further elaborations
+            grayImage.copyTo(savedImage);
+            // show the chessboard inner corners on screen
+            Calib3d.drawChessboardCorners(savedImage, boardSize, imageCorners, found);
+            imagePoints.add(imageCorners);
+            objectPoints.add(obj);
+        }
+    }
 
     private static void calibrateCamera()
     {

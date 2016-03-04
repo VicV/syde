@@ -6,7 +6,6 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
-import android.opengl.GLException;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Parcelable;
@@ -15,7 +14,6 @@ import android.support.v4.app.ActivityCompat;
 import android.support.v4.view.ViewPager;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
-import android.util.Log;
 import android.view.View;
 import android.widget.EditText;
 import android.widget.ImageView;
@@ -38,19 +36,11 @@ import com.jarone.litterary.helpers.ImageHelper;
 import com.jarone.litterary.helpers.LocationHelper;
 import com.jarone.litterary.imageproc.ImageProcessing;
 
-import java.nio.ByteBuffer;
-import java.nio.ByteOrder;
-import java.nio.IntBuffer;
-import java.nio.ShortBuffer;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
-
-import javax.microedition.khronos.egl.EGL10;
-import javax.microedition.khronos.egl.EGLContext;
-import javax.microedition.khronos.opengles.GL10;
 
 import dji.sdk.api.DJIDrone;
 import dji.sdk.interfaces.DJIReceivedVideoDataCallBack;
@@ -184,7 +174,7 @@ public class MainActivity extends DJIBaseActivity {
 //                        count = 0;
                          //Camera.takePhoto();
                         Grabber grabber = new Grabber();
-                        grabber.sendCommand(Grabber.Commands.OPEN);
+                        grabber.writeSocket(Grabber.Commands.OPEN);
 //                         Camera.takePhoto();
                         //ControlTable.testSaveLoad();
 //                        Camera.downloadLatestPhoto();
