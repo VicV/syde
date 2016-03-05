@@ -17,7 +17,7 @@ import javax.microedition.khronos.opengles.GL10;
 public class ImageHelper {
 
 
-    public static interface BitmapCreatedCallback {
+    public interface BitmapCreatedCallback {
         void onBitmapCreated(Bitmap bitmap);
     }
 

@@ -10,6 +10,8 @@ import android.util.AttributeSet;
 import android.util.Log;
 import android.view.SurfaceHolder;
 
+import com.jarone.litterary.helpers.ContextManager;
+
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
@@ -41,6 +43,7 @@ public class AndroidCameraSurfaceView extends GLSurfaceView {
         setEGLContextClientVersion(2);
         setRenderer(mRenderer);
         setRenderMode(GLSurfaceView.RENDERMODE_WHEN_DIRTY);
+
     }
 
     public void surfaceDestroyed(SurfaceHolder holder) {
@@ -173,6 +176,9 @@ public class AndroidCameraSurfaceView extends GLSurfaceView {
             param.set("orientation", "landscape");
             mCamera.setParameters(param);
             mCamera.startPreview();
+
+            ContextManager.getMainActivityInstance().processFrame();
+
         }
 
         private void initTex() {
