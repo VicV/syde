@@ -66,6 +66,7 @@ public class MainActivity extends DJIBaseActivity {
     public static ArrayList<DebugItem> messageList;
 
     private DjiGLSurfaceView mDjiGLSurfaceView;
+    private AndroidCameraSurfaceView mAndroidCameraSurfaceView;
 
     private ImageView CPreview;
     private RecyclerView debugMessageRecyclerView;
@@ -190,11 +191,12 @@ public class MainActivity extends DJIBaseActivity {
                         }
 
                     case R.id.button_special_camera:
-                        mDjiGLSurfaceView.setVisibility(View.GONE);
-                        AndroidCameraSurfaceView androidCamera = (AndroidCameraSurfaceView) findViewById(R.id.android_camera_surfaceview);
-                        androidCamera.setVisibility(View.VISIBLE);
-                        androidCamera.setupSurfaceView();
-                        new ImageAsyncTask().execute();
+                        if (mDjiGLSurfaceView.getVisibility() == View.GONE) {
+                            mDjiGLSurfaceView.setVisibility(View.GONE);
+                            AndroidCameraSurfaceView androidCamera = (AndroidCameraSurfaceView) findViewById(R.id.android_camera_surfaceview);
+                            androidCamera.setVisibility(View.VISIBLE);
+                            androidCamera.setupSurfaceView();
+                        }
                         break;
                 }
             }
@@ -223,6 +225,7 @@ public class MainActivity extends DJIBaseActivity {
     private boolean processing = false;
 
     private void registerCamera() {
+        mAndroidCameraSurfaceView = (AndroidCameraSurfaceView) findViewById(R.id.android_camera_surfaceview);
         mDjiGLSurfaceView = (DjiGLSurfaceView) findViewById(R.id.DJI_camera_surfaceview);
         mDjiGLSurfaceView.start();
 
