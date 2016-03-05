@@ -6,6 +6,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Parcelable;
@@ -24,7 +25,6 @@ import com.google.android.gms.maps.model.LatLng;
 import com.jarone.litterary.R;
 import com.jarone.litterary.adapters.DebugMessageRecyclerAdapter;
 import com.jarone.litterary.adapters.ViewPagerAdapter;
-import com.jarone.litterary.control.AngularController;
 import com.jarone.litterary.datatypes.DebugItem;
 import com.jarone.litterary.drone.Camera;
 import com.jarone.litterary.drone.DroneState;
@@ -36,6 +36,8 @@ import com.jarone.litterary.helpers.ImageHelper;
 import com.jarone.litterary.helpers.LocationHelper;
 import com.jarone.litterary.imageproc.ImageProcessing;
 
+import java.io.IOException;
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.concurrent.Executors;
@@ -158,8 +160,8 @@ public class MainActivity extends DJIBaseActivity {
                         Camera.takePhoto();
                         break;
                     case R.id.button_special2:
-                        AngularController ctrl = new AngularController();
-                        ctrl.generateControlTable();
+                        //AngularController ctrl = new AngularController();
+                        //ctrl.generateControlTable();
                         //ControlTable.testSaveLoad();
                         //For Testing
                         // TODO should be run once at startup
@@ -178,10 +180,21 @@ public class MainActivity extends DJIBaseActivity {
 //                        buttonPress = true;
 //                        count = 0;
                          //Camera.takePhoto();
-                        if (grabber == null) {
-                            grabber = new Grabber();
+//                        if (grabber == null) {
+//                            grabber = new Grabber();
+//                        }
+//                        grabber.sendCommand(Grabber.Commands.OPEN);
+                        ImageProcessing.loadCalibration();
+                        try {
+                            InputStream i = ContextManager.getActivity().getAssets().open("c2.jpg");
+                            Bitmap decoded = BitmapFactory.decodeStream(i);
+                            int nh = (int) (decoded.getHeight() * (2000.0 / decoded.getWidth()));
+                            Bitmap scaled = Bitmap.createScaledBitmap(decoded, 2000, nh, true);
+                            ImageProcessing.readFrame(scaled);
+                            ImageProcessing.correctDistortion();
+                        }catch (IOException e) {
+
                         }
-                        grabber.sendCommand(Grabber.Commands.OPEN);
 //                         Camera.takePhoto();
                         //ControlTable.testSaveLoad();
 //                        Camera.downloadLatestPhoto();

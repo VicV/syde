@@ -57,6 +57,23 @@ public class FileAccess {
         return null;
     }
 
+//    public static byte[] loadBytesFromFile(String directory, String name) {
+//        try {
+//            FileInputStream in = new FileInputStream(formatFileName(directory, name));
+//            in.read()
+//            byte readByte = in.read();
+//            while (readByte != -1) {
+//                sb.append((char)readByte);
+//                readByte = in.read();
+//            }
+//            return sb.toString();
+//        } catch (FileNotFoundException e) {
+//            MessageHandler.d("Couldn't find file");
+//        } catch (IOException e) {
+//            MessageHandler.d("Couldn't read from file");
+//        }
+//        return null;
+//    }
 
     public static Bitmap loadBitmapFromFile(String directory, String name) {
         BitmapFactory.Options options = new BitmapFactory.Options();
@@ -72,9 +89,13 @@ public class FileAccess {
      * @return
      */
     public static boolean saveToFile(String directory, String name, String data) {
+        return saveToFile(directory, name, data.getBytes());
+    }
+
+    public static boolean saveToFile(String directory, String name, byte[] data) {
         try {
             FileOutputStream out = new FileOutputStream(formatFileName(directory, name));
-            out.write(data.getBytes());
+            out.write(data);
             out.close();
             return true;
         } catch (FileNotFoundException e) {
