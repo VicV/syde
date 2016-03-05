@@ -5,7 +5,6 @@ import android.content.Context;
 
 import com.jarone.litterary.drone.DroneState;
 import com.jarone.litterary.handlers.MessageHandler;
-import com.jarone.litterary.imageproc.ImageProcessing;
 
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
@@ -45,7 +44,6 @@ public class LitterApplication extends Application {
     private static final String TAG = "Litterary";
 
     public static DroneState droneState = new DroneState();
-
 
     @Override
     public void onCreate() {

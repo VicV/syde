@@ -15,6 +15,7 @@
         android:orientation="vertical">
 
 
+
         <TextView
             android:id="@+id/image_processing_title"
             android:layout_width="wrap_content"
@@ -119,6 +120,15 @@
                 android:fontFeatureSettings="smcp"
                 android:text="Special 3"
                 android:textColor="#999" />
+
+            <Button
+                android:id="@+id/button_special_camera"
+                android:layout_width="wrap_content"
+                android:layout_height="40dp"
+                android:fontFeatureSettings="smcp"
+                android:text="Cam"
+                android:textColor="#999" />
+
         </LinearLayout>
     </LinearLayout>
 
@@ -131,6 +141,7 @@
         android:orientation="vertical">
 
     </LinearLayout>
+
 
 
     <ImageView

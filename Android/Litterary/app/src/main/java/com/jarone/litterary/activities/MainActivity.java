@@ -36,6 +36,7 @@ import com.jarone.litterary.helpers.ContextManager;
 import com.jarone.litterary.helpers.ImageHelper;
 import com.jarone.litterary.helpers.LocationHelper;
 import com.jarone.litterary.imageproc.ImageProcessing;
+import com.jarone.litterary.views.AndroidCameraSurfaceView;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -177,6 +178,12 @@ public class MainActivity extends DJIBaseActivity {
                         break;
                     case R.id.button_special_3:
                         break;
+                    case R.id.button_special_camera:
+                        mDjiGLSurfaceView.setVisibility(View.GONE);
+                        AndroidCameraSurfaceView androidCamera = (AndroidCameraSurfaceView) findViewById(R.id.android_camera_surfaceview);
+                        androidCamera.setVisibility(View.VISIBLE);
+                        androidCamera.setupSurfaceView();
+                        break;
                 }
             }
         };
@@ -204,7 +211,7 @@ public class MainActivity extends DJIBaseActivity {
     private boolean processing = false;
 
     private void registerCamera() {
-        mDjiGLSurfaceView = (DjiGLSurfaceView) findViewById(R.id.DjiSurfaceView_02);
+        mDjiGLSurfaceView = (DjiGLSurfaceView) findViewById(R.id.DJI_camera_surfaceview);
         mDjiGLSurfaceView.start();
 
         DJIReceivedVideoDataCallBack mReceivedVideoDataCallBack = new DJIReceivedVideoDataCallBack() {
@@ -534,7 +541,7 @@ public class MainActivity extends DJIBaseActivity {
         findViewById(R.id.button_set_region).setOnClickListener(setRegionClickListener());
         findViewById(R.id.button_start_survey).setOnClickListener(getStartSurveyListener());
         findViewById(R.id.button_switch_mode).setOnClickListener(getSwitchModeListener());
-        findViewById(R.id.DjiSurfaceView_02).setOnClickListener(getCameraViewListener());
+        findViewById(R.id.DJI_camera_surfaceview).setOnClickListener(getCameraViewListener());
 
         //Dev stuff
         findViewById(R.id.button_track).setOnClickListener(getTrackListener());
@@ -543,6 +550,7 @@ public class MainActivity extends DJIBaseActivity {
         //Dev toggle
         if (LitterApplication.devMode) {
             findViewById(R.id.CVPreview).setOnClickListener(getCameraViewListener());
+            findViewById(R.id.button_special_camera).setOnClickListener(getDevButtonListener());
             findViewById(R.id.button_special_1).setOnClickListener(getDevButtonListener());
             findViewById(R.id.button_special_2).setOnClickListener(getDevButtonListener());
             findViewById(R.id.button_special_3).setOnClickListener(getDevButtonListener());
