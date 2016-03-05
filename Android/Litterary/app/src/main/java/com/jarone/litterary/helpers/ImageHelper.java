@@ -22,15 +22,15 @@ public class ImageHelper {
     }
 
     // Create a bitmap from the current surface frame.
-    public static void createBitmapFromFrame(final BitmapCreatedCallback bitmapCreatedCallback, final GLSurfaceView mDjiGLSurfaceView) {
+    public static void createBitmapFromFrame(final BitmapCreatedCallback bitmapCreatedCallback, final GLSurfaceView surface) {
 
-        mDjiGLSurfaceView.queueEvent(new Runnable() {
+        surface.queueEvent(new Runnable() {
             @Override
             public void run() {
                 EGL10 egl = (EGL10) EGLContext.getEGL();
                 //Get GL10 object from EGL context.
                 GL10 gl = (GL10) egl.eglGetCurrentContext().getGL();
-                Bitmap frame = ImageHelper.getBitmapFromGLSurface(0, 0, mDjiGLSurfaceView.getWidth(), mDjiGLSurfaceView.getHeight(), gl);
+                Bitmap frame = ImageHelper.getBitmapFromGLSurface(0, 0, surface.getWidth(), surface.getHeight(), gl);
                 bitmapCreatedCallback.onBitmapCreated(frame);
             }
         });
