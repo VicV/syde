@@ -22,6 +22,7 @@ import android.widget.TextView;
 import android.widget.ToggleButton;
 
 import com.google.android.gms.maps.model.LatLng;
+import com.jarone.litterary.LitterApplication;
 import com.jarone.litterary.R;
 import com.jarone.litterary.adapters.DebugMessageRecyclerAdapter;
 import com.jarone.litterary.adapters.ViewPagerAdapter;
@@ -35,6 +36,7 @@ import com.jarone.litterary.helpers.ContextManager;
 import com.jarone.litterary.helpers.ImageHelper;
 import com.jarone.litterary.helpers.LocationHelper;
 import com.jarone.litterary.imageproc.ImageProcessing;
+import com.jarone.litterary.views.AndroidCameraSurfaceView;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -151,39 +153,29 @@ public class MainActivity extends DJIBaseActivity {
         };
     }
 
-    public View.OnClickListener getSpecialButtonListener() {
+    public View.OnClickListener getDevButtonListener() {
         return new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 switch (view.getId()) {
-                    case R.id.button_special1:
+                    case R.id.button_imgproc_1:
                         Camera.takePhoto();
                         break;
-                    case R.id.button_special2:
-                        //AngularController ctrl = new AngularController();
-                        //ctrl.generateControlTable();
-                        //ControlTable.testSaveLoad();
-                        //For Testing
+                    case R.id.button_imgproc_2:
                         // TODO should be run once at startup
                         new ImageProcessing.CalibrateTask().execute();
-//                        long start = System.currentTimeMillis();
-//                        int blobCount = 10;
-//                        for (int i = 0; i < blobCount; i++) {
-//                            ImageProcessing.setSourceImage("charger.jpg");
-//                            ImageProcessing.detectBlobs();
-//                        }
-//                        long end = System.currentTimeMillis();
-//                        MessageHandler.d("Average: " + ((end - start) / blobCount));
-
                         break;
-                    case R.id.button_special3:
-//                        buttonPress = true;
-//                        count = 0;
-                         //Camera.takePhoto();
-//                        if (grabber == null) {
-//                            grabber = new Grabber();
-//                        }
-//                        grabber.sendCommand(Grabber.Commands.OPEN);
+                    case R.id.button_imgproc_3:
+                        if (grabber == null) {
+                            grabber = new Grabber();
+                        }
+                        grabber.sendCommand(Grabber.Commands.OPEN);
+                        break;
+                    case R.id.button_special_1:
+                        break;
+                    case R.id.button_special_2:
+                        break;
+                    case R.id.button_special_3:
                         ImageProcessing.loadCalibration();
                         try {
                             InputStream i = ContextManager.getActivity().getAssets().open("c2.jpg");
@@ -195,9 +187,12 @@ public class MainActivity extends DJIBaseActivity {
                         }catch (IOException e) {
 
                         }
-//                         Camera.takePhoto();
-                        //ControlTable.testSaveLoad();
-//                        Camera.downloadLatestPhoto();
+
+                    case R.id.button_special_camera:
+                        mDjiGLSurfaceView.setVisibility(View.GONE);
+                        AndroidCameraSurfaceView androidCamera = (AndroidCameraSurfaceView) findViewById(R.id.android_camera_surfaceview);
+                        androidCamera.setVisibility(View.VISIBLE);
+                        androidCamera.setupSurfaceView();
                         break;
                 }
             }
@@ -226,7 +221,7 @@ public class MainActivity extends DJIBaseActivity {
     private boolean processing = false;
 
     private void registerCamera() {
-        mDjiGLSurfaceView = (DjiGLSurfaceView) findViewById(R.id.DjiSurfaceView_02);
+        mDjiGLSurfaceView = (DjiGLSurfaceView) findViewById(R.id.DJI_camera_surfaceview);
         mDjiGLSurfaceView.start();
 
         DJIReceivedVideoDataCallBack mReceivedVideoDataCallBack = new DJIReceivedVideoDataCallBack() {
@@ -250,14 +245,16 @@ public class MainActivity extends DJIBaseActivity {
                 @Override
                 public void onBitmapCreated(final Bitmap bitmap) {
                     processing = false;
-                    CPreview.postDelayed(new Runnable() {
-                        @Override
-                        public void run() {
-                            if (bitmap != null) {
-                                CPreview.setImageBitmap(ImageProcessing.processImage(bitmap));
+                    if (CPreview != null) {
+                        CPreview.postDelayed(new Runnable() {
+                            @Override
+                            public void run() {
+                                if (bitmap != null) {
+                                    CPreview.setImageBitmap(ImageProcessing.processImage(bitmap));
+                                }
                             }
-                        }
-                    }, 200);
+                        }, 200);
+                    }
                     // MessageHandler.d("Bitmap: " + count);
                 }
 
@@ -413,7 +410,9 @@ public class MainActivity extends DJIBaseActivity {
 //                }
 
                 ImageProcessing.convertLatestFrame();
-                ((ImageView) findViewById(R.id.CVPreview)).setImageBitmap(ImageProcessing.getCVPreview());
+                if (LitterApplication.devMode) {
+                    ((ImageView) findViewById(R.id.CVPreview)).setImageBitmap(ImageProcessing.getCVPreview());
+                }
             }
         });
     }
@@ -443,7 +442,9 @@ public class MainActivity extends DJIBaseActivity {
                 //Be initialized before interacting with the views.
                 setOnClickListeners();
                 registerUpdateInterface();
-                CPreview = ((ImageView) findViewById(R.id.CVPreview));
+                if (LitterApplication.devMode) {
+                    CPreview = ((ImageView) findViewById(R.id.CVPreview));
+                }
 
                 //Set up our debug message lest
                 debugMessageRecyclerView = (RecyclerView) findViewById(R.id.message_list_view);
@@ -519,8 +520,8 @@ public class MainActivity extends DJIBaseActivity {
         return new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                switch(v.getId()) {
-                    case(R.id.button_track):
+                switch (v.getId()) {
+                    case (R.id.button_track):
                         ImageProcessing.startTrackingObject();
                         trackFuture = taskScheduler.scheduleAtFixedRate(new Runnable() {
                             @Override
@@ -529,7 +530,7 @@ public class MainActivity extends DJIBaseActivity {
                             }
                         }, 0, 300, TimeUnit.MILLISECONDS);
                         break;
-                    case(R.id.button_stop_track):
+                    case (R.id.button_stop_track):
                         ImageProcessing.stopTrackingObject();
                         if (trackFuture != null) {
                             trackFuture.cancel(true);
@@ -543,19 +544,29 @@ public class MainActivity extends DJIBaseActivity {
 
 
     private void setOnClickListeners() {
+        //Main page
         findViewById(R.id.button_go_home).setOnClickListener(getHomeButtonListener());
         findViewById(R.id.button_set_home).setOnClickListener(getHomeButtonListener());
         findViewById(R.id.button_set_altitude).setOnClickListener(setAltitudeListener());
         findViewById(R.id.button_set_region).setOnClickListener(setRegionClickListener());
         findViewById(R.id.button_start_survey).setOnClickListener(getStartSurveyListener());
         findViewById(R.id.button_switch_mode).setOnClickListener(getSwitchModeListener());
-//        findViewById(R.id.button_pid).setOnClickListener(getPIDButtonListener());
-        findViewById(R.id.button_special1).setOnClickListener(getSpecialButtonListener());
-        findViewById(R.id.button_special2).setOnClickListener(getSpecialButtonListener());
-        findViewById(R.id.button_special3).setOnClickListener(getSpecialButtonListener());
-        findViewById(R.id.DjiSurfaceView_02).setOnClickListener(getCameraViewListener());
-        findViewById(R.id.CVPreview).setOnClickListener(getCameraViewListener());
+        findViewById(R.id.DJI_camera_surfaceview).setOnClickListener(getCameraViewListener());
+
+        //Dev stuff
         findViewById(R.id.button_track).setOnClickListener(getTrackListener());
         findViewById(R.id.button_stop_track).setOnClickListener(getTrackListener());
+
+        //Dev toggle
+        if (LitterApplication.devMode) {
+            findViewById(R.id.CVPreview).setOnClickListener(getCameraViewListener());
+            findViewById(R.id.button_special_camera).setOnClickListener(getDevButtonListener());
+            findViewById(R.id.button_special_1).setOnClickListener(getDevButtonListener());
+            findViewById(R.id.button_special_2).setOnClickListener(getDevButtonListener());
+            findViewById(R.id.button_special_3).setOnClickListener(getDevButtonListener());
+            findViewById(R.id.button_imgproc_1).setOnClickListener(getDevButtonListener());
+            findViewById(R.id.button_imgproc_2).setOnClickListener(getDevButtonListener());
+            findViewById(R.id.button_imgproc_3).setOnClickListener(getDevButtonListener());
+        }
     }
 }
