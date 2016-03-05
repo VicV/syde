@@ -172,6 +172,7 @@ public class MainActivity extends DJIBaseActivity {
                         grabber.sendCommand(Grabber.Commands.OPEN);
                         break;
                     case R.id.button_special_1:
+                        new ImageAsyncTask().execute();
                         break;
                     case R.id.button_special_2:
                         break;
@@ -193,6 +194,7 @@ public class MainActivity extends DJIBaseActivity {
                         AndroidCameraSurfaceView androidCamera = (AndroidCameraSurfaceView) findViewById(R.id.android_camera_surfaceview);
                         androidCamera.setVisibility(View.VISIBLE);
                         androidCamera.setupSurfaceView();
+                        new ImageAsyncTask().execute();
                         break;
                 }
             }
@@ -229,10 +231,10 @@ public class MainActivity extends DJIBaseActivity {
             public void onResult(byte[] videoBuffer, int size) {
                 mDjiGLSurfaceView.setDataToDecoder(videoBuffer, size);
 
-//                if (!processing) {
-//                    processing = true;
-//                    new ImageAsyncTask().execute();
-//                }
+                if (!processing) {
+                    processing = true;
+                    new ImageAsyncTask().execute();
+                }
             }
         };
         DJIDrone.getDjiCamera().setReceivedVideoDataCallBack(mReceivedVideoDataCallBack);
@@ -250,7 +252,10 @@ public class MainActivity extends DJIBaseActivity {
                             @Override
                             public void run() {
                                 if (bitmap != null) {
-                                    CPreview.setImageBitmap(ImageProcessing.processImage(bitmap));
+                                    //CPreview.setImageBitmap(ImageProcessing.processImage(bitmap));
+                                    CPreview.setImageBitmap(bitmap);
+                                    ImageProcessing.readFrame(bitmap);
+                                    new ImageAsyncTask().execute();
                                 }
                             }
                         }, 200);
@@ -526,6 +531,7 @@ public class MainActivity extends DJIBaseActivity {
                         trackFuture = taskScheduler.scheduleAtFixedRate(new Runnable() {
                             @Override
                             public void run() {
+                                new ImageAsyncTask().execute();
                                 ImageProcessing.trackObject();
                             }
                         }, 0, 300, TimeUnit.MILLISECONDS);

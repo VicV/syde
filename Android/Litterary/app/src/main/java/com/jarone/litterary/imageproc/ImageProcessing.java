@@ -137,10 +137,6 @@ public class ImageProcessing {
         }
     }
 
-    public static void setSourceFrame(byte[] videoBuffer) {
-        readFrame(BitmapFactory.decodeByteArray(videoBuffer, 0, videoBuffer.length));
-    }
-
     public static Bitmap processImage(Bitmap image) {
         identifyLitter(image, DroneState.getLatLng());
         convertLatestFrame();
@@ -153,7 +149,7 @@ public class ImageProcessing {
 
     public static ArrayList<LatLng> identifyLitter(Bitmap photo, LatLng origin) {
         readFrame(photo);
-        correctDistortion();
+        //correctDistortion();
         ArrayList<Point> points = detectBlobs();
         return calculateGPSCoords(points, origin);
     }
@@ -167,6 +163,9 @@ public class ImageProcessing {
      * Returns a list of blob centres in terms of points on the image
      */
     public static ArrayList<Point> detectBlobs() {
+        if (currentMat.empty()) {
+            return null;
+        }
         processingMat = currentMat;
         Imgproc.cvtColor(processingMat, processingMat, Imgproc.COLOR_BGR2GRAY);
         double cannyThresh = determineCannyThreshold();
@@ -176,7 +175,7 @@ public class ImageProcessing {
         fillImage();
         //TODO determine below threshold parameter from the drone's altitude and FOV
         eliminateSmallBlobs(600);
-        clearBorders();
+        //clearBorders();
         Imgproc.medianBlur(processingMat, processingMat, 31);
         ArrayList<Point> centres = findBlobCentres();
         currentMat = processingMat;
