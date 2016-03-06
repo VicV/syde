@@ -1,7 +1,10 @@
 package com.jarone.litterary.helpers;
 
 import android.graphics.Bitmap;
+import android.opengl.GLES20;
 import android.opengl.GLSurfaceView;
+
+import com.jarone.litterary.views.AndroidCameraSurfaceView;
 
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
@@ -17,7 +20,7 @@ import javax.microedition.khronos.opengles.GL10;
 public class ImageHelper {
 
 
-    public static interface BitmapCreatedCallback {
+    public interface BitmapCreatedCallback {
         void onBitmapCreated(Bitmap bitmap);
     }
 
@@ -27,9 +30,15 @@ public class ImageHelper {
         surface.queueEvent(new Runnable() {
             @Override
             public void run() {
-                EGL10 egl = (EGL10) EGLContext.getEGL();
-                //Get GL10 object from EGL context.
-                GL10 gl = (GL10) egl.eglGetCurrentContext().getGL();
+                GL10 gl;
+                if (surface instanceof AndroidCameraSurfaceView) {
+                    gl = ((AndroidCameraSurfaceView) surface).getGl10();
+                } else {
+
+                    EGL10 egl = (EGL10) EGLContext.getEGL();
+                    //Get GL10 object from EGL context.
+                    gl = (GL10) egl.eglGetCurrentContext().getGL();
+                }
                 Bitmap frame = ImageHelper.getBitmapFromGLSurface(0, 0, surface.getWidth(), surface.getHeight(), gl);
                 bitmapCreatedCallback.onBitmapCreated(frame);
             }
@@ -39,11 +48,15 @@ public class ImageHelper {
 
     public static Bitmap getBitmapFromGLSurface(int x, int y, int w, int h, GL10 gl) {
 
-        if (gl != null && w != 0 && h != 0) {
+        if (w != 0 && h != 0) {
             int screenshotSize = w * h;
             ByteBuffer bb = ByteBuffer.allocateDirect(screenshotSize * 4);
             bb.order(ByteOrder.nativeOrder());
-            gl.glReadPixels(0, 0, w, h, GL10.GL_RGBA, GL10.GL_UNSIGNED_BYTE, bb);
+            if(gl==null){
+                GLES20.glReadPixels(0, 0, w, h, GLES20.GL_RGBA, GLES20.GL_UNSIGNED_BYTE, bb);
+            } else{
+                gl.glReadPixels(0, 0, w, h, GLES20.GL_RGBA, GLES20.GL_UNSIGNED_BYTE, bb);
+            }
             int pixelsBuffer[] = new int[screenshotSize];
             bb.asIntBuffer().get(pixelsBuffer);
             Bitmap bitmap = Bitmap.createBitmap(w, h,

@@ -7,6 +7,7 @@ import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.opengl.GLSurfaceView;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Parcelable;
@@ -191,8 +192,10 @@ public class MainActivity extends DJIBaseActivity {
                         }
 
                     case R.id.button_special_camera:
-                        if (mDjiGLSurfaceView.getVisibility() == View.GONE) {
+                        if (mDjiGLSurfaceView.getVisibility() != View.GONE) {
                             mDjiGLSurfaceView.setVisibility(View.GONE);
+                            mDjiGLSurfaceView.pause();
+                            mDjiGLSurfaceView.destroy();
                             AndroidCameraSurfaceView androidCamera = (AndroidCameraSurfaceView) findViewById(R.id.android_camera_surfaceview);
                             androidCamera.setVisibility(View.VISIBLE);
                             androidCamera.setupSurfaceView();
@@ -236,16 +239,21 @@ public class MainActivity extends DJIBaseActivity {
 
 //                if (!processing) {
 //                    processing = true;
-//                    new ImageAsyncTask().execute();
 //                }
             }
         };
         DJIDrone.getDjiCamera().setReceivedVideoDataCallBack(mReceivedVideoDataCallBack);
     }
 
-    private class ImageAsyncTask extends AsyncTask<Void, Void, Void> {
+    public void processFrame() {
+        new ImageAsyncTask().execute(mDjiGLSurfaceView.getVisibility() == View.GONE ? mAndroidCameraSurfaceView : mDjiGLSurfaceView);
+    }
+
+    public class ImageAsyncTask extends AsyncTask<GLSurfaceView, Void, Void> {
+
+
         @Override
-        protected Void doInBackground(Void... params) {
+        protected Void doInBackground(GLSurfaceView... params) {
             ImageHelper.createBitmapFromFrame(new ImageHelper.BitmapCreatedCallback() {
                 @Override
                 public void onBitmapCreated(final Bitmap bitmap) {
@@ -266,7 +274,7 @@ public class MainActivity extends DJIBaseActivity {
                     // MessageHandler.d("Bitmap: " + count);
                 }
 
-            }, mDjiGLSurfaceView);
+            }, params[0]);
             return null;
         }
     }

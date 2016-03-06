@@ -10,6 +10,8 @@ import android.util.AttributeSet;
 import android.util.Log;
 import android.view.SurfaceHolder;
 
+import com.jarone.litterary.helpers.ContextManager;
+
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
@@ -21,6 +23,7 @@ import javax.microedition.khronos.opengles.GL10;
 // View
 public class AndroidCameraSurfaceView extends GLSurfaceView {
     AndroidCameraSurfaceRenderer mRenderer;
+    private GL10 gl10;
 
     AndroidCameraSurfaceView(Context context) {
         super(context);
@@ -41,6 +44,7 @@ public class AndroidCameraSurfaceView extends GLSurfaceView {
         setEGLContextClientVersion(2);
         setRenderer(mRenderer);
         setRenderMode(GLSurfaceView.RENDERMODE_WHEN_DIRTY);
+
     }
 
     public void surfaceDestroyed(SurfaceHolder holder) {
@@ -52,6 +56,10 @@ public class AndroidCameraSurfaceView extends GLSurfaceView {
 
     public void surfaceChanged(SurfaceHolder holder, int format, int w, int h) {
         super.surfaceChanged(holder, format, w, h);
+    }
+
+    public GL10 getGl10() {
+        return gl10;
     }
 
     class AndroidCameraSurfaceRenderer implements GLSurfaceView.Renderer, SurfaceTexture.OnFrameAvailableListener {
@@ -115,6 +123,7 @@ public class AndroidCameraSurfaceView extends GLSurfaceView {
             GLES20.glEnableVertexAttribArray(tch);
 
             GLES20.glDrawArrays(GLES20.GL_TRIANGLE_STRIP, 0, 4);
+            ContextManager.getMainActivityInstance().processFrame();
             GLES20.glFlush();
         }
 
@@ -170,7 +179,7 @@ public class AndroidCameraSurfaceView extends GLSurfaceView {
                 param.setPreviewSize(psize.get(i).width, psize.get(i).height);
                 //Log.i("mr","ssize: "+psize.get(i).width+", "+psize.get(i).height);
             }
-            param.set("orientation", "landscape");
+            param.set("orientation", "portrait");
             mCamera.setParameters(param);
             mCamera.startPreview();
         }
