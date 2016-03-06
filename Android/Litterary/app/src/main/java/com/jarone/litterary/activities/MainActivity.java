@@ -234,10 +234,10 @@ public class MainActivity extends DJIBaseActivity {
             public void onResult(byte[] videoBuffer, int size) {
                 mDjiGLSurfaceView.setDataToDecoder(videoBuffer, size);
 
-                if (!processing) {
-                    processing = true;
-                    new ImageAsyncTask().execute();
-                }
+//                if (!processing) {
+//                    processing = true;
+//                    new ImageAsyncTask().execute();
+//                }
             }
         };
         DJIDrone.getDjiCamera().setReceivedVideoDataCallBack(mReceivedVideoDataCallBack);
@@ -255,9 +255,9 @@ public class MainActivity extends DJIBaseActivity {
                             @Override
                             public void run() {
                                 if (bitmap != null) {
-                                    //CPreview.setImageBitmap(ImageProcessing.processImage(bitmap));
-                                    CPreview.setImageBitmap(bitmap);
-                                    ImageProcessing.readFrame(bitmap);
+                                    CPreview.setImageBitmap(ImageProcessing.processImage(bitmap));
+                                    //CPreview.setImageBitmap(bitmap);
+                                    //ImageProcessing.readFrame(bitmap);
                                     new ImageAsyncTask().execute();
                                 }
                             }
