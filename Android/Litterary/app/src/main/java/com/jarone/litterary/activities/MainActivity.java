@@ -556,9 +556,13 @@ public class MainActivity extends DJIBaseActivity {
     }
 
     public void setupWifi() {
-        MessageHandler.d("Performing wifi scan...");
-        registerReceiver(new WifiScanReceiver(), new IntentFilter(WifiManager.SCAN_RESULTS_AVAILABLE_ACTION));
-        wifiManager.startScan();
+        if (wifiManager.getConnectionInfo().getSSID().startsWith("Phantom")) {
+            MessageHandler.d("Drone already connected");
+        } else {
+            MessageHandler.d("Performing wifi scan...");
+            registerReceiver(new WifiScanReceiver(), new IntentFilter(WifiManager.SCAN_RESULTS_AVAILABLE_ACTION));
+            wifiManager.startScan();
+        }
     }
 
     public View.OnClickListener getWifiClickListener() {

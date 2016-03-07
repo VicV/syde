@@ -2,14 +2,15 @@ package com.jarone.litterary.helpers;
 
 import android.net.wifi.WifiConfiguration;
 import android.net.wifi.WifiManager;
-import android.net.wifi.p2p.WifiP2pManager;
 import android.text.TextUtils;
 
-import com.jarone.litterary.handlers.MessageHandler;
-
+import java.lang.reflect.InvocationHandler;
+import java.lang.reflect.Method;
+import java.lang.reflect.Proxy;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Objects;
 
 /**
  * Created by V on 3/7/2016.
@@ -17,22 +18,25 @@ import java.util.List;
 public class WifiHelper {
 
     /*
- *  Max priority of network to be associated.
+ *  Max priority of networks
  */
     private static final int MAX_PRIORITY = 999999;
 
     /**
-     * Allow a previously configured network to be associated with.
+     * Connect to a network by SSID.
      */
     public static boolean enableNetwork(String SSID, WifiManager wifiManager) {
         boolean state = false;
         List<WifiConfiguration> list = wifiManager.getConfiguredNetworks();
+        //This is what disconnects the current wifi AND forgets it (to stop the drone from losing connection).
+        //Commented out now because while it does work, it freezes the damn app for some reason.
+//        forgetWifi(wifiManager.getConnectionInfo().getNetworkId(), wifiManager);
 
 
+        //Walk through every single network connection and give the one we're looking for the top priority
         if (list != null && list.size() > 0) {
             for (WifiConfiguration i : list) {
                 if (i.SSID != null && i.SSID.equals(convertToQuotedString(SSID))) {
-                    forgetWifi(i, wifiManager);
                     wifiManager.disconnect();
                     int newPri = getMaxPriority(wifiManager) + 1;
                     if (newPri >= MAX_PRIORITY) {
@@ -50,6 +54,7 @@ public class WifiHelper {
                 }
             }
         }
+        //This is a SUPER backup. Basically 
         WifiConfiguration conf = new WifiConfiguration();
         conf.SSID = "\"" + SSID + "\"";
         conf.allowedKeyManagement.set(WifiConfiguration.KeyMgmt.NONE);
@@ -67,20 +72,29 @@ public class WifiHelper {
         return state;
     }
 
-    private static void forgetWifi(WifiConfiguration i, WifiManager wifiManager) {
+    private static void forgetWifi(int networkId, WifiManager wifiManager) {
         try {
-
-            wifiManager.getClass().getDeclaredMethod("forget").invoke(wifiManager, i.networkId, new WifiP2pManager.ActionListener() {
-                @Override
-                public void onSuccess() {
-                    MessageHandler.d("Successfully re-forgot");
+            Method forgetMethod = null;
+            for (Method m : wifiManager.getClass().getDeclaredMethods()) {
+                if (Objects.equals(m.getName(), "forget")) {
+                    forgetMethod = m;
                 }
+            }
+            Class<?> someInterface = wifiManager.getClass().getClasses()[0];
+
+            Object instance = Proxy.newProxyInstance(someInterface.getClassLoader(), new Class<?>[]{someInterface}, new InvocationHandler() {
 
                 @Override
-                public void onFailure(int reason) {
-                    MessageHandler.d("Fail to forget");
+                public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
+
+                    //Handle the invocations
+                    if (method.getName().equals("someMethod")) {
+                        return 1;
+                    } else return -1;
                 }
             });
+
+            forgetMethod.invoke(wifiManager, networkId, instance);
         } catch (Exception e) {
 
         }
