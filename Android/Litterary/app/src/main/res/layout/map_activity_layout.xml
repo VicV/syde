@@ -71,7 +71,7 @@
 
 
             <LinearLayout
-                android:id="@+id/a"
+                android:id="@+id/altitude_button"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_gravity="center_horizontal"
@@ -81,16 +81,18 @@
                 android:padding="15dp">
 
                 <EditText
-                    android:id="@+id/b"
+                    android:id="@+id/altitude_input"
+                    style="@style/MyEditText"
                     android:layout_width="40dp"
                     android:layout_height="40dp"
                     android:gravity="center"
                     android:hint="20m"
                     android:inputType="number"
-                    android:textSize="12sp" />
+                    android:textSize="12sp"
+                    android:windowSoftInputMode="adjustResize" />
 
                 <TextView
-                    android:id="@+id/c"
+                    android:id="@+id/altitude_text"
                     style="@style/MyText.Icon"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"

@@ -5,8 +5,10 @@ import android.annotation.TargetApi;
 import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
+import android.net.wifi.WifiManager;
 import android.opengl.GLSurfaceView;
 import android.os.AsyncTask;
 import android.os.Build;
@@ -25,6 +27,8 @@ import android.widget.ToggleButton;
 import com.google.android.gms.maps.model.LatLng;
 import com.jarone.litterary.LitterApplication;
 import com.jarone.litterary.R;
+import com.jarone.litterary.Receivers.WifiChangeReceiver;
+import com.jarone.litterary.Receivers.WifiScanReceiver;
 import com.jarone.litterary.adapters.DebugMessageRecyclerAdapter;
 import com.jarone.litterary.adapters.ViewPagerAdapter;
 import com.jarone.litterary.control.AngularController;
@@ -37,6 +41,7 @@ import com.jarone.litterary.handlers.MessageHandler;
 import com.jarone.litterary.helpers.ContextManager;
 import com.jarone.litterary.helpers.ImageHelper;
 import com.jarone.litterary.helpers.LocationHelper;
+import com.jarone.litterary.helpers.WifiHelper;
 import com.jarone.litterary.imageproc.ImageProcessing;
 import com.jarone.litterary.views.AndroidCameraSurfaceView;
 
@@ -69,6 +74,7 @@ public class MainActivity extends DJIBaseActivity {
     private AndroidCameraSurfaceView mAndroidCameraSurfaceView;
 
     private ImageView CPreview;
+    private WifiManager wifiManager;
     private RecyclerView debugMessageRecyclerView;
     private Context mainActivity;
     private ScheduledExecutorService taskScheduler;
@@ -94,8 +100,20 @@ public class MainActivity extends DJIBaseActivity {
         ContextManager.setContext(this);
         DroneState.registerConnectedTimer();
         GroundStation.registerPhantom2Callback();
+        setupWifiReceivers();
+
 
         taskScheduler = Executors.newSingleThreadScheduledExecutor();
+    }
+
+    private void setupWifiReceivers() {
+
+        wifiManager = (WifiManager) getSystemService(Context.WIFI_SERVICE);
+        registerReceiver(new WifiScanReceiver(), new IntentFilter(WifiManager.SCAN_RESULTS_AVAILABLE_ACTION));
+
+        IntentFilter wifiChangeIntentFilter = new IntentFilter();
+        wifiChangeIntentFilter.addAction(WifiManager.SUPPLICANT_CONNECTION_CHANGE_ACTION);
+        registerReceiver(new WifiChangeReceiver(wifiManager), wifiChangeIntentFilter);
     }
 
 
@@ -390,6 +408,13 @@ public class MainActivity extends DJIBaseActivity {
             @TargetApi(Build.VERSION_CODES.LOLLIPOP)
             @Override
             public void run() {
+                if (wifiManager.getConnectionInfo().getSSID().contains("Phantom")) {
+                    ((ImageView) findViewById(R.id.connect_icon)).setImageDrawable(getDrawable(R.drawable.wifi_connected_small));
+                    ((TextView) findViewById(R.id.connect_text)).setText("connected");
+                } else {
+                    ((TextView) findViewById(R.id.connect_text)).setText("connect");
+                    ((ImageView) findViewById(R.id.connect_icon)).setImageDrawable(getDrawable(R.drawable.wifi_not_connected_small));
+                }
                 ImageView modeButton = (ImageView) findViewById(R.id.switch_mode_icon);
                 if (DroneState.getMode() == DroneState.DIRECT_MODE) {
                     modeButton.setImageDrawable(getDrawable(R.drawable.direct_small));
@@ -524,6 +549,28 @@ public class MainActivity extends DJIBaseActivity {
         };
     }
 
+
+    public void connectWithSSID(String SSID) {
+        MessageHandler.d("Attempting to connect");
+        WifiHelper.enableNetwork(SSID, wifiManager);
+    }
+
+    public void setupWifi() {
+        MessageHandler.d("Performing wifi scan...");
+        registerReceiver(new WifiScanReceiver(), new IntentFilter(WifiManager.SCAN_RESULTS_AVAILABLE_ACTION));
+        wifiManager.startScan();
+    }
+
+    public View.OnClickListener getWifiClickListener() {
+        return new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                setupWifi();
+            }
+        };
+
+    }
+
     public View.OnClickListener getTrackListener() {
         return new View.OnClickListener() {
             @Override
@@ -559,6 +606,7 @@ public class MainActivity extends DJIBaseActivity {
         findViewById(R.id.start_button).setOnClickListener(getStartSurveyListener());
 //        findViewById(R.id.button_switch_mode).setOnClickListener(getSwitchModeListener());
         findViewById(R.id.DJI_camera_surfaceview).setOnClickListener(getCameraViewListener());
+        findViewById(R.id.connect_button).setOnClickListener(getWifiClickListener());
 
         //Dev stuff
 //        findViewById(R.id.button_track).setOnClickListener(getTrackListener());

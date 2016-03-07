@@ -1,13 +1,20 @@
 package com.jarone.litterary.activities;
 
+import android.content.Context;
 import android.content.Intent;
 import android.graphics.Color;
+import android.graphics.PorterDuff;
 import android.os.Bundle;
 import android.os.Parcelable;
 import android.support.v4.app.FragmentActivity;
+import android.view.KeyEvent;
 import android.view.View;
+import android.view.WindowManager;
+import android.view.inputmethod.EditorInfo;
+import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
@@ -78,11 +85,16 @@ public class MapActivity extends FragmentActivity implements OnMapReadyCallback 
 
     private boolean onlyPath = false;
 
+    private Context c;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.map_activity_layout);
+        c = this;
+        getWindow().setSoftInputMode(
+                WindowManager.LayoutParams.SOFT_INPUT_ADJUST_PAN);
 
         //Gets the map loaded.
         SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager()
@@ -98,14 +110,13 @@ public class MapActivity extends FragmentActivity implements OnMapReadyCallback 
                 photoPoints = (ArrayList<LatLng>) bundle.get("picturePoints");
                 if (photoPoints != null && photoPoints.size() > 1) {
                     findViewById(R.id.undo_button).setVisibility(View.GONE);
+                    findViewById(R.id.altitude_button).setVisibility(View.GONE);
                     findViewById(R.id.set_button).setVisibility(View.GONE);
                     findViewById(R.id.path_button).setVisibility(View.VISIBLE);
                     resetMode = true;
                 }
             }
         }
-
-
 
 
         // Undo -- removes the last point and marker.
@@ -125,11 +136,53 @@ public class MapActivity extends FragmentActivity implements OnMapReadyCallback 
             }
         });
 
+        final EditText altitudeText = (EditText) findViewById(R.id.altitude_input);
+        altitudeText.getBackground().mutate().setColorFilter(getResources().getColor(R.color.textcolor), PorterDuff.Mode.SRC_ATOP);
+
+        altitudeText.setOnFocusChangeListener(new View.OnFocusChangeListener() {
+
+            @Override
+            public void onFocusChange(View v, boolean hasFocus) {
+    /* When focus is lost check that the text field
+    * has valid values.
+    */
+                if (!hasFocus && !altitudeText.getText().toString().endsWith("m")) {
+                    altitudeText.setCursorVisible(false);
+                    altitudeText.setText(altitudeText.getText().toString() + "m");
+                }
+            }
+        });
+
+        altitudeText.setOnEditorActionListener(
+                new EditText.OnEditorActionListener() {
+                    @Override
+                    public boolean onEditorAction(TextView v, int actionId, KeyEvent event) {
+                        if (actionId == EditorInfo.IME_ACTION_SEARCH ||
+                                actionId == EditorInfo.IME_ACTION_DONE ||
+                                event.getAction() == KeyEvent.ACTION_DOWN &&
+                                        event.getKeyCode() == KeyEvent.KEYCODE_ENTER) {
+                            if (event != null && !event.isShiftPressed()) {
+                                // the user is done typing.
+                                if (!altitudeText.getText().toString().endsWith("m")) {
+                                    altitudeText.setCursorVisible(false);
+                                    altitudeText.setText(altitudeText.getText().toString() + "m");
+                                }
+                                return true; // consume.
+                            }
+                        }
+                        return false; // pass on to other listeners.
+                    }
+                });
+
         //The set button finishes the activity.
         findViewById(R.id.set_button).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                finish();
+                if (polyPoints.size() < 3) {
+                    Toast.makeText(c, "Please create a polygon with at least three points", Toast.LENGTH_SHORT).show();
+                } else {
+                    finish();
+                }
             }
         });
 
@@ -182,6 +235,7 @@ public class MapActivity extends FragmentActivity implements OnMapReadyCallback 
 
                 findViewById(R.id.undo_button).setVisibility(View.VISIBLE);
                 findViewById(R.id.set_button).setVisibility(View.VISIBLE);
+                findViewById(R.id.altitude_button).setVisibility(View.VISIBLE);
                 findViewById(R.id.path_button).setVisibility(View.GONE);
 
                 resetMode = false;
