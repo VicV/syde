@@ -9,73 +9,177 @@
 
 
     <LinearLayout
+        android:id="@+id/toprow"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:layout_marginStart="80dp"
-        android:layout_alignParentTop="true"
+        android:layout_height="wrap_content"
         android:layout_centerHorizontal="true"
-        android:layout_marginTop="231dp"
-        android:orientation="horizontal">
+        android:layout_marginTop="70dp"
+        android:gravity="center_vertical"
+        android:orientation="horizontal"
+        android:paddingBottom="42dp"
+        android:paddingLeft="10dp"
+        android:paddingRight="10dp">
 
 
         <LinearLayout
+            android:id="@+id/connect_button"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_gravity="center_horizontal"
+            android:layout_weight="1"
             android:gravity="center_horizontal"
             android:orientation="vertical">
 
             <ImageView
                 android:id="@+id/connect_icon"
-                android:layout_width="80dp"
-                android:layout_height="80dp"
-                android:src="@drawable/wifi" />
+                android:layout_width="60dp"
+                android:layout_height="60dp"
+                android:src="@drawable/wifi_small" />
 
             <TextView
                 android:id="@+id/connect_text"
+                style="@style/MyText.Icon"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Connect Drone" />
+                android:text="connect" />
         </LinearLayout>
 
         <LinearLayout
+            android:id="@+id/map_button"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_gravity="center_horizontal"
+            android:layout_weight="1"
+            android:gravity="center_horizontal"
+            android:orientation="vertical">
+
+            <ImageView
+                android:id="@+id/map_icon"
+                android:layout_width="60dp"
+                android:layout_height="60dp"
+                android:src="@drawable/map_small" />
+
+            <TextView
+                android:id="@+id/map_text"
+                style="@style/MyText.Icon"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="set region" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:id="@+id/start_button"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_horizontal"
+            android:layout_weight="1"
+
+            android:gravity="center_horizontal"
+            android:orientation="vertical">
+
+            <ImageView
+                android:id="@+id/start_icon"
+                android:layout_width="60dp"
+                android:layout_height="60dp"
+                android:src="@drawable/start_small" />
+
+            <TextView
+                android:id="@+id/start_text"
+                style="@style/MyText.Icon"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="start" />
+        </LinearLayout>
+    </LinearLayout>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/toprow"
+        android:layout_centerHorizontal="true"
+        android:gravity="center_vertical"
+        android:orientation="horizontal"
+        android:padding="10dp">
+
+
+        <LinearLayout
+            android:id="@+id/home_button"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_horizontal"
+            android:layout_weight="1"
             android:gravity="center_horizontal"
             android:orientation="vertical">
 
             <ImageView
                 android:id="@+id/home_icon"
-                android:layout_width="80dp"
-                android:layout_height="80dp"
-                android:src="@drawable/home_icon" />
+                android:layout_width="60dp"
+                android:layout_height="60dp"
+                android:src="@drawable/home_small" />
 
             <TextView
-                android:id="@+id/textView"
+                android:id="@+id/home_text"
+                style="@style/MyText.Icon"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="New Text" />
+                android:text="set home" />
         </LinearLayout>
 
         <LinearLayout
+            android:id="@+id/go_home_button"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_gravity="center_horizontal"
+            android:layout_weight="1"
             android:gravity="center_horizontal"
             android:orientation="vertical">
 
-            <Button
-                android:id="@+id/button"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="conn" />
+            <ImageView
+                android:id="@+id/home_icon_go"
+                android:layout_width="60dp"
+                android:layout_height="60dp"
+                android:src="@drawable/go_home_small" />
 
             <TextView
-                android:id="@+id/textView"
+                android:id="@+id/home_text_go"
+                style="@style/MyText.Icon"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="New Text" />
+                android:text="go home" />
         </LinearLayout>
+
+        <LinearLayout
+            android:id="@+id/switch_mode_button"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_horizontal"
+            android:layout_weight="1"
+            android:gravity="center_horizontal"
+            android:orientation="vertical">
+
+            <ImageView
+                android:id="@+id/switch_mode_icon"
+                android:layout_width="60dp"
+                android:layout_height="60dp"
+                android:src="@drawable/map_pin_small" />
+
+            <TextView
+                android:id="@+id/switch_mode_text"
+                style="@style/MyText.Icon"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="waypoint" />
+        </LinearLayout>
+
     </LinearLayout>
+
+    <TextView
+        android:id="@+id/loading_text"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_centerHorizontal="true"
+        android:layout_marginTop="30dp"
+        android:visibility="gone"
+        android:text="creating optimized route..." />
 </RelativeLayout>

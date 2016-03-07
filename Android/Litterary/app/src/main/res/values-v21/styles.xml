@@ -6,10 +6,28 @@
     </style>
 
     <style name="CustomTabLayout" parent="Widget.Design.TabLayout">
+
+        <item name="android:elevation">5dp</item>
         <item name="tabIndicatorColor">#ff4081</item>
         <item name="tabSelectedTextColor">#ff4081</item>
-        <item name="tabTextColor">#fff</item>
-        <item name="android:textColor">#fff</item>
+        <item name="tabTextColor">#8b8b8b</item>
+        <item name="android:fontFeatureSettings">smcp</item>
+        <item name="android:textColor">#8b8b8b</item>
+    </style>
+
+    <style name="Theme.App.Base" parent="Theme.AppCompat.Light.DarkActionBar">
+        <item name="colorControlNormal">#8b8b8b</item>
+        <item name="colorControlActivated">@color/</item>
+        <item name="colorControlHighlight">@color/accent</item>
+    </style>
+
+    <style name="MyText">
+        <item name="android:textColor">#8b8b8b</item>
+        <item name="android:fontFeatureSettings">smcp</item>
+    </style>
+
+    <style name="MyText.Icon">
+        <item name="android:layout_marginTop">2dp</item>
     </style>
 
 </resources>

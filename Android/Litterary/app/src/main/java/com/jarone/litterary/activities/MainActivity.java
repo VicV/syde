@@ -1,6 +1,7 @@
 package com.jarone.litterary.activities;
 
 import android.Manifest;
+import android.annotation.TargetApi;
 import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
@@ -8,6 +9,7 @@ import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.opengl.GLSurfaceView;
 import android.os.AsyncTask;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.Parcelable;
 import android.support.design.widget.TabLayout;
@@ -16,7 +18,6 @@ import android.support.v4.view.ViewPager;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.view.View;
-import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.ToggleButton;
@@ -278,12 +279,13 @@ public class MainActivity extends DJIBaseActivity {
     }
 
     public float getAltitudeValue() {
-        EditText text = (EditText) findViewById(R.id.editText);
+//        EditText text = (EditText) findViewById(R.id.editText);
         try {
-            return Float.parseFloat(text.getText().toString());
+//            return Float.parseFloat(text.getText().toString());
         } catch (NumberFormatException e) {
             return -1;
         }
+        return 20;
     }
 
     /**
@@ -322,8 +324,7 @@ public class MainActivity extends DJIBaseActivity {
 
         @Override
         protected void onPreExecute() {
-            findViewById(R.id.linearLayout).setVisibility(View.INVISIBLE);
-            findViewById(R.id.loadingLayout).setVisibility(View.VISIBLE);
+            findViewById(R.id.loading_text).setVisibility(View.VISIBLE);
             super.onPreExecute();
         }
 
@@ -345,14 +346,14 @@ public class MainActivity extends DJIBaseActivity {
 
         @Override
         protected void onPostExecute(Void aVoid) {
-            final TextView loadingText = ((TextView) findViewById(R.id.loading));
+            final TextView loadingText = ((TextView) findViewById(R.id.loading_text));
             loadingText.setText("DONE!");
             loadingText.postDelayed(new Runnable() {
                 @Override
                 public void run() {
-                    loadingText.setText("Creating Optimized Photo Route");
-                    findViewById(R.id.linearLayout).setVisibility(View.VISIBLE);
-                    findViewById(R.id.loadingLayout).setVisibility(View.INVISIBLE);
+                    loadingText.setText("creating optimized photo route...");
+                    findViewById(R.id.loading_text).setVisibility(View.INVISIBLE);
+                    ((TextView) findViewById(R.id.map_text)).setText("view route");
                 }
             }, 500);
             super.onPostExecute(aVoid);
@@ -386,14 +387,19 @@ public class MainActivity extends DJIBaseActivity {
 
     private void updateInterface() {
         runOnUiThread(new Runnable() {
+            @TargetApi(Build.VERSION_CODES.LOLLIPOP)
             @Override
             public void run() {
-                ToggleButton modeButton = (ToggleButton) findViewById(R.id.button_switch_mode);
+                ImageView modeButton = (ImageView) findViewById(R.id.switch_mode_icon);
                 if (DroneState.getMode() == DroneState.DIRECT_MODE) {
-                    modeButton.setChecked(true);
+                    modeButton.setImageDrawable(getDrawable(R.drawable.direct_small));
+                    ((TextView) findViewById(R.id.switch_mode_text)).setText("direct");
                     ((TextView) findViewById(R.id.currentMode)).setText("DIRECT");
+
+
                 } else if (DroneState.getMode() == DroneState.WAYPOINT_MODE) {
-                    modeButton.setChecked(false);
+                    modeButton.setImageDrawable(getDrawable(R.drawable.map_pin_small));
+                    ((TextView) findViewById(R.id.switch_mode_text)).setText("waypoint");
                     ((TextView) findViewById(R.id.currentMode)).setText(DroneState.flightMode.name());
                 }
                 ((TextView) findViewById(R.id.currentLocation)).setText(
@@ -478,10 +484,10 @@ public class MainActivity extends DJIBaseActivity {
             @Override
             public void onClick(View v) {
                 switch (v.getId()) {
-                    case R.id.button_go_home:
+                    case R.id.go_home_button:
                         GroundStation.goHome();
                         break;
-                    case R.id.button_set_home:
+                    case R.id.home_button:
                         GroundStation.setHomePoint();
                         break;
                 }
@@ -523,7 +529,7 @@ public class MainActivity extends DJIBaseActivity {
             @Override
             public void onClick(View v) {
                 switch (v.getId()) {
-                    case (R.id.button_track):
+                    case (R.id.button_special_1):
                         ImageProcessing.startTrackingObject();
                         trackFuture = taskScheduler.scheduleAtFixedRate(new Runnable() {
                             @Override
@@ -532,7 +538,7 @@ public class MainActivity extends DJIBaseActivity {
                             }
                         }, 0, 300, TimeUnit.MILLISECONDS);
                         break;
-                    case (R.id.button_stop_track):
+                    case (R.id.button_special_2):
                         ImageProcessing.stopTrackingObject();
                         if (trackFuture != null) {
                             trackFuture.cancel(true);
@@ -547,17 +553,16 @@ public class MainActivity extends DJIBaseActivity {
 
     private void setOnClickListeners() {
         //Main page
-        findViewById(R.id.button_go_home).setOnClickListener(getHomeButtonListener());
-        findViewById(R.id.button_set_home).setOnClickListener(getHomeButtonListener());
-        findViewById(R.id.button_set_altitude).setOnClickListener(setAltitudeListener());
-        findViewById(R.id.button_set_region).setOnClickListener(setRegionClickListener());
-        findViewById(R.id.button_start_survey).setOnClickListener(getStartSurveyListener());
-        findViewById(R.id.button_switch_mode).setOnClickListener(getSwitchModeListener());
+        findViewById(R.id.go_home_button).setOnClickListener(getHomeButtonListener());
+        findViewById(R.id.home_button).setOnClickListener(getHomeButtonListener());
+        findViewById(R.id.map_button).setOnClickListener(setRegionClickListener());
+        findViewById(R.id.start_button).setOnClickListener(getStartSurveyListener());
+//        findViewById(R.id.button_switch_mode).setOnClickListener(getSwitchModeListener());
         findViewById(R.id.DJI_camera_surfaceview).setOnClickListener(getCameraViewListener());
 
         //Dev stuff
-        findViewById(R.id.button_track).setOnClickListener(getTrackListener());
-        findViewById(R.id.button_stop_track).setOnClickListener(getTrackListener());
+//        findViewById(R.id.button_track).setOnClickListener(getTrackListener());
+//        findViewById(R.id.button_stop_track).setOnClickListener(getTrackListener());
 
         //Dev toggle
         if (LitterApplication.devMode) {

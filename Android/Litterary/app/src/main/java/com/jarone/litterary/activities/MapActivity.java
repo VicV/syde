@@ -6,6 +6,7 @@ import android.os.Bundle;
 import android.os.Parcelable;
 import android.support.v4.app.FragmentActivity;
 import android.view.View;
+import android.widget.ImageView;
 import android.widget.TextView;
 
 import com.google.android.gms.maps.CameraUpdateFactory;
@@ -19,19 +20,16 @@ import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.gms.maps.model.Polygon;
 import com.google.android.gms.maps.model.PolygonOptions;
-import com.jarone.litterary.drone.DroneState;
-import com.jarone.litterary.drone.GroundStation;
 import com.google.android.gms.maps.model.Polyline;
 import com.google.android.gms.maps.model.PolylineOptions;
-
 import com.jarone.litterary.R;
+import com.jarone.litterary.drone.DroneState;
+import com.jarone.litterary.drone.GroundStation;
 import com.jarone.litterary.handlers.MessageHandler;
-import com.jarone.litterary.helpers.ContextManager;
 import com.jarone.litterary.helpers.LocationHelper;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.List;
 
 /**
  * Created by vic on 11/9/15.
@@ -99,19 +97,21 @@ public class MapActivity extends FragmentActivity implements OnMapReadyCallback 
             if (bundle.get("picturePoints") != null) {
                 photoPoints = (ArrayList<LatLng>) bundle.get("picturePoints");
                 if (photoPoints != null && photoPoints.size() > 1) {
-                    findViewById(R.id.button_undo).setVisibility(View.GONE);
-                    findViewById(R.id.button_set).setVisibility(View.GONE);
-                    findViewById(R.id.button_path).setVisibility(View.VISIBLE);
+                    findViewById(R.id.undo_button).setVisibility(View.GONE);
+                    findViewById(R.id.set_button).setVisibility(View.GONE);
+                    findViewById(R.id.path_button).setVisibility(View.VISIBLE);
                     resetMode = true;
                 }
             }
         }
 
 
+
+
         // Undo -- removes the last point and marker.
         // TODO: Undo drags
 
-        findViewById(R.id.button_undo).setOnClickListener(new View.OnClickListener() {
+        findViewById(R.id.undo_button).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
 
@@ -126,7 +126,7 @@ public class MapActivity extends FragmentActivity implements OnMapReadyCallback 
         });
 
         //The set button finishes the activity.
-        findViewById(R.id.button_set).setOnClickListener(new View.OnClickListener() {
+        findViewById(R.id.set_button).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 finish();
@@ -180,15 +180,15 @@ public class MapActivity extends FragmentActivity implements OnMapReadyCallback 
                     polyPoints.clear();
                 }
 
-                findViewById(R.id.button_undo).setVisibility(View.VISIBLE);
-                findViewById(R.id.button_set).setVisibility(View.VISIBLE);
-                findViewById(R.id.button_path).setVisibility(View.GONE);
+                findViewById(R.id.undo_button).setVisibility(View.VISIBLE);
+                findViewById(R.id.set_button).setVisibility(View.VISIBLE);
+                findViewById(R.id.path_button).setVisibility(View.GONE);
 
                 resetMode = false;
             }
         });
 
-        findViewById(R.id.button_path).setOnClickListener(new View.OnClickListener() {
+        findViewById(R.id.path_button).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 if (!onlyPath) {
@@ -199,7 +199,8 @@ public class MapActivity extends FragmentActivity implements OnMapReadyCallback 
                     for (Marker m : photoMarkers) {
                         m.remove();
                     }
-                    ((TextView) findViewById(R.id.button_path)).setText("All Markers");
+                    ((TextView) findViewById(R.id.path_text)).setText("all markers");
+                    ((ImageView) findViewById(R.id.path_icon)).setImageDrawable(getDrawable(R.drawable.map_pin_small));
                     onlyPath = true;
                 } else {
                     if (polyPoints != null && polyPoints.size() > 0) {
@@ -221,7 +222,8 @@ public class MapActivity extends FragmentActivity implements OnMapReadyCallback 
                         }
                     }
                     onlyPath = false;
-                    ((TextView) findViewById(R.id.button_path)).setText("Only Path");
+                    ((TextView) findViewById(R.id.path_text)).setText("path only");
+                    ((ImageView) findViewById(R.id.path_icon)).setImageDrawable(getDrawable(R.drawable.path_icon_small));
                 }
             }
         });

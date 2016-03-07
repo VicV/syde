@@ -15,7 +15,6 @@
         android:orientation="vertical">
 
 
-
         <TextView
             android:id="@+id/image_processing_title"
             android:layout_width="wrap_content"
@@ -24,7 +23,7 @@
             android:layout_marginTop="5dp"
             android:fontFeatureSettings="smcp"
             android:text="Image Processing"
-            android:textColor="#999" />
+            android:textColor="#888" />
 
         <View
             android:layout_width="match_parent"
@@ -37,6 +36,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginEnd="5dp"
+            android:elevation="5dp"
             android:layout_marginStart="5dp"
             android:gravity="center_horizontal"
             android:orientation="horizontal">
@@ -46,7 +46,6 @@
                 android:id="@+id/button_imgproc_1"
                 android:layout_width="wrap_content"
                 android:layout_height="40dp"
-                android:fontFeatureSettings="smcp"
                 android:text="Img Proc 1"
                 android:textColor="#999" />
 
@@ -141,7 +140,6 @@
         android:orientation="vertical">
 
     </LinearLayout>
-
 
 
     <ImageView
