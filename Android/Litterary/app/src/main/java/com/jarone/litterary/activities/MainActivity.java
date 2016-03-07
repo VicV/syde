@@ -266,7 +266,7 @@ public class MainActivity extends DJIBaseActivity {
                                     CPreview.setImageBitmap(ImageProcessing.processImage(bitmap));
                                     //CPreview.setImageBitmap(bitmap);
                                     //ImageProcessing.readFrame(bitmap);
-                                    new ImageAsyncTask().execute();
+                                    //new ImageAsyncTask().execute();
                                 }
                             }
                         }, 200);

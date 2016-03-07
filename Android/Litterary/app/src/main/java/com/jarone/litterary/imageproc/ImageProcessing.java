@@ -86,6 +86,8 @@ public class ImageProcessing {
     public static Mat distCoeffs;
     private static boolean isCalibrated;
 
+    private static ArrayList<Point> blobCentres;
+
     /**
      * Init all the (global) variables needed in the controller
      */
@@ -150,8 +152,8 @@ public class ImageProcessing {
     public static ArrayList<LatLng> identifyLitter(Bitmap photo, LatLng origin) {
         readFrame(photo);
         //correctDistortion();
-        ArrayList<Point> points = detectBlobs();
-        return calculateGPSCoords(points, origin);
+        detectBlobs();
+        return calculateGPSCoords(blobCentres, origin);
     }
 
     public static Bitmap getCVPreview() {
@@ -166,7 +168,10 @@ public class ImageProcessing {
         if (currentMat.empty()) {
             return null;
         }
-        processingMat = currentMat;
+        if (processingMat == null) {
+            processingMat = new Mat();
+        }
+        currentMat.copyTo(processingMat);
         Imgproc.cvtColor(processingMat, processingMat, Imgproc.COLOR_BGR2GRAY);
         double cannyThresh = determineCannyThreshold();
         Imgproc.Canny(processingMat, processingMat, cannyThresh, cannyThresh*2);
@@ -177,9 +182,9 @@ public class ImageProcessing {
         eliminateSmallBlobs(600);
         //clearBorders();
         Imgproc.medianBlur(processingMat, processingMat, 31);
-        ArrayList<Point> centres = findBlobCentres();
-        currentMat = processingMat;
-        return centres;
+        blobCentres = findBlobCentres();
+        processingMat.copyTo(currentMat);
+        return blobCentres;
     }
 
     /**
@@ -224,7 +229,7 @@ public class ImageProcessing {
      */
     public static double determineCannyThreshold() {
         Mat _ = new Mat();
-        return Imgproc.threshold(currentMat, _, 0, 255, Imgproc.THRESH_OTSU);
+        return Imgproc.threshold(processingMat, _, 0, 255, Imgproc.THRESH_OTSU);
     }
 
     /**
@@ -346,9 +351,8 @@ public class ImageProcessing {
      */
     public static void startTrackingObject() {
         isTracking = true;
-        ArrayList<Point> centres = detectBlobs();
-        Point object = closestToCentre(centres);
-        int index = centres.indexOf(object);
+        Point object = closestToCentre(blobCentres);
+        int index = blobCentres.indexOf(object);
         trackingObject = new TrackingObject(object, contourSize(currentBlobs.get(index)), DroneState.getLatLng(), DroneState.getAltitude());
     }
 
@@ -365,10 +369,9 @@ public class ImageProcessing {
             return null;
         }
         TrackingObject tmp = trackingObject.predictPositionAndSize(DroneState.getLatLng(), DroneState.getAltitude());
-        ArrayList<Point> centres = detectBlobs();
         Point trackerObj = null;
         int index = 0;
-        for (Point centre: centres) {
+        for (Point centre: blobCentres) {
             //If we are within 50 pixels of the assumed new location of the blob
             if (pixelDistance(centre, tmp.getPosition()) < 50 && Math.abs(contourSize(currentBlobs.get(index)) - tmp.getSize()) < 10) {
                 trackerObj = centre;
