@@ -542,7 +542,6 @@ public class MainActivity extends DJIBaseActivity {
                         trackFuture = taskScheduler.scheduleAtFixedRate(new Runnable() {
                             @Override
                             public void run() {
-                                new ImageAsyncTask().execute();
                                 ImageProcessing.trackObject();
                             }
                         }, 0, 300, TimeUnit.MILLISECONDS);

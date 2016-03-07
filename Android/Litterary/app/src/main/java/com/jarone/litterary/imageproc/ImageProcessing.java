@@ -373,7 +373,7 @@ public class ImageProcessing {
         int index = 0;
         for (Point centre: blobCentres) {
             //If we are within 50 pixels of the assumed new location of the blob
-            if (pixelDistance(centre, tmp.getPosition()) < 50 && Math.abs(contourSize(currentBlobs.get(index)) - tmp.getSize()) < 10) {
+            if (pixelDistance(centre, tmp.getPosition()) < 100000 && Math.abs(contourSize(currentBlobs.get(index)) - tmp.getSize()) < 100000) {
                 trackerObj = centre;
                 break;
             }
@@ -381,7 +381,7 @@ public class ImageProcessing {
         }
         if (trackerObj != null) {
             trackingObject = tmp;
-            Core.circle(currentMat, trackingObject.getPosition(), 100, new Scalar(255, 0, 255), 4);
+            Core.circle(processingMat, trackingObject.getPosition(), 100, new Scalar(255, 0, 255), 4);
             return trackerObj;
         } else {
             MessageHandler.w("Lost track of object!");
