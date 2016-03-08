@@ -39,7 +39,7 @@
  * Updated: 26.04.13 09:03
  */
 
-package com.jarone.litterary.imageproc;
+package com.jarone.litterary.helpers;
 
 import java.io.*;
 import java.util.*;
