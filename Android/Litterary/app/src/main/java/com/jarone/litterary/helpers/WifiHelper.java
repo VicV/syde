@@ -54,9 +54,13 @@ public class WifiHelper {
                 }
             }
         }
-        //This is a SUPER backup. Basically 
+        //This is a SUPER backup. Basically CREATES the connection (again, if it already exists) to
+        //force a reconnect EVEN IF there is no wifi connection (DJI stuff doesn't technically have
+        //one so it wont want to reconnect);
         WifiConfiguration conf = new WifiConfiguration();
         conf.SSID = "\"" + SSID + "\"";
+
+        //Need this because there is no password
         conf.allowedKeyManagement.set(WifiConfiguration.KeyMgmt.NONE);
         wifiManager.addNetwork(conf);
         List<WifiConfiguration> more = wifiManager.getConfiguredNetworks();
@@ -72,6 +76,8 @@ public class WifiHelper {
         return state;
     }
 
+    //Forgets a wifi network, used to remove any previously known wifi networks to stop
+    //From stealing connection from drone. Freezes the app though so don't use.
     private static void forgetWifi(int networkId, WifiManager wifiManager) {
         try {
             Method forgetMethod = null;
@@ -81,7 +87,6 @@ public class WifiHelper {
                 }
             }
             Class<?> someInterface = wifiManager.getClass().getClasses()[0];
-
             Object instance = Proxy.newProxyInstance(someInterface.getClassLoader(), new Class<?>[]{someInterface}, new InvocationHandler() {
 
                 @Override
@@ -136,7 +141,7 @@ public class WifiHelper {
     }
 
     /**
-     * Add quotes to string if not already present.
+     * Add quotes to string if not already present. (SSID requires this)
      *
      * @param string
      * @return

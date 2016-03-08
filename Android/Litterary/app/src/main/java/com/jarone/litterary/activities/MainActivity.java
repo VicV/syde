@@ -21,6 +21,7 @@ import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.view.View;
 import android.widget.ImageView;
+import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.ToggleButton;
 
@@ -101,7 +102,10 @@ public class MainActivity extends DJIBaseActivity {
         DroneState.registerConnectedTimer();
         GroundStation.registerPhantom2Callback();
         setupWifiReceivers();
+        mDjiGLSurfaceView.setZOrderMediaOverlay(true);
+        RelativeLayout.LayoutParams lp = new RelativeLayout.LayoutParams(RelativeLayout.LayoutParams.FILL_PARENT, RelativeLayout.LayoutParams.WRAP_CONTENT);
 
+        addContentView(getLayoutInflater().inflate(R.layout.surface_overlay_layout, null), lp);
 
         taskScheduler = Executors.newSingleThreadScheduledExecutor();
     }
@@ -443,9 +447,19 @@ public class MainActivity extends DJIBaseActivity {
 //                }
 
                 ImageProcessing.convertLatestFrame();
+
+
                 if (LitterApplication.devMode) {
                     ((ImageView) findViewById(R.id.CVPreview)).setImageBitmap(ImageProcessing.getCVPreview());
                 }
+                if (currentPhotoPoints != null && currentPhotoPoints.size() > 0) {
+                    findViewById(R.id.remaining_items).setVisibility(View.VISIBLE);
+                    //TODO: UPDATE ON EACH PICTURE TAKEN
+                } else {
+                    findViewById(R.id.remaining_items).setVisibility(View.GONE);
+                }
+
+                //TODO: UPDATE BATTERY. NEED TO KNOW WTF REMAINPOWER IS FROM ADAM
             }
         });
     }
