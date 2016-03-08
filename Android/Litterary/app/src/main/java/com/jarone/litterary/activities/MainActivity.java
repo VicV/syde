@@ -8,6 +8,7 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.net.wifi.WifiManager;
 import android.opengl.GLSurfaceView;
 import android.os.AsyncTask;
@@ -32,7 +33,6 @@ import com.jarone.litterary.Receivers.WifiChangeReceiver;
 import com.jarone.litterary.Receivers.WifiScanReceiver;
 import com.jarone.litterary.adapters.DebugMessageRecyclerAdapter;
 import com.jarone.litterary.adapters.ViewPagerAdapter;
-import com.jarone.litterary.control.AngularController;
 import com.jarone.litterary.datatypes.DebugItem;
 import com.jarone.litterary.drone.Camera;
 import com.jarone.litterary.drone.DroneState;
@@ -46,6 +46,8 @@ import com.jarone.litterary.helpers.WifiHelper;
 import com.jarone.litterary.imageproc.ImageProcessing;
 import com.jarone.litterary.views.AndroidCameraSurfaceView;
 
+import java.io.IOException;
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.concurrent.Executors;
@@ -185,11 +187,8 @@ public class MainActivity extends DJIBaseActivity {
                         Camera.takePhoto();
                         break;
                     case R.id.button_imgproc_2:
-                        AngularController ctrl = new AngularController();
-                        ctrl.generateControlTable();
                         // TODO should be run once at startup
                         new ImageProcessing.CalibrateTask().execute();
-
                         break;
                     case R.id.button_imgproc_3:
                         if (grabber == null) {
@@ -198,11 +197,23 @@ public class MainActivity extends DJIBaseActivity {
                         grabber.sendCommand(Grabber.Commands.OPEN);
                         break;
                     case R.id.button_special_1:
+                        new ImageAsyncTask().execute();
                         break;
                     case R.id.button_special_2:
                         break;
                     case R.id.button_special_3:
-                        break;
+                        ImageProcessing.loadCalibration();
+                        try {
+                            InputStream i = ContextManager.getActivity().getAssets().open("c2.jpg");
+                            Bitmap decoded = BitmapFactory.decodeStream(i);
+                            int nh = (int) (decoded.getHeight() * (2000.0 / decoded.getWidth()));
+                            Bitmap scaled = Bitmap.createScaledBitmap(decoded, 2000, nh, true);
+                            ImageProcessing.readFrame(scaled);
+                            ImageProcessing.correctDistortion();
+                        }catch (IOException e) {
+
+                        }
+
                     case R.id.button_special_camera:
                         if (mDjiGLSurfaceView.getVisibility() != View.GONE) {
                             mDjiGLSurfaceView.setVisibility(View.GONE);
@@ -276,6 +287,9 @@ public class MainActivity extends DJIBaseActivity {
                             public void run() {
                                 if (bitmap != null) {
                                     CPreview.setImageBitmap(ImageProcessing.processImage(bitmap));
+                                    //CPreview.setImageBitmap(bitmap);
+                                    //ImageProcessing.readFrame(bitmap);
+                                    //new ImageAsyncTask().execute();
                                 }
                             }
                         }, 200);

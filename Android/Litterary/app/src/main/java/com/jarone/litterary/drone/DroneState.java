@@ -27,7 +27,7 @@ public class DroneState {
     private static double longitude = -80.54;
 
     private static double speed = 0;
-    private static double altitude = 0;
+    private static double altitude = 0.1;
 
     private static double pitch = 0;
     private static double roll = 0;
