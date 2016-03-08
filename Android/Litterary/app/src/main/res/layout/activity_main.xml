@@ -2,17 +2,20 @@
     android:id="@+id/main_layout"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:background="#fff"
     android:orientation="vertical">
 
     <RelativeLayout
+        android:id="@+id/surface_layout"
         android:layout_width="fill_parent"
         android:layout_height="212dp">
 
-        <dji.sdk.widget.DjiGLSurfaceView
-            android:id="@+id/DJI_camera_surfaceview"
-            android:layout_width="fill_parent"
-            android:layout_height="212dp"
-            android:elevation="5dp" />
+        <TextView
+            style="@style/MyText"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:gravity="center"
+            android:text="lalalala" />
 
         <com.jarone.litterary.views.AndroidCameraSurfaceView
             android:id="@+id/android_camera_surfaceview"
@@ -21,19 +24,25 @@
             android:elevation="5dp"
             android:visibility="gone" />
 
+        <dji.sdk.widget.DjiGLSurfaceView
+            android:id="@+id/DJI_camera_surfaceview"
+            android:layout_width="fill_parent"
+            android:layout_height="212dp"
+            android:elevation="5dp" />
+
 
     </RelativeLayout>
 
     <RelativeLayout
         android:layout_width="fill_parent"
         android:layout_height="fill_parent"
-        android:background="#222">
+        android:background="#fff">
 
         <android.support.design.widget.TabLayout
             android:id="@+id/tab_layout"
             style="@style/CustomTabLayout"
             android:layout_width="match_parent"
-            android:layout_height="30dp" />
+            android:layout_height="45dp" />
 
         <android.support.v4.view.ViewPager
             android:id="@+id/viewPager"

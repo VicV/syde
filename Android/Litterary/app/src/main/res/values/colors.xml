@@ -6,5 +6,6 @@
     <color name="red">#df352a</color>
     <color name="orange">#ff660f</color>
     <color name="white">#ccc</color>
+    <color name="textcolor">#8b8b8b</color>
 
 </resources>

@@ -42,13 +42,13 @@ public class DebugMessageRecyclerAdapter extends RecyclerView.Adapter<DebugMessa
         //Changes color based on the debug level.
         switch (level) {
             case DEBUG:
-                return ContextCompat.getColor(mContext, R.color.white);
+                return ContextCompat.getColor(mContext, R.color.textcolor);
             case WARN:
                 return ContextCompat.getColor(mContext, R.color.orange);
             case ERROR:
                 return ContextCompat.getColor(mContext, R.color.red);
             default:
-                return ContextCompat.getColor(mContext, R.color.white);
+                return ContextCompat.getColor(mContext, R.color.textcolor);
         }
         //TODO: Actually mark messages appropriately with level
     }

@@ -97,6 +97,7 @@ public class DroneState {
                 velocityX = state.velocityX;
                 velocityY = state.velocityY;
                 velocityZ = state.velocityZ;
+                battery = state.remainPower;
                 pitch = state.pitch;
                 roll = state.roll;
                 yaw = state.yaw;

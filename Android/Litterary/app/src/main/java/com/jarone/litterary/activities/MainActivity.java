@@ -1,14 +1,18 @@
 package com.jarone.litterary.activities;
 
 import android.Manifest;
+import android.annotation.TargetApi;
 import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.net.wifi.WifiManager;
 import android.opengl.GLSurfaceView;
 import android.os.AsyncTask;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.Parcelable;
 import android.support.design.widget.TabLayout;
@@ -17,14 +21,16 @@ import android.support.v4.view.ViewPager;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.view.View;
-import android.widget.EditText;
 import android.widget.ImageView;
+import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.ToggleButton;
 
 import com.google.android.gms.maps.model.LatLng;
 import com.jarone.litterary.LitterApplication;
 import com.jarone.litterary.R;
+import com.jarone.litterary.Receivers.WifiChangeReceiver;
+import com.jarone.litterary.Receivers.WifiScanReceiver;
 import com.jarone.litterary.adapters.DebugMessageRecyclerAdapter;
 import com.jarone.litterary.adapters.ViewPagerAdapter;
 import com.jarone.litterary.datatypes.DebugItem;
@@ -36,6 +42,7 @@ import com.jarone.litterary.handlers.MessageHandler;
 import com.jarone.litterary.helpers.ContextManager;
 import com.jarone.litterary.helpers.ImageHelper;
 import com.jarone.litterary.helpers.LocationHelper;
+import com.jarone.litterary.helpers.WifiHelper;
 import com.jarone.litterary.imageproc.ImageProcessing;
 import com.jarone.litterary.views.AndroidCameraSurfaceView;
 
@@ -70,6 +77,7 @@ public class MainActivity extends DJIBaseActivity {
     private AndroidCameraSurfaceView mAndroidCameraSurfaceView;
 
     private ImageView CPreview;
+    private WifiManager wifiManager;
     private RecyclerView debugMessageRecyclerView;
     private Context mainActivity;
     private ScheduledExecutorService taskScheduler;
@@ -95,8 +103,23 @@ public class MainActivity extends DJIBaseActivity {
         ContextManager.setContext(this);
         DroneState.registerConnectedTimer();
         GroundStation.registerPhantom2Callback();
+        setupWifiReceivers();
+        mDjiGLSurfaceView.setZOrderMediaOverlay(true);
+        RelativeLayout.LayoutParams lp = new RelativeLayout.LayoutParams(RelativeLayout.LayoutParams.FILL_PARENT, RelativeLayout.LayoutParams.WRAP_CONTENT);
+
+        addContentView(getLayoutInflater().inflate(R.layout.surface_overlay_layout, null), lp);
 
         taskScheduler = Executors.newSingleThreadScheduledExecutor();
+    }
+
+    private void setupWifiReceivers() {
+
+        wifiManager = (WifiManager) getSystemService(Context.WIFI_SERVICE);
+        registerReceiver(new WifiScanReceiver(), new IntentFilter(WifiManager.SCAN_RESULTS_AVAILABLE_ACTION));
+
+        IntentFilter wifiChangeIntentFilter = new IntentFilter();
+        wifiChangeIntentFilter.addAction(WifiManager.SUPPLICANT_CONNECTION_CHANGE_ACTION);
+        registerReceiver(new WifiChangeReceiver(wifiManager), wifiChangeIntentFilter);
     }
 
 
@@ -292,12 +315,13 @@ public class MainActivity extends DJIBaseActivity {
     }
 
     public float getAltitudeValue() {
-        EditText text = (EditText) findViewById(R.id.editText);
+//        EditText text = (EditText) findViewById(R.id.editText);
         try {
-            return Float.parseFloat(text.getText().toString());
+//            return Float.parseFloat(text.getText().toString());
         } catch (NumberFormatException e) {
             return -1;
         }
+        return 20;
     }
 
     /**
@@ -336,8 +360,7 @@ public class MainActivity extends DJIBaseActivity {
 
         @Override
         protected void onPreExecute() {
-            findViewById(R.id.linearLayout).setVisibility(View.INVISIBLE);
-            findViewById(R.id.loadingLayout).setVisibility(View.VISIBLE);
+            findViewById(R.id.loading_text).setVisibility(View.VISIBLE);
             super.onPreExecute();
         }
 
@@ -359,14 +382,14 @@ public class MainActivity extends DJIBaseActivity {
 
         @Override
         protected void onPostExecute(Void aVoid) {
-            final TextView loadingText = ((TextView) findViewById(R.id.loading));
+            final TextView loadingText = ((TextView) findViewById(R.id.loading_text));
             loadingText.setText("DONE!");
             loadingText.postDelayed(new Runnable() {
                 @Override
                 public void run() {
-                    loadingText.setText("Creating Optimized Photo Route");
-                    findViewById(R.id.linearLayout).setVisibility(View.VISIBLE);
-                    findViewById(R.id.loadingLayout).setVisibility(View.INVISIBLE);
+                    loadingText.setText("creating optimized photo route...");
+                    findViewById(R.id.loading_text).setVisibility(View.INVISIBLE);
+                    ((TextView) findViewById(R.id.map_text)).setText("view route");
                 }
             }, 500);
             super.onPostExecute(aVoid);
@@ -400,14 +423,26 @@ public class MainActivity extends DJIBaseActivity {
 
     private void updateInterface() {
         runOnUiThread(new Runnable() {
+            @TargetApi(Build.VERSION_CODES.LOLLIPOP)
             @Override
             public void run() {
-                ToggleButton modeButton = (ToggleButton) findViewById(R.id.button_switch_mode);
+                if (wifiManager.getConnectionInfo().getSSID().contains("Phantom")) {
+                    ((ImageView) findViewById(R.id.connect_icon)).setImageDrawable(getDrawable(R.drawable.wifi_connected_small));
+                    ((TextView) findViewById(R.id.connect_text)).setText("connected");
+                } else {
+                    ((TextView) findViewById(R.id.connect_text)).setText("connect");
+                    ((ImageView) findViewById(R.id.connect_icon)).setImageDrawable(getDrawable(R.drawable.wifi_not_connected_small));
+                }
+                ImageView modeButton = (ImageView) findViewById(R.id.switch_mode_icon);
                 if (DroneState.getMode() == DroneState.DIRECT_MODE) {
-                    modeButton.setChecked(true);
+                    modeButton.setImageDrawable(getDrawable(R.drawable.direct_small));
+                    ((TextView) findViewById(R.id.switch_mode_text)).setText("direct");
                     ((TextView) findViewById(R.id.currentMode)).setText("DIRECT");
+
+
                 } else if (DroneState.getMode() == DroneState.WAYPOINT_MODE) {
-                    modeButton.setChecked(false);
+                    modeButton.setImageDrawable(getDrawable(R.drawable.map_pin_small));
+                    ((TextView) findViewById(R.id.switch_mode_text)).setText("waypoint");
                     ((TextView) findViewById(R.id.currentMode)).setText(DroneState.flightMode.name());
                 }
                 ((TextView) findViewById(R.id.currentLocation)).setText(
@@ -426,9 +461,19 @@ public class MainActivity extends DJIBaseActivity {
 //                }
 
                 ImageProcessing.convertLatestFrame();
+
+
                 if (LitterApplication.devMode) {
                     ((ImageView) findViewById(R.id.CVPreview)).setImageBitmap(ImageProcessing.getCVPreview());
                 }
+                if (currentPhotoPoints != null && currentPhotoPoints.size() > 0) {
+                    findViewById(R.id.remaining_items).setVisibility(View.VISIBLE);
+                    //TODO: UPDATE ON EACH PICTURE TAKEN
+                } else {
+                    findViewById(R.id.remaining_items).setVisibility(View.GONE);
+                }
+
+                //TODO: UPDATE BATTERY. NEED TO KNOW WTF REMAINPOWER IS FROM ADAM
             }
         });
     }
@@ -492,10 +537,10 @@ public class MainActivity extends DJIBaseActivity {
             @Override
             public void onClick(View v) {
                 switch (v.getId()) {
-                    case R.id.button_go_home:
+                    case R.id.go_home_button:
                         GroundStation.goHome();
                         break;
-                    case R.id.button_set_home:
+                    case R.id.home_button:
                         GroundStation.setHomePoint();
                         break;
                 }
@@ -532,12 +577,38 @@ public class MainActivity extends DJIBaseActivity {
         };
     }
 
+
+    public void connectWithSSID(String SSID) {
+        MessageHandler.d("Attempting to connect");
+        WifiHelper.enableNetwork(SSID, wifiManager);
+    }
+
+    public void setupWifi() {
+        if (wifiManager.getConnectionInfo().getSSID().startsWith("Phantom")) {
+            MessageHandler.d("Drone already connected");
+        } else {
+            MessageHandler.d("Performing wifi scan...");
+            registerReceiver(new WifiScanReceiver(), new IntentFilter(WifiManager.SCAN_RESULTS_AVAILABLE_ACTION));
+            wifiManager.startScan();
+        }
+    }
+
+    public View.OnClickListener getWifiClickListener() {
+        return new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                setupWifi();
+            }
+        };
+
+    }
+
     public View.OnClickListener getTrackListener() {
         return new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 switch (v.getId()) {
-                    case (R.id.button_track):
+                    case (R.id.button_special_1):
                         ImageProcessing.startTrackingObject();
                         trackFuture = taskScheduler.scheduleAtFixedRate(new Runnable() {
                             @Override
@@ -546,7 +617,7 @@ public class MainActivity extends DJIBaseActivity {
                             }
                         }, 0, 300, TimeUnit.MILLISECONDS);
                         break;
-                    case (R.id.button_stop_track):
+                    case (R.id.button_special_2):
                         ImageProcessing.stopTrackingObject();
                         if (trackFuture != null) {
                             trackFuture.cancel(true);
@@ -561,17 +632,17 @@ public class MainActivity extends DJIBaseActivity {
 
     private void setOnClickListeners() {
         //Main page
-        findViewById(R.id.button_go_home).setOnClickListener(getHomeButtonListener());
-        findViewById(R.id.button_set_home).setOnClickListener(getHomeButtonListener());
-        findViewById(R.id.button_set_altitude).setOnClickListener(setAltitudeListener());
-        findViewById(R.id.button_set_region).setOnClickListener(setRegionClickListener());
-        findViewById(R.id.button_start_survey).setOnClickListener(getStartSurveyListener());
-        findViewById(R.id.button_switch_mode).setOnClickListener(getSwitchModeListener());
+        findViewById(R.id.go_home_button).setOnClickListener(getHomeButtonListener());
+        findViewById(R.id.home_button).setOnClickListener(getHomeButtonListener());
+        findViewById(R.id.map_button).setOnClickListener(setRegionClickListener());
+        findViewById(R.id.start_button).setOnClickListener(getStartSurveyListener());
+//        findViewById(R.id.button_switch_mode).setOnClickListener(getSwitchModeListener());
         findViewById(R.id.DJI_camera_surfaceview).setOnClickListener(getCameraViewListener());
+        findViewById(R.id.connect_button).setOnClickListener(getWifiClickListener());
 
         //Dev stuff
-        findViewById(R.id.button_track).setOnClickListener(getTrackListener());
-        findViewById(R.id.button_stop_track).setOnClickListener(getTrackListener());
+//        findViewById(R.id.button_track).setOnClickListener(getTrackListener());
+//        findViewById(R.id.button_stop_track).setOnClickListener(getTrackListener());
 
         //Dev toggle
         if (LitterApplication.devMode) {

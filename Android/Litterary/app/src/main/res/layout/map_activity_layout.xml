@@ -1,87 +1,183 @@
 <?xml version="1.0" encoding="utf-8"?>
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="fill_parent"
-    android:layout_height="fill_parent">
+    android:layout_height="fill_parent"
+    android:background="#fff">
 
-
-    <fragment
-        android:id="@+id/map"
-        class="com.google.android.gms.maps.SupportMapFragment"
+    <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:layout_above="@+id/bottomLayout" />
+        android:layout_above="@+id/bottomLayout"
+        android:elevation="5dp">
+
+        <fragment
+            android:id="@+id/map"
+            class="com.google.android.gms.maps.SupportMapFragment"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent" />
+    </LinearLayout>
 
     <LinearLayout
         android:id="@+id/bottomLayout"
         android:layout_width="match_parent"
-        android:layout_height="50dp"
+        android:layout_height="wrap_content"
         android:layout_alignParentBottom="true"
         android:layout_centerHorizontal="true"
-        android:background="#222"
+        android:layout_marginEnd="20dp"
+        android:layout_marginStart="20dp"
+        android:background="#fff"
         android:gravity="center_vertical"
-        android:orientation="horizontal">
-
+        android:orientation="vertical">
 
         <TextView
-            android:id="@+id/textView2"
-            android:layout_width="120dp"
+            style="@style/MyText"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginLeft="5dp"
-            android:layout_marginRight="5dp"
-            android:text="Long press map to define region."
-            android:textColor="#ebebeb" />
+            android:layout_gravity="center_horizontal"
+            android:gravity="center_horizontal"
+            android:padding="15dp"
+            android:text="long-click on the map to define a region" />
 
-        <android.widget.Space
-            android:layout_width="0dp"
-            android:layout_height="0dp"
-            android:layout_weight="1" />
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="center_vertical"
+            android:orientation="horizontal">
 
-        <Button
-            android:id="@+id/button_reset"
-            android:layout_width="wrap_content"
-            android:layout_height="30dp"
-            android:background="#ebebeb"
-            android:text="Reset" />
+            <LinearLayout
+                android:id="@+id/set_button"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_horizontal"
+                android:layout_weight="1"
+                android:gravity="center_horizontal"
+                android:orientation="vertical"
+                android:padding="15dp">
 
-        <android.widget.Space
-            android:layout_width="0dp"
-            android:layout_height="0dp"
-            android:layout_weight="1" />
+                <ImageView
+                    android:id="@+id/set_icon"
+                    android:layout_width="40dp"
+                    android:layout_height="40dp"
+                    android:src="@drawable/checkmark_small" />
 
-        <Button
-            android:id="@+id/button_undo"
-            android:layout_width="wrap_content"
-            android:layout_height="30dp"
-            android:background="#ebebeb"
-            android:text="Undo"
-            android:visibility="visible" />
+                <TextView
+                    android:id="@+id/set_text"
+                    style="@style/MyText.Icon"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="set" />
 
-        <Button
-            android:id="@+id/button_path"
-            android:layout_width="wrap_content"
-            android:layout_height="30dp"
-            android:layout_gravity="center"
-            android:background="#ebebeb"
-            android:gravity="center"
-            android:paddingLeft="5dp"
-            android:paddingRight="5dp"
-            android:text="Only Path"
-            android:visibility="gone" />
+            </LinearLayout>
 
-        <android.widget.Space
-            android:layout_width="0dp"
-            android:layout_height="0dp"
-            android:layout_weight="1" />
 
-        <Button
-            android:id="@+id/button_set"
-            android:layout_width="wrap_content"
-            android:layout_height="30dp"
-            android:layout_marginRight="5dp"
-            android:background="#ebebeb"
-            android:text="Set"
-            android:visibility="visible" />
+            <LinearLayout
+                android:id="@+id/altitude_button"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_horizontal"
+                android:layout_weight="1"
+                android:gravity="center_horizontal"
+                android:orientation="vertical"
+                android:padding="15dp">
 
+                <EditText
+                    android:id="@+id/altitude_input"
+                    style="@style/MyEditText"
+                    android:layout_width="40dp"
+                    android:layout_height="40dp"
+                    android:gravity="center"
+                    android:hint="20m"
+                    android:inputType="number"
+                    android:textSize="12sp"
+                    android:windowSoftInputMode="adjustResize" />
+
+                <TextView
+                    android:id="@+id/altitude_text"
+                    style="@style/MyText.Icon"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="altitude" />
+
+            </LinearLayout>
+
+            <LinearLayout
+                android:id="@+id/undo_button"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_horizontal"
+                android:layout_weight="1"
+                android:gravity="center_horizontal"
+                android:orientation="vertical"
+                android:padding="15dp">
+
+                <ImageView
+                    android:id="@+id/undo_icon"
+                    android:layout_width="40dp"
+                    android:layout_height="40dp"
+                    android:src="@drawable/undo_small" />
+
+                <TextView
+                    android:id="@+id/undo_text"
+                    style="@style/MyText.Icon"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="undo" />
+
+            </LinearLayout>
+
+            <LinearLayout
+                android:id="@+id/path_button"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_horizontal"
+                android:layout_weight="1"
+                android:gravity="center_horizontal"
+                android:orientation="vertical"
+                android:padding="15dp"
+                android:visibility="gone">
+
+                <ImageView
+                    android:id="@+id/path_icon"
+                    android:layout_width="40dp"
+                    android:layout_height="40dp"
+                    android:src="@drawable/path_icon_small" />
+
+                <TextView
+                    android:id="@+id/path_text"
+                    style="@style/MyText.Icon"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="path only" />
+
+            </LinearLayout>
+
+
+            <LinearLayout
+                android:id="@+id/button_reset"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_horizontal"
+                android:layout_weight="1"
+                android:gravity="center_horizontal"
+                android:orientation="vertical"
+                android:padding="15dp">
+
+                <ImageView
+                    android:id="@+id/rest_icon"
+                    android:layout_width="40dp"
+                    android:layout_height="40dp"
+                    android:src="@drawable/x_small" />
+
+                <TextView
+                    android:id="@+id/reset_text"
+                    style="@style/MyText.Icon"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="reset" />
+
+            </LinearLayout>
+
+        </LinearLayout>
 
     </LinearLayout>
 
