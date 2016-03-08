@@ -8,9 +8,11 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 
+import dji.sdk.api.Battery.DJIBatteryProperty;
 import dji.sdk.api.DJIDrone;
 import dji.sdk.api.GroundStation.DJIGroundStationTypeDef;
 import dji.sdk.api.MainController.DJIMainControllerSystemState;
+import dji.sdk.interfaces.DJIBatteryUpdateInfoCallBack;
 import dji.sdk.interfaces.DJIMcuUpdateStateCallBack;
 
 /**
@@ -61,6 +63,7 @@ public class DroneState {
     private static final String TAG = DroneState.class.toString();
 
     private static DJIMcuUpdateStateCallBack mMcuUpdateStateCallBack;
+    private static DJIBatteryUpdateInfoCallBack mBatteryUpdateInfoCallBack;
 
     public static SurveyRoute currentSurveyRoute;
 
@@ -74,6 +77,7 @@ public class DroneState {
             public void run() {
                 droneConnected = false;
                 updateDroneState();
+                registerBatteryUpdate();
                 GroundStation.registerPhantom2Callback();
             }
         }, 5000, 5000, TimeUnit.MILLISECONDS);
@@ -93,11 +97,9 @@ public class DroneState {
                 homeLongitude = state.homeLocationLongitude;
                 altitude = state.altitude;
                 speed = state.speed;
-                battery = state.powerLevel;
                 velocityX = state.velocityX;
                 velocityY = state.velocityY;
                 velocityZ = state.velocityZ;
-                battery = state.remainPower;
                 pitch = state.pitch;
                 roll = state.roll;
                 yaw = state.yaw;
@@ -114,6 +116,16 @@ public class DroneState {
         };
 
         DJIDrone.getDjiMC().setMcuUpdateStateCallBack(mMcuUpdateStateCallBack);
+    }
+
+    public static void registerBatteryUpdate() {
+        mBatteryUpdateInfoCallBack = new DJIBatteryUpdateInfoCallBack() {
+            @Override
+            public void onResult(DJIBatteryProperty djiBatteryProperty) {
+                battery = djiBatteryProperty.remainLifePercent;
+            }
+        };
+        DJIDrone.getDjiBattery().setBatteryUpdateInfoCallBack(mBatteryUpdateInfoCallBack);
     }
 
     public static double getLatitude() {
