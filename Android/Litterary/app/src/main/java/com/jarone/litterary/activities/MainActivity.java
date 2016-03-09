@@ -25,9 +25,7 @@ import com.jarone.litterary.LitterApplication;
 import com.jarone.litterary.R;
 import com.jarone.litterary.adapters.DebugMessageRecyclerAdapter;
 import com.jarone.litterary.adapters.ViewPagerAdapter;
-import com.jarone.litterary.control.AngularController;
 import com.jarone.litterary.datatypes.DebugItem;
-import com.jarone.litterary.drone.Camera;
 import com.jarone.litterary.drone.DroneState;
 import com.jarone.litterary.drone.Grabber;
 import com.jarone.litterary.drone.GroundStation;
@@ -157,14 +155,16 @@ public class MainActivity extends DJIBaseActivity {
             public void onClick(View view) {
                 switch (view.getId()) {
                     case R.id.button_imgproc_1:
-                        Camera.takePhoto();
+                        if (grabber == null) {
+                            grabber = new Grabber();
+                        }
+                        grabber.sendCommand(Grabber.Commands.RAISE);
                         break;
                     case R.id.button_imgproc_2:
-                        AngularController ctrl = new AngularController();
-                        ctrl.generateControlTable();
-                        // TODO should be run once at startup
-                        new ImageProcessing.CalibrateTask().execute();
-
+                        if (grabber == null) {
+                            grabber = new Grabber();
+                        }
+                        grabber.sendCommand(Grabber.Commands.LOWER);
                         break;
                     case R.id.button_imgproc_3:
                         if (grabber == null) {
@@ -173,10 +173,23 @@ public class MainActivity extends DJIBaseActivity {
                         grabber.sendCommand(Grabber.Commands.OPEN);
                         break;
                     case R.id.button_special_1:
+                        if (grabber == null) {
+                            grabber = new Grabber();
+                        }
+                        grabber.sendCommand(Grabber.Commands.OPEN);
                         break;
                     case R.id.button_special_2:
+                        if (grabber == null) {
+                            grabber = new Grabber();
+                        }
+                        grabber.sendCommand(Grabber.Commands.CLOSE);
+
                         break;
                     case R.id.button_special_3:
+                        if (grabber == null) {
+                            grabber = new Grabber();
+                        }
+                        grabber.sendCommand(Grabber.Commands.HOLD);
                         break;
                     case R.id.button_special_camera:
                         mDjiGLSurfaceView.setVisibility(View.GONE);

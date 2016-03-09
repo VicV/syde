@@ -129,7 +129,7 @@ public class AndroidCameraSurfaceView extends GLSurfaceView {
             mSTexture.setOnFrameAvailableListener(this);
 
             mCamera = Camera.open();
-            mCamera.setDisplayOrientation(90);
+            mCamera.setDisplayOrientation(180);
             try {
                 mCamera.setPreviewTexture(mSTexture);
             } catch (IOException ioe) {
@@ -170,8 +170,8 @@ public class AndroidCameraSurfaceView extends GLSurfaceView {
                 param.setPreviewSize(psize.get(i).width, psize.get(i).height);
                 //Log.i("mr","ssize: "+psize.get(i).width+", "+psize.get(i).height);
             }
-            param.set("orientation", "landscape");
             mCamera.setParameters(param);
+            mCamera.setDisplayOrientation(180);
             mCamera.startPreview();
         }
 
