@@ -1,12 +1,20 @@
 package com.jarone.litterary.activities;
 
+import android.content.Context;
 import android.content.Intent;
 import android.graphics.Color;
+import android.graphics.PorterDuff;
 import android.os.Bundle;
 import android.os.Parcelable;
 import android.support.v4.app.FragmentActivity;
+import android.view.KeyEvent;
 import android.view.View;
+import android.view.WindowManager;
+import android.view.inputmethod.EditorInfo;
+import android.widget.EditText;
+import android.widget.ImageView;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
@@ -19,19 +27,16 @@ import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.gms.maps.model.Polygon;
 import com.google.android.gms.maps.model.PolygonOptions;
-import com.jarone.litterary.drone.DroneState;
-import com.jarone.litterary.drone.GroundStation;
 import com.google.android.gms.maps.model.Polyline;
 import com.google.android.gms.maps.model.PolylineOptions;
-
 import com.jarone.litterary.R;
+import com.jarone.litterary.drone.DroneState;
+import com.jarone.litterary.drone.GroundStation;
 import com.jarone.litterary.handlers.MessageHandler;
-import com.jarone.litterary.helpers.ContextManager;
 import com.jarone.litterary.helpers.LocationHelper;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.List;
 
 /**
  * Created by vic on 11/9/15.
@@ -80,11 +85,16 @@ public class MapActivity extends FragmentActivity implements OnMapReadyCallback 
 
     private boolean onlyPath = false;
 
+    private Context c;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.map_activity_layout);
+        c = this;
+        getWindow().setSoftInputMode(
+                WindowManager.LayoutParams.SOFT_INPUT_ADJUST_PAN);
 
         //Gets the map loaded.
         SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager()
@@ -99,9 +109,10 @@ public class MapActivity extends FragmentActivity implements OnMapReadyCallback 
             if (bundle.get("picturePoints") != null) {
                 photoPoints = (ArrayList<LatLng>) bundle.get("picturePoints");
                 if (photoPoints != null && photoPoints.size() > 1) {
-                    findViewById(R.id.button_undo).setVisibility(View.GONE);
-                    findViewById(R.id.button_set).setVisibility(View.GONE);
-                    findViewById(R.id.button_path).setVisibility(View.VISIBLE);
+                    findViewById(R.id.undo_button).setVisibility(View.GONE);
+                    findViewById(R.id.altitude_button).setVisibility(View.GONE);
+                    findViewById(R.id.set_button).setVisibility(View.GONE);
+                    findViewById(R.id.path_button).setVisibility(View.VISIBLE);
                     resetMode = true;
                 }
             }
@@ -111,7 +122,7 @@ public class MapActivity extends FragmentActivity implements OnMapReadyCallback 
         // Undo -- removes the last point and marker.
         // TODO: Undo drags
 
-        findViewById(R.id.button_undo).setOnClickListener(new View.OnClickListener() {
+        findViewById(R.id.undo_button).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
 
@@ -125,11 +136,53 @@ public class MapActivity extends FragmentActivity implements OnMapReadyCallback 
             }
         });
 
+        final EditText altitudeText = (EditText) findViewById(R.id.altitude_input);
+        altitudeText.getBackground().mutate().setColorFilter(getResources().getColor(R.color.textcolor), PorterDuff.Mode.SRC_ATOP);
+
+        altitudeText.setOnFocusChangeListener(new View.OnFocusChangeListener() {
+
+            @Override
+            public void onFocusChange(View v, boolean hasFocus) {
+    /* When focus is lost check that the text field
+    * has valid values.
+    */
+                if (!hasFocus && !altitudeText.getText().toString().endsWith("m")) {
+                    altitudeText.setCursorVisible(false);
+                    altitudeText.setText(altitudeText.getText().toString() + "m");
+                }
+            }
+        });
+
+        altitudeText.setOnEditorActionListener(
+                new EditText.OnEditorActionListener() {
+                    @Override
+                    public boolean onEditorAction(TextView v, int actionId, KeyEvent event) {
+                        if (actionId == EditorInfo.IME_ACTION_SEARCH ||
+                                actionId == EditorInfo.IME_ACTION_DONE ||
+                                event.getAction() == KeyEvent.ACTION_DOWN &&
+                                        event.getKeyCode() == KeyEvent.KEYCODE_ENTER) {
+                            if (event != null && !event.isShiftPressed()) {
+                                // the user is done typing.
+                                if (!altitudeText.getText().toString().endsWith("m")) {
+                                    altitudeText.setCursorVisible(false);
+                                    altitudeText.setText(altitudeText.getText().toString() + "m");
+                                }
+                                return true; // consume.
+                            }
+                        }
+                        return false; // pass on to other listeners.
+                    }
+                });
+
         //The set button finishes the activity.
-        findViewById(R.id.button_set).setOnClickListener(new View.OnClickListener() {
+        findViewById(R.id.set_button).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                finish();
+                if (polyPoints.size() < 3) {
+                    Toast.makeText(c, "Please create a polygon with at least three points", Toast.LENGTH_SHORT).show();
+                } else {
+                    finish();
+                }
             }
         });
 
@@ -180,15 +233,16 @@ public class MapActivity extends FragmentActivity implements OnMapReadyCallback 
                     polyPoints.clear();
                 }
 
-                findViewById(R.id.button_undo).setVisibility(View.VISIBLE);
-                findViewById(R.id.button_set).setVisibility(View.VISIBLE);
-                findViewById(R.id.button_path).setVisibility(View.GONE);
+                findViewById(R.id.undo_button).setVisibility(View.VISIBLE);
+                findViewById(R.id.set_button).setVisibility(View.VISIBLE);
+                findViewById(R.id.altitude_button).setVisibility(View.VISIBLE);
+                findViewById(R.id.path_button).setVisibility(View.GONE);
 
                 resetMode = false;
             }
         });
 
-        findViewById(R.id.button_path).setOnClickListener(new View.OnClickListener() {
+        findViewById(R.id.path_button).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 if (!onlyPath) {
@@ -199,7 +253,8 @@ public class MapActivity extends FragmentActivity implements OnMapReadyCallback 
                     for (Marker m : photoMarkers) {
                         m.remove();
                     }
-                    ((TextView) findViewById(R.id.button_path)).setText("All Markers");
+                    ((TextView) findViewById(R.id.path_text)).setText("all markers");
+                    ((ImageView) findViewById(R.id.path_icon)).setImageDrawable(getDrawable(R.drawable.map_pin_small));
                     onlyPath = true;
                 } else {
                     if (polyPoints != null && polyPoints.size() > 0) {
@@ -221,7 +276,8 @@ public class MapActivity extends FragmentActivity implements OnMapReadyCallback 
                         }
                     }
                     onlyPath = false;
-                    ((TextView) findViewById(R.id.button_path)).setText("Only Path");
+                    ((TextView) findViewById(R.id.path_text)).setText("path only");
+                    ((ImageView) findViewById(R.id.path_icon)).setImageDrawable(getDrawable(R.drawable.path_icon_small));
                 }
             }
         });

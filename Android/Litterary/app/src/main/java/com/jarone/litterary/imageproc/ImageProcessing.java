@@ -4,13 +4,18 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.media.Image;
 import android.os.AsyncTask;
+import android.util.Base64;
 
 import com.google.android.gms.maps.model.LatLng;
+import com.google.myjson.Gson;
+import com.google.myjson.JsonObject;
+import com.google.myjson.JsonParser;
 import com.jarone.litterary.control.AngularController;
 import com.jarone.litterary.drone.DroneState;
 import com.jarone.litterary.handlers.MessageHandler;
 import com.jarone.litterary.helpers.ContextManager;
 import com.jarone.litterary.helpers.FileAccess;
+import com.jarone.litterary.helpers.SerializationUtils;
 
 import org.opencv.android.BaseLoaderCallback;
 import org.opencv.android.LoaderCallbackInterface;
@@ -78,9 +83,11 @@ public class ImageProcessing {
     private static int boardsNumber;
     private static int numCornersHor;
     private static int numCornersVer;
-    private static Mat intrinsic;
-    private static Mat distCoeffs;
+    public static Mat intrinsic;
+    public static Mat distCoeffs;
     private static boolean isCalibrated;
+
+    private static ArrayList<Point> blobCentres;
 
     /**
      * Init all the (global) variables needed in the controller
@@ -133,10 +140,6 @@ public class ImageProcessing {
         }
     }
 
-    public static void setSourceFrame(byte[] videoBuffer) {
-        readFrame(BitmapFactory.decodeByteArray(videoBuffer, 0, videoBuffer.length));
-    }
-
     public static Bitmap processImage(Bitmap image) {
         identifyLitter(image, DroneState.getLatLng());
         convertLatestFrame();
@@ -149,9 +152,9 @@ public class ImageProcessing {
 
     public static ArrayList<LatLng> identifyLitter(Bitmap photo, LatLng origin) {
         readFrame(photo);
-        correctDistortion();
-        ArrayList<Point> points = detectBlobs();
-        return calculateGPSCoords(points, origin);
+        //correctDistortion();
+        detectBlobs();
+        return calculateGPSCoords(blobCentres, origin);
     }
 
     public static Bitmap getCVPreview() {
@@ -163,7 +166,13 @@ public class ImageProcessing {
      * Returns a list of blob centres in terms of points on the image
      */
     public static ArrayList<Point> detectBlobs() {
-        processingMat = currentMat;
+        if (currentMat.empty()) {
+            return null;
+        }
+        if (processingMat == null) {
+            processingMat = new Mat();
+        }
+        currentMat.copyTo(processingMat);
         Imgproc.cvtColor(processingMat, processingMat, Imgproc.COLOR_BGR2GRAY);
         double cannyThresh = determineCannyThreshold();
         Imgproc.Canny(processingMat, processingMat, cannyThresh, cannyThresh*2);
@@ -172,11 +181,11 @@ public class ImageProcessing {
         fillImage();
         //TODO determine below threshold parameter from the drone's altitude and FOV
         eliminateSmallBlobs(600);
-        clearBorders();
+        //clearBorders();
         Imgproc.medianBlur(processingMat, processingMat, 31);
-        ArrayList<Point> centres = findBlobCentres();
-        currentMat = processingMat;
-        return centres;
+        blobCentres = findBlobCentres();
+        processingMat.copyTo(currentMat);
+        return blobCentres;
     }
 
     /**
@@ -221,7 +230,7 @@ public class ImageProcessing {
      */
     public static double determineCannyThreshold() {
         Mat _ = new Mat();
-        return Imgproc.threshold(currentMat, _, 0, 255, Imgproc.THRESH_OTSU);
+        return Imgproc.threshold(processingMat, _, 0, 255, Imgproc.THRESH_OTSU);
     }
 
     /**
@@ -343,9 +352,8 @@ public class ImageProcessing {
      */
     public static void startTrackingObject() {
         isTracking = true;
-        ArrayList<Point> centres = detectBlobs();
-        Point object = closestToCentre(centres);
-        int index = centres.indexOf(object);
+        Point object = closestToCentre(blobCentres);
+        int index = blobCentres.indexOf(object);
         trackingObject = new TrackingObject(object, contourSize(currentBlobs.get(index)), DroneState.getLatLng(), DroneState.getAltitude());
     }
 
@@ -362,12 +370,11 @@ public class ImageProcessing {
             return null;
         }
         TrackingObject tmp = trackingObject.predictPositionAndSize(DroneState.getLatLng(), DroneState.getAltitude());
-        ArrayList<Point> centres = detectBlobs();
         Point trackerObj = null;
         int index = 0;
-        for (Point centre: centres) {
+        for (Point centre: blobCentres) {
             //If we are within 50 pixels of the assumed new location of the blob
-            if (pixelDistance(centre, tmp.getPosition()) < 50 && Math.abs(contourSize(currentBlobs.get(index)) - tmp.getSize()) < 10) {
+            if (pixelDistance(centre, tmp.getPosition()) < 100000 && Math.abs(contourSize(currentBlobs.get(index)) - tmp.getSize()) < 100000) {
                 trackerObj = centre;
                 break;
             }
@@ -375,7 +382,7 @@ public class ImageProcessing {
         }
         if (trackerObj != null) {
             trackingObject = tmp;
-            Core.circle(currentMat, trackingObject.getPosition(), 100, new Scalar(255, 0, 255), 4);
+            Core.circle(processingMat, trackingObject.getPosition(), 100, new Scalar(255, 0, 255), 4);
             return trackerObj;
         } else {
             MessageHandler.w("Lost track of object!");
@@ -489,21 +496,17 @@ public class ImageProcessing {
     }
 
     public static void saveCalibration() {
-        FileAccess.saveToFile("calibration", "dist.png", bitmapFromMat(distCoeffs));
-        FileAccess.saveToFile("calibration", "intrinsic.png", bitmapFromMat(intrinsic));
+        FileAccess.saveToFile("calibration", "dist", matToJson(distCoeffs));
+        FileAccess.saveToFile("calibration", "intrinsic", matToJson(intrinsic));
     }
 
     public static void loadCalibration() {
-        Bitmap dist = FileAccess.loadBitmapFromFile("calibration", "dist.png");
-        Bitmap intrins = FileAccess.loadBitmapFromFile("calibration", "intrinsic.png");
-        Utils.bitmapToMat(dist, distCoeffs);
-        Utils.bitmapToMat(intrins, intrinsic);
-    }
+        String dist = FileAccess.loadFromFile("calibration", "dist");
+        String intrins = FileAccess.loadFromFile("calibration", "intrinsic");
 
-    public static Bitmap bitmapFromMat(Mat mat) {
-        Bitmap bitmap = Bitmap.createBitmap(mat.width(), mat.height(), Bitmap.Config.ARGB_8888);
-        Utils.matToBitmap(mat, bitmap);
-        return bitmap;
+        distCoeffs = matFromJson(dist);
+        intrinsic = matFromJson(intrins);
+        isCalibrated = true;
     }
 
     public static class CalibrateTask extends AsyncTask<Void, Void, Boolean> {
@@ -518,6 +521,95 @@ public class ImageProcessing {
             loadCalibrationImages();
             return true;
         }
+    }
+
+    public static String matToJson(Mat mat){
+        JsonObject obj = new JsonObject();
+
+        if(mat.isContinuous()){
+            int cols = mat.cols();
+            int rows = mat.rows();
+            int elemSize = (int) mat.elemSize();
+            int type = mat.type();
+
+            obj.addProperty("rows", rows);
+            obj.addProperty("cols", cols);
+            obj.addProperty("type", type);
+
+            // We cannot set binary data to a json object, so:
+            // Encoding data byte array to Base64.
+            String dataString;
+
+            if( type == CvType.CV_32S || type == CvType.CV_32SC2 || type == CvType.CV_32SC3 || type == CvType.CV_16S) {
+                int[] data = new int[cols * rows * elemSize];
+                mat.get(0, 0, data);
+                dataString = new String(Base64.encode(SerializationUtils.toByteArray(data), Base64.DEFAULT));
+            }
+            else if( type == CvType.CV_32F || type == CvType.CV_32FC2) {
+                float[] data = new float[cols * rows * elemSize];
+                mat.get(0, 0, data);
+                dataString = new String(Base64.encode(SerializationUtils.toByteArray(data), Base64.DEFAULT));
+            }
+            else if( type == CvType.CV_64F || type == CvType.CV_64FC2) {
+                double[] data = new double[cols * rows * elemSize];
+                mat.get(0, 0, data);
+                dataString = new String(Base64.encode(SerializationUtils.toByteArray(data), Base64.DEFAULT));
+            }
+            else if( type == CvType.CV_8U ) {
+                byte[] data = new byte[cols * rows * elemSize];
+                mat.get(0, 0, data);
+                dataString = new String(Base64.encode(data, Base64.DEFAULT));
+            }
+            else {
+
+                throw new UnsupportedOperationException("unknown type");
+            }
+            obj.addProperty("data", dataString);
+
+            Gson gson = new Gson();
+            String json = gson.toJson(obj);
+
+            return json;
+        } else {
+            System.out.println("Mat not continuous.");
+        }
+        return "{}";
+    }
+
+    public static Mat matFromJson(String json){
+
+
+        JsonParser parser = new JsonParser();
+        JsonObject JsonObject = parser.parse(json).getAsJsonObject();
+
+        int rows = JsonObject.get("rows").getAsInt();
+        int cols = JsonObject.get("cols").getAsInt();
+        int type = JsonObject.get("type").getAsInt();
+
+        Mat mat = new Mat(rows, cols, type);
+
+        String dataString = JsonObject.get("data").getAsString();
+        if( type == CvType.CV_32S || type == CvType.CV_32SC2 || type == CvType.CV_32SC3 || type == CvType.CV_16S) {
+            int[] data = SerializationUtils.toIntArray(Base64.decode(dataString.getBytes(),  Base64.DEFAULT));
+            mat.put(0, 0, data);
+        }
+        else if( type == CvType.CV_32F || type == CvType.CV_32FC2) {
+            float[] data = SerializationUtils.toFloatArray(Base64.decode(dataString.getBytes(), Base64.DEFAULT));
+            mat.put(0, 0, data);
+        }
+        else if( type == CvType.CV_64F || type == CvType.CV_64FC2) {
+            double[] data = SerializationUtils.toDoubleArray(Base64.decode(dataString.getBytes(), Base64.DEFAULT));
+            mat.put(0, 0, data);
+        }
+        else if( type == CvType.CV_8U ) {
+            byte[] data = Base64.decode(dataString.getBytes(), Base64.DEFAULT);
+            mat.put(0, 0, data);
+        }
+        else {
+
+            throw new UnsupportedOperationException("unknown type");
+        }
+        return mat;
     }
 
 }

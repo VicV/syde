@@ -71,7 +71,7 @@ public class ViewPagerAdapter extends PagerAdapter {
         DEBUG("messages", R.layout.debug_queue_layout_page),
         MAIN("main", R.layout.main_layout_page),
         STATUS("status", R.layout.info_layout_page),
-        DEV("DEV", R.layout.dev_layout_page);
+        DEV("dev", R.layout.dev_layout_page);
 
         private String mTitle;
         private int mLayoutResId;

@@ -2,15 +2,20 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#222"
+    android:background="#fff"
     android:orientation="vertical">
 
     <TextView
         android:id="@+id/debug_text"
-        android:padding="5dp"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text=" Service connection created  Service connection created  Service connection created  Service connection created"
-        android:textColor="#fff" />
+        android:padding="5dp"
+        android:text="Service connection created  Service connection created  Service connection created  Service connection created"
+        android:textColor="#8b8b8b" />
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:background="#f5f5f5" />
 
 </LinearLayout>

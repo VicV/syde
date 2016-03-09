@@ -23,6 +23,7 @@ public class DJIBaseActivity extends FragmentActivity {
     protected void onResume() {
         super.onResume();
         DJIDrone.getDjiMC().startUpdateTimer(1000);
+        DJIDrone.getDjiBattery().startUpdateTimer(2000);
         OpenCVLoader.initAsync("2.4.8", this, ImageProcessing.loaderCallback);
         DJIDrone.getDjiGroundStation().startUpdateTimer(1000);
         ServiceManager.getInstance().pauseService(false); // Resume the service
@@ -32,6 +33,7 @@ public class DJIBaseActivity extends FragmentActivity {
     protected void onPause() {
         super.onPause();
         DJIDrone.getDjiMC().stopUpdateTimer();
+        DJIDrone.getDjiBattery().stopUpdateTimer();
 
         ServiceManager.getInstance().pauseService(true); // Pause the service
     }
