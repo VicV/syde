@@ -25,20 +25,26 @@ import org.opencv.calib3d.Calib3d;
 import org.opencv.core.Core;
 import org.opencv.core.CvType;
 import org.opencv.core.Mat;
+import org.opencv.core.MatOfFloat;
+import org.opencv.core.MatOfInt;
 import org.opencv.core.MatOfPoint;
 import org.opencv.core.MatOfPoint2f;
 import org.opencv.core.MatOfPoint3f;
 import org.opencv.core.Point;
 import org.opencv.core.Point3;
+import org.opencv.core.Rect;
+import org.opencv.core.RotatedRect;
 import org.opencv.core.Scalar;
 import org.opencv.core.Size;
 import org.opencv.core.TermCriteria;
 import org.opencv.imgproc.Imgproc;
 import org.opencv.imgproc.Moments;
+import org.opencv.video.Video;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 /**
@@ -51,11 +57,18 @@ public class ImageProcessing {
     //The latest fully-processed result image
     private static Mat currentMat;
 
+    //For the tracking algorithm (keep track of coloured image)
+    private static Mat originalMat;
+
     //The temporary image used for intermediate processing
     private static Mat processingMat;
 
     //Stores the list of blobs detected from the current Mat
     private static ArrayList<MatOfPoint> currentBlobs;
+
+    //Thresholding values for Canny edge detector in blob detector
+    private static double highThreshold;
+    private static double lowThreshold;
 
     //The Bitmap representation of the current result image
     private static Bitmap CVPreview = null;
@@ -63,6 +76,10 @@ public class ImageProcessing {
     private static TrackingObject trackingObject;
 
     private static boolean isTracking;
+
+    private static TrackingObject trackedObject;
+    private static Mat bgr;
+    private static final Scalar RECT_COLOR = new Scalar(0, 255, 0, 255);
 
     //measured result 114.8 degrees
     private static final double CAMERA_FOVX = 110;
@@ -140,10 +157,16 @@ public class ImageProcessing {
         }
     }
 
-    public static Bitmap processImage(Bitmap image) {
+    public static void setOriginalImage(Bitmap frame) {
+        originalMat = new Mat();
+        Utils.bitmapToMat(frame, originalMat);
+    }
+
+    public static void processImage(Bitmap image) {
         identifyLitter(image, DroneState.getLatLng());
-        convertLatestFrame();
-        return CVPreview;
+        if (!isTracking) {
+            convertLatestFrame();
+        }
     }
 
     public static void readFrame(Bitmap image) {
@@ -173,9 +196,10 @@ public class ImageProcessing {
             processingMat = new Mat();
         }
         currentMat.copyTo(processingMat);
+
         Imgproc.cvtColor(processingMat, processingMat, Imgproc.COLOR_BGR2GRAY);
-        double cannyThresh = determineCannyThreshold();
-        Imgproc.Canny(processingMat, processingMat, cannyThresh, cannyThresh*2);
+        determineCannyThreshold();
+        Imgproc.Canny(processingMat, processingMat, lowThreshold, highThreshold);
         closeImage();
         Imgproc.threshold(processingMat, processingMat, 0, 255, Imgproc.THRESH_BINARY);
         fillImage();
@@ -228,9 +252,10 @@ public class ImageProcessing {
      * Use Otsu thresholding to determine a good threshold value for Canny edge detection
      * @return
      */
-    public static double determineCannyThreshold() {
+    public static void determineCannyThreshold() {
         Mat _ = new Mat();
-        return Imgproc.threshold(processingMat, _, 0, 255, Imgproc.THRESH_OTSU);
+        lowThreshold = Imgproc.threshold(processingMat, processingMat, 127, 255, Imgproc.THRESH_OTSU);
+        highThreshold = lowThreshold*3;
     }
 
     /**
@@ -334,6 +359,14 @@ public class ImageProcessing {
         return minPoint;
     }
 
+    public static Rect calculateStartingRect(){
+
+        Point object = closestToCentre(blobCentres);
+        int x = (int) object.x;
+        int y = (int) object.y;
+        return new Rect(x, y, 20, 20);
+    }
+
     /**
      * TODO Implement this
      * Return the current distance of the drone from the target being tracked
@@ -345,58 +378,6 @@ public class ImageProcessing {
 
     public static double pixelDistance(Point p1, Point p2) {
        return Math.sqrt(Math.pow(p1.x - p2.x, 2) + Math.pow(p1.y - p2.y, 2));
-    }
-
-    /**
-     * Begin tracking the object closest to the centre of the camera
-     */
-    public static void startTrackingObject() {
-        isTracking = true;
-        Point object = closestToCentre(blobCentres);
-        int index = blobCentres.indexOf(object);
-        trackingObject = new TrackingObject(object, contourSize(currentBlobs.get(index)), DroneState.getLatLng(), DroneState.getAltitude());
-    }
-
-    /**
-     * Perform one "tracking interation" where we predict where the object should be in the current
-     * frame based on where it was and how far we've moved. If we find a blob near that location,
-     * it must be the tracked object. Update the track object to this new location and return the
-     * point identified
-     * @return
-     */
-    public static Point trackObject() {
-        if (!isTracking) {
-            MessageHandler.w("Not tracking object!");
-            return null;
-        }
-        TrackingObject tmp = trackingObject.predictPositionAndSize(DroneState.getLatLng(), DroneState.getAltitude());
-        Point trackerObj = null;
-        int index = 0;
-        for (Point centre: blobCentres) {
-            //If we are within 50 pixels of the assumed new location of the blob
-            if (pixelDistance(centre, tmp.getPosition()) < 100000 && Math.abs(contourSize(currentBlobs.get(index)) - tmp.getSize()) < 100000) {
-                trackerObj = centre;
-                break;
-            }
-            index++;
-        }
-        if (trackerObj != null) {
-            trackingObject = tmp;
-            Core.circle(processingMat, trackingObject.getPosition(), 100, new Scalar(255, 0, 255), 4);
-            return trackerObj;
-        } else {
-            MessageHandler.w("Lost track of object!");
-            return null;
-        }
-    }
-
-    public static void stopTrackingObject() {
-        isTracking = false;
-        trackingObject = null;
-    }
-
-    public static boolean isTracking() {
-        return isTracking;
     }
 
     public static double metresToPixels(double metres, double altitude){
@@ -612,5 +593,95 @@ public class ImageProcessing {
         return mat;
     }
 
-}
+    public static void createTrackedOject(Mat mRgba,Rect region)
+    {
+        trackedObject.hsv=new Mat(mRgba.size(),CvType.CV_8UC3);
+        trackedObject.mask=new Mat(mRgba.size(),CvType.CV_8UC1);
+        trackedObject.hue=new Mat(mRgba.size(),CvType.CV_8UC1);
+        trackedObject.prob=new Mat(mRgba.size(),CvType.CV_8UC1);
+        updateHueImage();
 
+        //create a histogram representation of the object
+        Mat tempmask = trackedObject.mask.submat(region);
+
+        MatOfFloat ranges = new MatOfFloat(0f, 256f);
+        MatOfInt histSize = new MatOfInt(25);
+
+        List<Mat> images = Arrays.asList(trackedObject.hueArray.get(0).submat(region));
+        Imgproc.calcHist(images, new MatOfInt(0),tempmask, trackedObject.hist, histSize, ranges);
+
+        Core.normalize(trackedObject.hist, trackedObject.hist);
+        trackedObject.prevRect=region;
+    }
+
+    public static void updateHueImage()
+    {
+
+        int vmin =65, vmax = 256, smin = 55;
+        //Mat is already a bgr image: convert to HSV color model
+        Imgproc.cvtColor(originalMat,trackedObject.hsv,Imgproc.COLOR_BGR2HSV);
+
+        //mask out-of-range values
+        Core.inRange(trackedObject.hsv, new Scalar(0, smin,Math.min(vmin,vmax)),new Scalar(180, 256,Math.max(vmin, vmax)), trackedObject.mask);
+
+        trackedObject.hsvArray.clear();
+        trackedObject.hueArray.clear();
+        trackedObject.hsvArray.add(trackedObject.hsv);
+        trackedObject.hueArray.add(trackedObject.hue);
+        MatOfInt from_to = new MatOfInt(0,0);
+
+        //extract the hue channel, split: src, dest channels
+        Core.mixChannels(trackedObject.hsvArray,trackedObject.hueArray,from_to);
+    }
+
+    public static void trackObject() {
+
+        if (!isTracking) {
+            MessageHandler.w("Not tracking object!");
+            return;
+        }
+        MatOfFloat ranges = new MatOfFloat(0f, 256f);
+
+        updateHueImage();
+        Imgproc.calcBackProject(trackedObject.hueArray, new MatOfInt(0), trackedObject.hist, trackedObject.prob, ranges, 255);
+        Core.bitwise_and(trackedObject.prob, trackedObject.mask, trackedObject.prob, new Mat());
+
+        trackedObject.currBox = Video.CamShift(trackedObject.prob, trackedObject.prevRect, new TermCriteria(TermCriteria.EPS, 10, 1));
+        trackedObject.prevRect = trackedObject.currBox.boundingRect();
+        trackedObject.currBox.angle = -trackedObject.currBox.angle;
+        Core.ellipse(originalMat,trackedObject.currBox,RECT_COLOR, 6);
+        Utils.matToBitmap(originalMat, CVPreview);
+    }
+
+
+    public static boolean isTracking() {
+        return isTracking;
+    }
+
+    /**
+     * Begin tracking the object closest to the centre of the camera
+     */
+    public static void startTrackingObject()
+    {
+        if (!isTracking)
+        {
+            //Only want to create a new Tracked Object if are not currently tracking (throws exception otherwise)
+            MessageHandler.d("Started Tracking...");
+            trackedObject = new TrackingObject();
+            isTracking = true;
+            createTrackedOject(originalMat, trackedObject.prevRect);
+            trackObject();
+        } else {
+            MessageHandler.d("Already Tracking...");
+        }
+    }
+
+    /**
+     * Stop tracking object
+     */
+    public static void stopTrackingObject() {
+        MessageHandler.d("Stopped Tracking...");
+        isTracking = false;
+        trackedObject = null;
+    }
+}

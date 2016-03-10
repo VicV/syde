@@ -274,7 +274,6 @@ public class MainActivity extends DJIBaseActivity {
 
     public class ImageAsyncTask extends AsyncTask<GLSurfaceView, Void, Void> {
 
-
         @Override
         protected Void doInBackground(GLSurfaceView... params) {
             ImageHelper.createBitmapFromFrame(new ImageHelper.BitmapCreatedCallback() {
@@ -286,13 +285,18 @@ public class MainActivity extends DJIBaseActivity {
                             @Override
                             public void run() {
                                 if (bitmap != null) {
-                                    CPreview.setImageBitmap(ImageProcessing.processImage(bitmap));
+                                    ImageProcessing.processImage(bitmap);
+                                    ImageProcessing.setOriginalImage(bitmap);
+                                    if (ImageProcessing.isTracking())
+                                    {
+                                        ImageProcessing.trackObject();
+                                    }
                                     //CPreview.setImageBitmap(bitmap);
                                     //ImageProcessing.readFrame(bitmap);
                                     //new ImageAsyncTask().execute();
                                 }
                             }
-                        }, 200);
+                        }, 400);
                     }
                     // MessageHandler.d("Bitmap: " + count);
                 }
@@ -460,9 +464,6 @@ public class MainActivity extends DJIBaseActivity {
 //                    ((TextView) findViewById(R.id.pid_error)).setText("" + GroundStation.getAngularController().getLastError());
 //                }
 
-                ImageProcessing.convertLatestFrame();
-
-
                 if (LitterApplication.devMode) {
                     ((ImageView) findViewById(R.id.CVPreview)).setImageBitmap(ImageProcessing.getCVPreview());
                 }
@@ -613,7 +614,7 @@ public class MainActivity extends DJIBaseActivity {
                         trackFuture = taskScheduler.scheduleAtFixedRate(new Runnable() {
                             @Override
                             public void run() {
-                                ImageProcessing.trackObject();
+                                //ImageProcessing.trackObject();
                             }
                         }, 0, 300, TimeUnit.MILLISECONDS);
                         break;
@@ -641,15 +642,15 @@ public class MainActivity extends DJIBaseActivity {
         findViewById(R.id.connect_button).setOnClickListener(getWifiClickListener());
 
         //Dev stuff
-//        findViewById(R.id.button_track).setOnClickListener(getTrackListener());
-//        findViewById(R.id.button_stop_track).setOnClickListener(getTrackListener());
+        findViewById(R.id.button_special_1).setOnClickListener(getTrackListener());
+        findViewById(R.id.button_special_2).setOnClickListener(getTrackListener());
 
         //Dev toggle
         if (LitterApplication.devMode) {
             findViewById(R.id.CVPreview).setOnClickListener(getCameraViewListener());
             findViewById(R.id.button_special_camera).setOnClickListener(getDevButtonListener());
-            findViewById(R.id.button_special_1).setOnClickListener(getDevButtonListener());
-            findViewById(R.id.button_special_2).setOnClickListener(getDevButtonListener());
+            //findViewById(R.id.button_special_1).setOnClickListener(getDevButtonListener());
+            //findViewById(R.id.button_special_2).setOnClickListener(getDevButtonListener());
             findViewById(R.id.button_special_3).setOnClickListener(getDevButtonListener());
             findViewById(R.id.button_imgproc_1).setOnClickListener(getDevButtonListener());
             findViewById(R.id.button_imgproc_2).setOnClickListener(getDevButtonListener());
