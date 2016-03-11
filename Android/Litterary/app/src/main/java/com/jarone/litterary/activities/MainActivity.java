@@ -653,7 +653,7 @@ public class MainActivity extends DJIBaseActivity {
         findViewById(R.id.home_button).setOnClickListener(getHomeButtonListener());
         findViewById(R.id.map_button).setOnClickListener(setRegionClickListener());
         findViewById(R.id.start_button).setOnClickListener(getStartSurveyListener());
-//        findViewById(R.id.button_switch_mode).setOnClickListener(getSwitchModeListener());
+        findViewById(R.id.switch_mode_button).setOnClickListener(getSwitchModeListener());
         findViewById(R.id.DJI_camera_surfaceview).setOnClickListener(getCameraViewListener());
         findViewById(R.id.connect_button).setOnClickListener(getWifiClickListener());
 
