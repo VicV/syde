@@ -66,7 +66,7 @@ public class NavigationRoute {
             GroundStation.newTask();
             GroundStation.addPoint(route[index].latitude, route[index].longitude, SPEED, altitude, heading);
             index++;
-
+            setCallbacks();
             GroundStation.uploadAndExecuteTask();
 
         } else {
@@ -86,6 +86,15 @@ public class NavigationRoute {
             }
         };
         GroundStation.stopTask();
+    }
+
+    protected void setCallbacks() {
+        GroundStation.taskDoneCallback = new Runnable() {
+            @Override
+            public void run() {
+               executeRouteStep();
+            }
+        };
     }
 
     public boolean isExecuting() {

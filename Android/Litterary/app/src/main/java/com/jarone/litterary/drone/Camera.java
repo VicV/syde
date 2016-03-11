@@ -25,7 +25,7 @@ import dji.sdk.util.DjiLocationCoordinate2D;
  */
 public class Camera {
 
-    public static int requestedGimbalAngle = 0;
+    public static int requestedGimbalAngle = 1000;
     /**
      * The callback which is executed when a photo is successfully taken. This will be changed
      * by calling classes
@@ -53,17 +53,18 @@ public class Camera {
                             public void onResult(DJIError djiError) {
                                 if (djiError.errorCode != DJIError.RESULT_OK) {
                                     engageCameraMode();
+                                    takePhoto();
                                     return;
                                 }
                                 MessageHandler.d("Take Photo: " + djiError.errorDescription);
-                                downloadLatestPhoto();
+                                //downloadLatestPhoto();
                                 photoCallback.run();
-                                photoCallback = new Runnable() {
-                                    @Override
-                                    public void run() {
-
-                                    }
-                                };
+//                                photoCallback = new Runnable() {
+//                                    @Override
+//                                    public void run() {
+//
+//                                    }
+//                                };
                             }
                         }
                     );

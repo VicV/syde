@@ -33,6 +33,7 @@ import com.jarone.litterary.Receivers.WifiChangeReceiver;
 import com.jarone.litterary.Receivers.WifiScanReceiver;
 import com.jarone.litterary.adapters.DebugMessageRecyclerAdapter;
 import com.jarone.litterary.adapters.ViewPagerAdapter;
+import com.jarone.litterary.control.AngularController;
 import com.jarone.litterary.datatypes.DebugItem;
 import com.jarone.litterary.drone.Camera;
 import com.jarone.litterary.drone.DroneState;
@@ -82,6 +83,7 @@ public class MainActivity extends DJIBaseActivity {
     private Context mainActivity;
     private ScheduledExecutorService taskScheduler;
     private ScheduledFuture trackFuture;
+    private AngularController angularController;
 
     private LatLng[] currentPolygon = null;
     private ArrayList<LatLng> currentPhotoPoints = null;
@@ -107,7 +109,7 @@ public class MainActivity extends DJIBaseActivity {
         mDjiGLSurfaceView.setZOrderMediaOverlay(true);
         RelativeLayout.LayoutParams lp = new RelativeLayout.LayoutParams(RelativeLayout.LayoutParams.FILL_PARENT, RelativeLayout.LayoutParams.WRAP_CONTENT);
 
-        addContentView(getLayoutInflater().inflate(R.layout.surface_overlay_layout, null), lp);
+//        addContentView(getLayoutInflater().inflate(R.layout.surface_overlay_layout, null), lp);
 
         taskScheduler = Executors.newSingleThreadScheduledExecutor();
     }
@@ -191,15 +193,32 @@ public class MainActivity extends DJIBaseActivity {
                         new ImageProcessing.CalibrateTask().execute();
                         break;
                     case R.id.button_imgproc_3:
-                        if (grabber == null) {
-                            grabber = new Grabber();
+                        if (ImageProcessing.isTracking()) {
+                            ImageProcessing.stopTrackingObject();
+                            if (trackFuture != null) {
+                                trackFuture.cancel(true);
+                                trackFuture = null;
+                            }
+
+                        } else {
+                            ImageProcessing.startTrackingObject();
+                            trackFuture = taskScheduler.scheduleAtFixedRate(new Runnable() {
+                                @Override
+                                public void run() {
+                                    ImageProcessing.trackObject();
+                                }
+                            }, 0, 300, TimeUnit.MILLISECONDS);
                         }
-                        grabber.sendCommand(Grabber.Commands.OPEN);
+
                         break;
                     case R.id.button_special_1:
-                        new ImageAsyncTask().execute();
+                        if (angularController == null) {
+                            angularController = new AngularController();
+                        }
+                        angularController.generateControlTable();
                         break;
                     case R.id.button_special_2:
+                        angularController.cancelTableGeneration();
                         break;
                     case R.id.button_special_3:
                         ImageProcessing.loadCalibration();
@@ -209,7 +228,7 @@ public class MainActivity extends DJIBaseActivity {
                             int nh = (int) (decoded.getHeight() * (2000.0 / decoded.getWidth()));
                             Bitmap scaled = Bitmap.createScaledBitmap(decoded, 2000, nh, true);
                             ImageProcessing.readFrame(scaled);
-                            ImageProcessing.correctDistortion();
+                            //ImageProcessing.correctDistortion();
                         }catch (IOException e) {
 
                         }
@@ -460,18 +479,16 @@ public class MainActivity extends DJIBaseActivity {
 //                    ((TextView) findViewById(R.id.pid_error)).setText("" + GroundStation.getAngularController().getLastError());
 //                }
 
-                ImageProcessing.convertLatestFrame();
-
 
                 if (LitterApplication.devMode) {
                     ((ImageView) findViewById(R.id.CVPreview)).setImageBitmap(ImageProcessing.getCVPreview());
                 }
-                if (currentPhotoPoints != null && currentPhotoPoints.size() > 0) {
-                    findViewById(R.id.remaining_items).setVisibility(View.VISIBLE);
-                    //TODO: UPDATE ON EACH PICTURE TAKEN
-                } else {
-                    findViewById(R.id.remaining_items).setVisibility(View.GONE);
-                }
+//                if (currentPhotoPoints != null && currentPhotoPoints.size() > 0) {
+//                    findViewById(R.id.remaining_items).setVisibility(View.VISIBLE);
+//                    //TODO: UPDATE ON EACH PICTURE TAKEN
+//                } else {
+//                    findViewById(R.id.remaining_items).setVisibility(View.GONE);
+//                }
 
                 //TODO: UPDATE BATTERY. NEED TO KNOW WTF REMAINPOWER IS FROM ADAM
             }
