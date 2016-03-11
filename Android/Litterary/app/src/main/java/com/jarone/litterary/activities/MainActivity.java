@@ -259,7 +259,7 @@ public class MainActivity extends DJIBaseActivity {
             @Override
             public void onResult(byte[] videoBuffer, int size) {
                 mDjiGLSurfaceView.setDataToDecoder(videoBuffer, size);
-                processFrame();
+                //processFrame();
 //                if (!processing) {
 //                    processing = true;
 //                }
