@@ -657,12 +657,10 @@ public class MainActivity extends DJIBaseActivity {
         findViewById(R.id.DJI_camera_surfaceview).setOnClickListener(getCameraViewListener());
         findViewById(R.id.connect_button).setOnClickListener(getWifiClickListener());
 
-
         //Dev toggle
         if (LitterApplication.devMode) {
             findViewById(R.id.CVPreview).setOnClickListener(getCameraViewListener());
             findViewById(R.id.button_special_camera).setOnClickListener(getDevButtonListener());
-
 
             //Dev stuff
             findViewById(R.id.button_special_1).setOnClickListener(getTrackListener());
