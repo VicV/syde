@@ -667,6 +667,7 @@ public class ImageProcessing {
         {
             //Only want to create a new Tracked Object if are not currently tracking (throws exception otherwise)
             MessageHandler.d("Started Tracking...");
+            detectBlobs();
             trackedObject = new TrackingObject();
             isTracking = true;
             createTrackedOject(originalMat, trackedObject.prevRect);
