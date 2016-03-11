@@ -33,7 +33,6 @@ import org.opencv.core.MatOfPoint3f;
 import org.opencv.core.Point;
 import org.opencv.core.Point3;
 import org.opencv.core.Rect;
-import org.opencv.core.RotatedRect;
 import org.opencv.core.Scalar;
 import org.opencv.core.Size;
 import org.opencv.core.TermCriteria;
@@ -109,8 +108,7 @@ public class ImageProcessing {
     /**
      * Init all the (global) variables needed in the controller
      */
-    public static void init()
-    {
+    public static void init() {
         numCornersHor = 9;
         numCornersVer = 6;
         obj = new MatOfPoint3f();
@@ -123,7 +121,7 @@ public class ImageProcessing {
         distCoeffs = new Mat();
         boardsNumber = 9;
         isCalibrated = false;
-        int numSquares = numCornersHor*numCornersVer;
+        int numSquares = numCornersHor * numCornersVer;
         for (int j = 0; j < numSquares; j++)
             obj.push_back(new MatOfPoint3f(new Point3(j / numCornersHor, j % numCornersVer, 0.0f)));
     }
@@ -177,6 +175,7 @@ public class ImageProcessing {
         readFrame(photo);
         //correctDistortion();
         detectBlobs();
+        ContextManager.getMainActivityInstance().setProcessing(false);
         return calculateGPSCoords(blobCentres, origin);
     }
 
@@ -233,7 +232,8 @@ public class ImageProcessing {
         fillContours(contours, 255);
     }
 
-    /**VCR1honey
+    /**
+     * VCR1honey
      * Converts the most recently-processed Mat frame to a Bitmap and stores it in CVPreview
      *
      * @return
@@ -250,12 +250,13 @@ public class ImageProcessing {
 
     /**
      * Use Otsu thresholding to determine a good threshold value for Canny edge detection
+     *
      * @return
      */
     public static void determineCannyThreshold() {
         Mat _ = new Mat();
         lowThreshold = Imgproc.threshold(processingMat, processingMat, 127, 255, Imgproc.THRESH_OTSU);
-        highThreshold = lowThreshold*3;
+        highThreshold = lowThreshold * 3;
     }
 
     /**
@@ -301,6 +302,7 @@ public class ImageProcessing {
 
     /**
      * Determine the centroid of each detected blob
+     *
      * @return
      */
     public static ArrayList<Point> findBlobCentres() {
@@ -317,13 +319,14 @@ public class ImageProcessing {
 
     /**
      * Uses images moments to determine the centroid of the given contour
+     *
      * @param contour
      * @return
      */
     public static Point contourCentroid(MatOfPoint contour) {
         Moments moment = Imgproc.moments(contour);
-        int x = (int)moment.get_m10() / (int)moment.get_m00();
-        int y = (int)moment.get_m01() / (int)moment.get_m00();
+        int x = (int) moment.get_m10() / (int) moment.get_m00();
+        int y = (int) moment.get_m01() / (int) moment.get_m00();
         return new Point(x, y);
     }
 
@@ -359,7 +362,7 @@ public class ImageProcessing {
         return minPoint;
     }
 
-    public static Rect calculateStartingRect(){
+    public static Rect calculateStartingRect() {
 
         Point object = closestToCentre(blobCentres);
         int x = (int) object.x;
@@ -370,6 +373,7 @@ public class ImageProcessing {
     /**
      * TODO Implement this
      * Return the current distance of the drone from the target being tracked
+     *
      * @return
      */
     public static double distanceFromTarget(AngularController.ActiveAngle angle) {
@@ -377,21 +381,19 @@ public class ImageProcessing {
     }
 
     public static double pixelDistance(Point p1, Point p2) {
-       return Math.sqrt(Math.pow(p1.x - p2.x, 2) + Math.pow(p1.y - p2.y, 2));
+        return Math.sqrt(Math.pow(p1.x - p2.x, 2) + Math.pow(p1.y - p2.y, 2));
     }
 
-    public static double metresToPixels(double metres, double altitude){
-        double degrees = Math.atan(metres/altitude);
-        return degrees/CAMERA_FOVX * imageX;
+    public static double metresToPixels(double metres, double altitude) {
+        double degrees = Math.atan(metres / altitude);
+        return degrees / CAMERA_FOVX * imageX;
     }
 
     /**
      * Correct distorted input stream using the chessboard pattern
      */
-    public static void correctDistortion()
-    {
-        if (isCalibrated)
-        {
+    public static void correctDistortion() {
+        if (isCalibrated) {
             processingMat = currentMat;
             Mat correctedMat = new Mat();
             Imgproc.undistort(processingMat, correctedMat, intrinsic, distCoeffs);
@@ -404,16 +406,14 @@ public class ImageProcessing {
         }
     }
 
-    private static void loadCalibrationImages()
-    {
+    private static void loadCalibrationImages() {
         init();
         try {
             //TODO take new checkerboard images that do not fail and change boardsNumber appropriately
-            for (int j = 1; j < boardsNumber+1; j++)
-            {
+            for (int j = 1; j < boardsNumber + 1; j++) {
                 InputStream i = ContextManager.getActivity().getAssets().open("c" + j + ".jpg");
                 Bitmap decoded = BitmapFactory.decodeStream(i);
-                int nh = (int) ( decoded.getHeight() * (2000.0 / decoded.getWidth()) );
+                int nh = (int) (decoded.getHeight() * (2000.0 / decoded.getWidth()));
                 Bitmap scaled = Bitmap.createScaledBitmap(decoded, 2000, nh, true);
                 readFrame(scaled);
                 savedImage = currentMat;
@@ -425,12 +425,11 @@ public class ImageProcessing {
         // reach the correct number of images needed for the calibration
         calibrateCamera();
     }
+
     /**
      * Find and draws the points needed for the calibration on the chessboard
-     *
      */
-    private static void findAndDrawPoints()
-    {
+    private static void findAndDrawPoints() {
         // init
         MessageHandler.d("Finding points");
         Mat grayImage = new Mat();
@@ -445,8 +444,7 @@ public class ImageProcessing {
         boolean found = Calib3d.findChessboardCorners(grayImage, boardSize, imageCorners,
                 Calib3d.CALIB_CB_ADAPTIVE_THRESH + Calib3d.CALIB_CB_NORMALIZE_IMAGE + Calib3d.CALIB_CB_FAST_CHECK);
         MessageHandler.d("Done finding");
-        if (found)
-        {
+        if (found) {
             MessageHandler.d("Find successful");
             TermCriteria term = new TermCriteria(TermCriteria.EPS | TermCriteria.MAX_ITER, 30, 0.1);
             Imgproc.cornerSubPix(grayImage, imageCorners, new Size(11, 11), new Size(-1, -1), term);
@@ -459,8 +457,7 @@ public class ImageProcessing {
         }
     }
 
-    private static void calibrateCamera()
-    {
+    private static void calibrateCamera() {
         // init needed variables according to OpenCV docs
         List<Mat> rvecs = new ArrayList<>();
         List<Mat> tvecs = new ArrayList<>();
@@ -504,10 +501,10 @@ public class ImageProcessing {
         }
     }
 
-    public static String matToJson(Mat mat){
+    public static String matToJson(Mat mat) {
         JsonObject obj = new JsonObject();
 
-        if(mat.isContinuous()){
+        if (mat.isContinuous()) {
             int cols = mat.cols();
             int rows = mat.rows();
             int elemSize = (int) mat.elemSize();
@@ -521,27 +518,23 @@ public class ImageProcessing {
             // Encoding data byte array to Base64.
             String dataString;
 
-            if( type == CvType.CV_32S || type == CvType.CV_32SC2 || type == CvType.CV_32SC3 || type == CvType.CV_16S) {
+            if (type == CvType.CV_32S || type == CvType.CV_32SC2 || type == CvType.CV_32SC3 || type == CvType.CV_16S) {
                 int[] data = new int[cols * rows * elemSize];
                 mat.get(0, 0, data);
                 dataString = new String(Base64.encode(SerializationUtils.toByteArray(data), Base64.DEFAULT));
-            }
-            else if( type == CvType.CV_32F || type == CvType.CV_32FC2) {
+            } else if (type == CvType.CV_32F || type == CvType.CV_32FC2) {
                 float[] data = new float[cols * rows * elemSize];
                 mat.get(0, 0, data);
                 dataString = new String(Base64.encode(SerializationUtils.toByteArray(data), Base64.DEFAULT));
-            }
-            else if( type == CvType.CV_64F || type == CvType.CV_64FC2) {
+            } else if (type == CvType.CV_64F || type == CvType.CV_64FC2) {
                 double[] data = new double[cols * rows * elemSize];
                 mat.get(0, 0, data);
                 dataString = new String(Base64.encode(SerializationUtils.toByteArray(data), Base64.DEFAULT));
-            }
-            else if( type == CvType.CV_8U ) {
+            } else if (type == CvType.CV_8U) {
                 byte[] data = new byte[cols * rows * elemSize];
                 mat.get(0, 0, data);
                 dataString = new String(Base64.encode(data, Base64.DEFAULT));
-            }
-            else {
+            } else {
 
                 throw new UnsupportedOperationException("unknown type");
             }
@@ -557,7 +550,7 @@ public class ImageProcessing {
         return "{}";
     }
 
-    public static Mat matFromJson(String json){
+    public static Mat matFromJson(String json) {
 
 
         JsonParser parser = new JsonParser();
@@ -570,35 +563,30 @@ public class ImageProcessing {
         Mat mat = new Mat(rows, cols, type);
 
         String dataString = JsonObject.get("data").getAsString();
-        if( type == CvType.CV_32S || type == CvType.CV_32SC2 || type == CvType.CV_32SC3 || type == CvType.CV_16S) {
-            int[] data = SerializationUtils.toIntArray(Base64.decode(dataString.getBytes(),  Base64.DEFAULT));
+        if (type == CvType.CV_32S || type == CvType.CV_32SC2 || type == CvType.CV_32SC3 || type == CvType.CV_16S) {
+            int[] data = SerializationUtils.toIntArray(Base64.decode(dataString.getBytes(), Base64.DEFAULT));
             mat.put(0, 0, data);
-        }
-        else if( type == CvType.CV_32F || type == CvType.CV_32FC2) {
+        } else if (type == CvType.CV_32F || type == CvType.CV_32FC2) {
             float[] data = SerializationUtils.toFloatArray(Base64.decode(dataString.getBytes(), Base64.DEFAULT));
             mat.put(0, 0, data);
-        }
-        else if( type == CvType.CV_64F || type == CvType.CV_64FC2) {
+        } else if (type == CvType.CV_64F || type == CvType.CV_64FC2) {
             double[] data = SerializationUtils.toDoubleArray(Base64.decode(dataString.getBytes(), Base64.DEFAULT));
             mat.put(0, 0, data);
-        }
-        else if( type == CvType.CV_8U ) {
+        } else if (type == CvType.CV_8U) {
             byte[] data = Base64.decode(dataString.getBytes(), Base64.DEFAULT);
             mat.put(0, 0, data);
-        }
-        else {
+        } else {
 
             throw new UnsupportedOperationException("unknown type");
         }
         return mat;
     }
 
-    public static void createTrackedOject(Mat mRgba,Rect region)
-    {
-        trackedObject.hsv=new Mat(mRgba.size(),CvType.CV_8UC3);
-        trackedObject.mask=new Mat(mRgba.size(),CvType.CV_8UC1);
-        trackedObject.hue=new Mat(mRgba.size(),CvType.CV_8UC1);
-        trackedObject.prob=new Mat(mRgba.size(),CvType.CV_8UC1);
+    public static void createTrackedOject(Mat mRgba, Rect region) {
+        trackedObject.hsv = new Mat(mRgba.size(), CvType.CV_8UC3);
+        trackedObject.mask = new Mat(mRgba.size(), CvType.CV_8UC1);
+        trackedObject.hue = new Mat(mRgba.size(), CvType.CV_8UC1);
+        trackedObject.prob = new Mat(mRgba.size(), CvType.CV_8UC1);
         updateHueImage();
 
         //create a histogram representation of the object
@@ -608,30 +596,29 @@ public class ImageProcessing {
         MatOfInt histSize = new MatOfInt(25);
 
         List<Mat> images = Arrays.asList(trackedObject.hueArray.get(0).submat(region));
-        Imgproc.calcHist(images, new MatOfInt(0),tempmask, trackedObject.hist, histSize, ranges);
+        Imgproc.calcHist(images, new MatOfInt(0), tempmask, trackedObject.hist, histSize, ranges);
 
         Core.normalize(trackedObject.hist, trackedObject.hist);
-        trackedObject.prevRect=region;
+        trackedObject.prevRect = region;
     }
 
-    public static void updateHueImage()
-    {
+    public static void updateHueImage() {
 
-        int vmin =65, vmax = 256, smin = 55;
+        int vmin = 65, vmax = 256, smin = 55;
         //Mat is already a bgr image: convert to HSV color model
-        Imgproc.cvtColor(originalMat,trackedObject.hsv,Imgproc.COLOR_BGR2HSV);
+        Imgproc.cvtColor(originalMat, trackedObject.hsv, Imgproc.COLOR_BGR2HSV);
 
         //mask out-of-range values
-        Core.inRange(trackedObject.hsv, new Scalar(0, smin,Math.min(vmin,vmax)),new Scalar(180, 256,Math.max(vmin, vmax)), trackedObject.mask);
+        Core.inRange(trackedObject.hsv, new Scalar(0, smin, Math.min(vmin, vmax)), new Scalar(180, 256, Math.max(vmin, vmax)), trackedObject.mask);
 
         trackedObject.hsvArray.clear();
         trackedObject.hueArray.clear();
         trackedObject.hsvArray.add(trackedObject.hsv);
         trackedObject.hueArray.add(trackedObject.hue);
-        MatOfInt from_to = new MatOfInt(0,0);
+        MatOfInt from_to = new MatOfInt(0, 0);
 
         //extract the hue channel, split: src, dest channels
-        Core.mixChannels(trackedObject.hsvArray,trackedObject.hueArray,from_to);
+        Core.mixChannels(trackedObject.hsvArray, trackedObject.hueArray, from_to);
     }
 
     public static void trackObject() {
@@ -649,7 +636,7 @@ public class ImageProcessing {
         trackedObject.currBox = Video.CamShift(trackedObject.prob, trackedObject.prevRect, new TermCriteria(TermCriteria.EPS, 10, 1));
         trackedObject.prevRect = trackedObject.currBox.boundingRect();
         trackedObject.currBox.angle = -trackedObject.currBox.angle;
-        Core.ellipse(originalMat,trackedObject.currBox,RECT_COLOR, 6);
+        Core.ellipse(originalMat, trackedObject.currBox, RECT_COLOR, 6);
         Utils.matToBitmap(originalMat, CVPreview);
     }
 
@@ -661,10 +648,8 @@ public class ImageProcessing {
     /**
      * Begin tracking the object closest to the centre of the camera
      */
-    public static void startTrackingObject()
-    {
-        if (!isTracking)
-        {
+    public static void startTrackingObject() {
+        if (!isTracking) {
             //Only want to create a new Tracked Object if are not currently tracking (throws exception otherwise)
             MessageHandler.d("Started Tracking...");
             detectBlobs();

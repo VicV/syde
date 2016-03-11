@@ -210,7 +210,7 @@ public class MainActivity extends DJIBaseActivity {
                             Bitmap scaled = Bitmap.createScaledBitmap(decoded, 2000, nh, true);
                             ImageProcessing.readFrame(scaled);
                             ImageProcessing.correctDistortion();
-                        }catch (IOException e) {
+                        } catch (IOException e) {
 
                         }
 
@@ -259,10 +259,10 @@ public class MainActivity extends DJIBaseActivity {
             @Override
             public void onResult(byte[] videoBuffer, int size) {
                 mDjiGLSurfaceView.setDataToDecoder(videoBuffer, size);
-                processFrame();
-//                if (!processing) {
-//                    processing = true;
-//                }
+                if (!processing) {
+                    processing = true;
+                    processFrame();
+                }
             }
         };
         DJIDrone.getDjiCamera().setReceivedVideoDataCallBack(mReceivedVideoDataCallBack);
@@ -272,6 +272,10 @@ public class MainActivity extends DJIBaseActivity {
         new ImageAsyncTask().execute(mDjiGLSurfaceView.getVisibility() == View.GONE ? mAndroidCameraSurfaceView : mDjiGLSurfaceView);
     }
 
+    public void setProcessing(boolean processing) {
+        this.processing = processing;
+    }
+
     public class ImageAsyncTask extends AsyncTask<GLSurfaceView, Void, Void> {
 
         @Override
@@ -279,7 +283,9 @@ public class MainActivity extends DJIBaseActivity {
             ImageHelper.createBitmapFromFrame(new ImageHelper.BitmapCreatedCallback() {
                 @Override
                 public void onBitmapCreated(final Bitmap bitmap) {
-                    processing = false;
+
+
+
                     if (CPreview != null) {
                         CPreview.postDelayed(new Runnable() {
                             @Override
@@ -287,8 +293,7 @@ public class MainActivity extends DJIBaseActivity {
                                 if (bitmap != null) {
                                     ImageProcessing.processImage(bitmap);
                                     ImageProcessing.setOriginalImage(bitmap);
-                                    if (ImageProcessing.isTracking())
-                                    {
+                                    if (ImageProcessing.isTracking()) {
                                         ImageProcessing.trackObject();
                                     }
                                     //CPreview.setImageBitmap(bitmap);

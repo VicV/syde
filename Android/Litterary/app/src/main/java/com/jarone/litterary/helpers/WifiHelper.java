@@ -64,20 +64,22 @@ public class WifiHelper {
         conf.allowedKeyManagement.set(WifiConfiguration.KeyMgmt.NONE);
         wifiManager.addNetwork(conf);
         List<WifiConfiguration> more = wifiManager.getConfiguredNetworks();
-        for (WifiConfiguration i : more) {
-            if (i.SSID != null && i.SSID.equals("\"" + SSID + "\"")) {
-                wifiManager.disconnect();
-                wifiManager.enableNetwork(i.networkId, true);
-                wifiManager.reconnect();
-                break;
+        if (more != null) {
+            for (WifiConfiguration i : more) {
+                if (i.SSID != null && i.SSID.equals("\"" + SSID + "\"")) {
+                    wifiManager.disconnect();
+                    wifiManager.enableNetwork(i.networkId, true);
+                    wifiManager.reconnect();
+                    break;
+                }
             }
         }
-
         return state;
     }
 
     //Forgets a wifi network, used to remove any previously known wifi networks to stop
     //From stealing connection from drone. Freezes the app though so don't use.
+
     private static void forgetWifi(int networkId, WifiManager wifiManager) {
         try {
             Method forgetMethod = null;
