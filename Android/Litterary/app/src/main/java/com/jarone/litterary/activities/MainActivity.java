@@ -307,9 +307,7 @@ public class MainActivity extends DJIBaseActivity {
                                     if (ImageProcessing.isTracking()) {
                                         ImageProcessing.trackObject();
                                     }
-                                    //CPreview.setImageBitmap(bitmap);
-                                    //ImageProcessing.readFrame(bitmap);
-                                    //new ImageAsyncTask().execute();
+
                                 }
                             }
                         }, 400);
@@ -441,54 +439,78 @@ public class MainActivity extends DJIBaseActivity {
 
     }
 
+    private boolean interfaceSetup = false;
+
+    private ImageView connectIcon;
+    private TextView connectText;
+    private TextView switchModeText;
+    private TextView currentModeText;
+    private TextView currentLocation;
+    private TextView targetLocation;
+    private TextView droneConnected;
+    private ImageView modeButton;
+
+    private void setupInterfaceUpdate() {
+        connectIcon = ((ImageView) findViewById(R.id.connect_icon));
+        connectText = ((TextView) findViewById(R.id.connect_text));
+        switchModeText = ((TextView) findViewById(R.id.switch_mode_text));
+        currentModeText = ((TextView) findViewById(R.id.currentMode));
+        currentLocation = ((TextView) findViewById(R.id.currentLocation));
+        targetLocation = ((TextView) findViewById(R.id.targetLocation));
+        droneConnected = ((TextView) findViewById(R.id.droneConnected));
+        modeButton = (ImageView) findViewById(R.id.switch_mode_icon);
+    }
+
     private void updateInterface() {
+        if (!interfaceSetup) {
+            setupInterfaceUpdate();
+        }
         runOnUiThread(new Runnable() {
             @TargetApi(Build.VERSION_CODES.LOLLIPOP)
             @Override
             public void run() {
                 if (wifiManager.getConnectionInfo().getSSID().contains("Phantom")) {
-                    ((ImageView) findViewById(R.id.connect_icon)).setImageDrawable(getDrawable(R.drawable.wifi_connected_small));
-                    ((TextView) findViewById(R.id.connect_text)).setText("connected");
+                    connectIcon.setImageDrawable(getDrawable(R.drawable.wifi_connected_small));
+                    connectText.setText("connected");
                 } else {
-                    ((TextView) findViewById(R.id.connect_text)).setText("connect");
-                    ((ImageView) findViewById(R.id.connect_icon)).setImageDrawable(getDrawable(R.drawable.wifi_not_connected_small));
+                    connectText.setText("connect");
+                    connectIcon.setImageDrawable(getDrawable(R.drawable.wifi_not_connected_small));
                 }
-                ImageView modeButton = (ImageView) findViewById(R.id.switch_mode_icon);
                 if (DroneState.getMode() == DroneState.DIRECT_MODE) {
                     modeButton.setImageDrawable(getDrawable(R.drawable.direct_small));
-                    ((TextView) findViewById(R.id.switch_mode_text)).setText("direct");
-                    ((TextView) findViewById(R.id.currentMode)).setText("DIRECT");
+                    switchModeText.setText("direct");
+                    currentModeText.setText("DIRECT");
 
 
                 } else if (DroneState.getMode() == DroneState.WAYPOINT_MODE) {
                     modeButton.setImageDrawable(getDrawable(R.drawable.map_pin_small));
-                    ((TextView) findViewById(R.id.switch_mode_text)).setText("waypoint");
-                    ((TextView) findViewById(R.id.currentMode)).setText(DroneState.flightMode.name());
+                    switchModeText.setText("waypoint");
+                    currentModeText.setText(DroneState.flightMode.name());
                 }
-                ((TextView) findViewById(R.id.currentLocation)).setText(
+                currentLocation.setText(
                         LocationHelper.formatForDisplay(DroneState.getLatitude(), DroneState.getLongitude()));
 
-                ((TextView) findViewById(R.id.targetLocation)).setText(
+                targetLocation.setText(
                         LocationHelper.formatForDisplay(
                                 GroundStation.getCurrentTarget().latitude,
                                 GroundStation.getCurrentTarget().longitude)
 
                 );
-                ((TextView) findViewById(R.id.droneConnected)).setText("" + DroneState.droneConnected);
+                droneConnected.setText("" + DroneState.droneConnected);
 //                if (GroundStation.executingController()) {
 //                    ((TextView) findViewById(R.id.pid_angle)).setText("" + GroundStation.getAngularController().getLastAction());
 //                    ((TextView) findViewById(R.id.pid_error)).setText("" + GroundStation.getAngularController().getLastError());
 //                }
 
                 if (LitterApplication.devMode) {
-                    ((ImageView) findViewById(R.id.CVPreview)).setImageBitmap(ImageProcessing.getCVPreview());
+                    CPreview.setImageBitmap(ImageProcessing.getCVPreview());
                 }
-                if (currentPhotoPoints != null && currentPhotoPoints.size() > 0) {
-                    findViewById(R.id.remaining_items).setVisibility(View.VISIBLE);
-                    //TODO: UPDATE ON EACH PICTURE TAKEN
-                } else {
-                    findViewById(R.id.remaining_items).setVisibility(View.GONE);
-                }
+//                if (currentPhotoPoints != null && currentPhotoPoints.size() > 0) {
+//                    findViewById(R.id.remaining_items).setVisibility(View.VISIBLE);
+//                    //TODO: UPDATE ON EACH PICTURE TAKEN
+//                } else {
+//                    findViewById(R.id.remaining_items).setVisibility(View.GONE);
+//                }
 
                 //TODO: UPDATE BATTERY. NEED TO KNOW WTF REMAINPOWER IS FROM ADAM
             }

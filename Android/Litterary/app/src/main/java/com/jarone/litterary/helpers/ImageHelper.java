@@ -40,14 +40,14 @@ public class ImageHelper {
                     EGL10 egl = (EGL10) EGLContext.getEGL();
                     gl = (GL10) egl.eglGetCurrentContext().getGL();
                 }
-                Bitmap frame = ImageHelper.getBitmapFromGLSurface(0, 0, surface.getWidth(), surface.getHeight(), gl);
+                Bitmap frame = ImageHelper.getBitmapFromGLSurface(surface.getWidth(), surface.getHeight(), gl);
                 bitmapCreatedCallback.onBitmapCreated(frame);
             }
         });
     }
 
 
-    public static Bitmap getBitmapFromGLSurface(int x, int y, int w, int h, GL10 gl) {
+    public static Bitmap getBitmapFromGLSurface(int w, int h, GL10 gl) {
 
         if (runningBitmap == null) {
             runningBitmap = Bitmap.createBitmap(w, h, Bitmap.Config.RGB_565);
