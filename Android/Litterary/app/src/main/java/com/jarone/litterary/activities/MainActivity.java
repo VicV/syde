@@ -8,7 +8,6 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
 import android.net.wifi.WifiManager;
 import android.opengl.GLSurfaceView;
 import android.os.AsyncTask;
@@ -29,13 +28,11 @@ import android.widget.ToggleButton;
 import com.google.android.gms.maps.model.LatLng;
 import com.jarone.litterary.LitterApplication;
 import com.jarone.litterary.R;
-import com.jarone.litterary.Receivers.WifiChangeReceiver;
 import com.jarone.litterary.Receivers.WifiScanReceiver;
 import com.jarone.litterary.adapters.DebugMessageRecyclerAdapter;
 import com.jarone.litterary.adapters.ViewPagerAdapter;
 import com.jarone.litterary.control.AngularController;
 import com.jarone.litterary.datatypes.DebugItem;
-import com.jarone.litterary.drone.Camera;
 import com.jarone.litterary.drone.DroneState;
 import com.jarone.litterary.drone.Grabber;
 import com.jarone.litterary.drone.GroundStation;
@@ -47,8 +44,6 @@ import com.jarone.litterary.helpers.WifiHelper;
 import com.jarone.litterary.imageproc.ImageProcessing;
 import com.jarone.litterary.views.AndroidCameraSurfaceView;
 
-import java.io.IOException;
-import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.concurrent.Executors;
@@ -59,6 +54,7 @@ import java.util.concurrent.TimeUnit;
 import dji.sdk.api.DJIDrone;
 import dji.sdk.interfaces.DJIReceivedVideoDataCallBack;
 import dji.sdk.widget.DjiGLSurfaceView;
+import retrofit2.http.HEAD;
 
 
 public class MainActivity extends DJIBaseActivity {
@@ -79,6 +75,8 @@ public class MainActivity extends DJIBaseActivity {
 
     private ImageView CPreview;
     private WifiManager wifiManager;
+
+    private WifiScanReceiver wifiScanReceiver = new WifiScanReceiver();
     private RecyclerView debugMessageRecyclerView;
     private Context mainActivity;
     private ScheduledExecutorService taskScheduler;
@@ -88,6 +86,7 @@ public class MainActivity extends DJIBaseActivity {
     private LatLng[] currentPolygon = null;
     private ArrayList<LatLng> currentPhotoPoints = null;
     private ViewPager viewPager;
+    private boolean canStartProcessing = false;
 
     Grabber grabber;
 
@@ -115,15 +114,15 @@ public class MainActivity extends DJIBaseActivity {
     }
 
     private void setupWifiReceivers() {
-
         wifiManager = (WifiManager) getSystemService(Context.WIFI_SERVICE);
-        registerReceiver(new WifiScanReceiver(), new IntentFilter(WifiManager.SCAN_RESULTS_AVAILABLE_ACTION));
-
-        IntentFilter wifiChangeIntentFilter = new IntentFilter();
-        wifiChangeIntentFilter.addAction(WifiManager.SUPPLICANT_CONNECTION_CHANGE_ACTION);
-        registerReceiver(new WifiChangeReceiver(wifiManager), wifiChangeIntentFilter);
+        registerReceiver(wifiScanReceiver, new IntentFilter(WifiManager.SCAN_RESULTS_AVAILABLE_ACTION));
     }
 
+    @Override
+    protected void onPause() {
+        unregisterReceiver(wifiScanReceiver);
+        super.onPause();
+    }
 
     private void registerUpdateInterface() {
         taskScheduler.scheduleAtFixedRate(new Runnable() {
@@ -186,11 +185,16 @@ public class MainActivity extends DJIBaseActivity {
             public void onClick(View view) {
                 switch (view.getId()) {
                     case R.id.button_imgproc_1:
-                        Camera.takePhoto();
+                        if (grabber == null) {
+                            grabber = new Grabber();
+                        }
+                        grabber.sendCommand(Grabber.Commands.RAISE);
                         break;
                     case R.id.button_imgproc_2:
-                        // TODO should be run once at startup
-                        new ImageProcessing.CalibrateTask().execute();
+                        if (grabber == null) {
+                            grabber = new Grabber();
+                        }
+                        grabber.sendCommand(Grabber.Commands.LOWER);
                         break;
                     case R.id.button_imgproc_3:
                         if (ImageProcessing.isTracking()) {
@@ -212,27 +216,32 @@ public class MainActivity extends DJIBaseActivity {
 
                         break;
                     case R.id.button_special_1:
-                        if (angularController == null) {
-                            angularController = new AngularController();
+                        if (grabber == null) {
+                            grabber = new Grabber();
                         }
-                        angularController.generateControlTable();
+                        grabber.sendCommand(Grabber.Commands.OPEN);
                         break;
+
                     case R.id.button_special_2:
-                        angularController.cancelTableGeneration();
+                        if (grabber == null) {
+                            grabber = new Grabber();
+                        }
+                        grabber.sendCommand(Grabber.Commands.CLOSE);
+
                         break;
                     case R.id.button_special_3:
-                        ImageProcessing.loadCalibration();
-                        try {
-                            InputStream i = ContextManager.getActivity().getAssets().open("c2.jpg");
-                            Bitmap decoded = BitmapFactory.decodeStream(i);
-                            int nh = (int) (decoded.getHeight() * (2000.0 / decoded.getWidth()));
-                            Bitmap scaled = Bitmap.createScaledBitmap(decoded, 2000, nh, true);
-                            ImageProcessing.readFrame(scaled);
-                            //ImageProcessing.correctDistortion();
-                        }catch (IOException e) {
-
-                        }
-
+                        canStartProcessing = true;
+//                        ImageProcessing.loadCalibration();
+//                        try {
+//                            InputStream i = ContextManager.getActivity().getAssets().open("c2.jpg");
+//                            Bitmap decoded = BitmapFactory.decodeStream(i);
+//                            int nh = (int) (decoded.getHeight() * (2000.0 / decoded.getWidth()));
+//                            Bitmap scaled = Bitmap.createScaledBitmap(decoded, 2000, nh, true);
+//                            ImageProcessing.readFrame(scaled);
+//                            ImageProcessing.correctDistortion();
+//                        } catch (IOException e) {
+//                        }
+                        break;
                     case R.id.button_special_camera:
                         if (mDjiGLSurfaceView.getVisibility() != View.GONE) {
                             mDjiGLSurfaceView.setVisibility(View.GONE);
@@ -278,10 +287,10 @@ public class MainActivity extends DJIBaseActivity {
             @Override
             public void onResult(byte[] videoBuffer, int size) {
                 mDjiGLSurfaceView.setDataToDecoder(videoBuffer, size);
-
-//                if (!processing) {
-//                    processing = true;
-//                }
+                if (!processing && canStartProcessing) {
+                    processing = true;
+                    processFrame();
+                }
             }
         };
         DJIDrone.getDjiCamera().setReceivedVideoDataCallBack(mReceivedVideoDataCallBack);
@@ -291,27 +300,33 @@ public class MainActivity extends DJIBaseActivity {
         new ImageAsyncTask().execute(mDjiGLSurfaceView.getVisibility() == View.GONE ? mAndroidCameraSurfaceView : mDjiGLSurfaceView);
     }
 
-    public class ImageAsyncTask extends AsyncTask<GLSurfaceView, Void, Void> {
+    public void setProcessing(boolean processing) {
+        this.processing = processing;
+    }
 
+    public class ImageAsyncTask extends AsyncTask<GLSurfaceView, Void, Void> {
 
         @Override
         protected Void doInBackground(GLSurfaceView... params) {
             ImageHelper.createBitmapFromFrame(new ImageHelper.BitmapCreatedCallback() {
                 @Override
                 public void onBitmapCreated(final Bitmap bitmap) {
-                    processing = false;
+
+
                     if (CPreview != null) {
                         CPreview.postDelayed(new Runnable() {
                             @Override
                             public void run() {
                                 if (bitmap != null) {
-                                    CPreview.setImageBitmap(ImageProcessing.processImage(bitmap));
-                                    //CPreview.setImageBitmap(bitmap);
-                                    //ImageProcessing.readFrame(bitmap);
-                                    //new ImageAsyncTask().execute();
+                                    ImageProcessing.processImage(bitmap);
+                                    ImageProcessing.setOriginalImage(bitmap);
+                                    if (ImageProcessing.isTracking()) {
+                                        ImageProcessing.trackObject();
+                                    }
+
                                 }
                             }
-                        }, 200);
+                        }, 400);
                     }
                     // MessageHandler.d("Bitmap: " + count);
                 }
@@ -440,48 +455,71 @@ public class MainActivity extends DJIBaseActivity {
 
     }
 
+    private boolean interfaceSetup = false;
+
+    private ImageView connectIcon;
+    private TextView connectText;
+    private TextView switchModeText;
+    private TextView currentModeText;
+    private TextView currentLocation;
+    private TextView targetLocation;
+    private TextView droneConnected;
+    private ImageView modeButton;
+
+    private void setupInterfaceUpdate() {
+        connectIcon = ((ImageView) findViewById(R.id.connect_icon));
+        connectText = ((TextView) findViewById(R.id.connect_text));
+        switchModeText = ((TextView) findViewById(R.id.switch_mode_text));
+        currentModeText = ((TextView) findViewById(R.id.currentMode));
+        currentLocation = ((TextView) findViewById(R.id.currentLocation));
+        targetLocation = ((TextView) findViewById(R.id.targetLocation));
+        droneConnected = ((TextView) findViewById(R.id.droneConnected));
+        modeButton = (ImageView) findViewById(R.id.switch_mode_icon);
+    }
+
     private void updateInterface() {
+        if (!interfaceSetup) {
+            setupInterfaceUpdate();
+        }
         runOnUiThread(new Runnable() {
             @TargetApi(Build.VERSION_CODES.LOLLIPOP)
             @Override
             public void run() {
                 if (wifiManager.getConnectionInfo().getSSID().contains("Phantom")) {
-                    ((ImageView) findViewById(R.id.connect_icon)).setImageDrawable(getDrawable(R.drawable.wifi_connected_small));
-                    ((TextView) findViewById(R.id.connect_text)).setText("connected");
+                    connectIcon.setImageDrawable(getDrawable(R.drawable.wifi_connected_small));
+                    connectText.setText("connected");
                 } else {
-                    ((TextView) findViewById(R.id.connect_text)).setText("connect");
-                    ((ImageView) findViewById(R.id.connect_icon)).setImageDrawable(getDrawable(R.drawable.wifi_not_connected_small));
+                    connectText.setText("connect");
+                    connectIcon.setImageDrawable(getDrawable(R.drawable.wifi_not_connected_small));
                 }
-                ImageView modeButton = (ImageView) findViewById(R.id.switch_mode_icon);
                 if (DroneState.getMode() == DroneState.DIRECT_MODE) {
                     modeButton.setImageDrawable(getDrawable(R.drawable.direct_small));
-                    ((TextView) findViewById(R.id.switch_mode_text)).setText("direct");
-                    ((TextView) findViewById(R.id.currentMode)).setText("DIRECT");
+                    switchModeText.setText("direct");
+                    currentModeText.setText("DIRECT");
 
 
                 } else if (DroneState.getMode() == DroneState.WAYPOINT_MODE) {
                     modeButton.setImageDrawable(getDrawable(R.drawable.map_pin_small));
-                    ((TextView) findViewById(R.id.switch_mode_text)).setText("waypoint");
-                    ((TextView) findViewById(R.id.currentMode)).setText(DroneState.flightMode.name());
+                    switchModeText.setText("waypoint");
+                    currentModeText.setText(DroneState.flightMode.name());
                 }
-                ((TextView) findViewById(R.id.currentLocation)).setText(
+                currentLocation.setText(
                         LocationHelper.formatForDisplay(DroneState.getLatitude(), DroneState.getLongitude()));
 
-                ((TextView) findViewById(R.id.targetLocation)).setText(
+                targetLocation.setText(
                         LocationHelper.formatForDisplay(
                                 GroundStation.getCurrentTarget().latitude,
                                 GroundStation.getCurrentTarget().longitude)
 
                 );
-                ((TextView) findViewById(R.id.droneConnected)).setText("" + DroneState.droneConnected);
+                droneConnected.setText("" + DroneState.droneConnected);
 //                if (GroundStation.executingController()) {
 //                    ((TextView) findViewById(R.id.pid_angle)).setText("" + GroundStation.getAngularController().getLastAction());
 //                    ((TextView) findViewById(R.id.pid_error)).setText("" + GroundStation.getAngularController().getLastError());
 //                }
 
-
                 if (LitterApplication.devMode) {
-                    ((ImageView) findViewById(R.id.CVPreview)).setImageBitmap(ImageProcessing.getCVPreview());
+                    CPreview.setImageBitmap(ImageProcessing.getCVPreview());
                 }
 //                if (currentPhotoPoints != null && currentPhotoPoints.size() > 0) {
 //                    findViewById(R.id.remaining_items).setVisibility(View.VISIBLE);
@@ -630,7 +668,7 @@ public class MainActivity extends DJIBaseActivity {
                         trackFuture = taskScheduler.scheduleAtFixedRate(new Runnable() {
                             @Override
                             public void run() {
-                                ImageProcessing.trackObject();
+                                //ImageProcessing.trackObject();
                             }
                         }, 0, 300, TimeUnit.MILLISECONDS);
                         break;
@@ -653,20 +691,18 @@ public class MainActivity extends DJIBaseActivity {
         findViewById(R.id.home_button).setOnClickListener(getHomeButtonListener());
         findViewById(R.id.map_button).setOnClickListener(setRegionClickListener());
         findViewById(R.id.start_button).setOnClickListener(getStartSurveyListener());
-//        findViewById(R.id.button_switch_mode).setOnClickListener(getSwitchModeListener());
+        findViewById(R.id.switch_mode_button).setOnClickListener(getSwitchModeListener());
         findViewById(R.id.DJI_camera_surfaceview).setOnClickListener(getCameraViewListener());
         findViewById(R.id.connect_button).setOnClickListener(getWifiClickListener());
-
-        //Dev stuff
-//        findViewById(R.id.button_track).setOnClickListener(getTrackListener());
-//        findViewById(R.id.button_stop_track).setOnClickListener(getTrackListener());
 
         //Dev toggle
         if (LitterApplication.devMode) {
             findViewById(R.id.CVPreview).setOnClickListener(getCameraViewListener());
             findViewById(R.id.button_special_camera).setOnClickListener(getDevButtonListener());
-            findViewById(R.id.button_special_1).setOnClickListener(getDevButtonListener());
-            findViewById(R.id.button_special_2).setOnClickListener(getDevButtonListener());
+
+            //Dev stuff
+            findViewById(R.id.button_special_1).setOnClickListener(getTrackListener());
+            findViewById(R.id.button_special_2).setOnClickListener(getTrackListener());
             findViewById(R.id.button_special_3).setOnClickListener(getDevButtonListener());
             findViewById(R.id.button_imgproc_1).setOnClickListener(getDevButtonListener());
             findViewById(R.id.button_imgproc_2).setOnClickListener(getDevButtonListener());

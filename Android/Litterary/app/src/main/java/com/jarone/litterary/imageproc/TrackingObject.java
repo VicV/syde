@@ -2,9 +2,14 @@ package com.jarone.litterary.imageproc;
 
 
 import com.google.android.gms.maps.model.LatLng;
-import com.jarone.litterary.helpers.LocationHelper;
 
+import org.opencv.core.Mat;
 import org.opencv.core.Point;
+import org.opencv.core.RotatedRect;
+import org.opencv.core.Rect;
+
+import java.util.List;
+import java.util.Vector;
 
 /**
  * Created by Adam on 2016-02-23.
@@ -16,6 +21,13 @@ public class TrackingObject {
     private LatLng cameraLocation;
     private double cameraAltitude;
 
+    public Mat hsv,hue,mask,prob;
+    public Rect prevRect;
+    public RotatedRect currBox;
+    public Mat hist;
+    public List<Mat> hsvArray,hueArray;
+
+
     public TrackingObject(Point position, double size, LatLng location, double altitude) {
         this.position = position;
         this.size = size;
@@ -23,16 +35,14 @@ public class TrackingObject {
         this.cameraAltitude = altitude;
     }
 
-    public TrackingObject predictPositionAndSize(LatLng newLocation, double newAltitude) {
-        double lat_dist = LocationHelper.distanceBetweenLat(newLocation, cameraLocation);
-        double long_dist = LocationHelper.distanceBetweenLong(newLocation, cameraLocation);
-        lat_dist = ImageProcessing.metresToPixels(lat_dist, newAltitude);
-        long_dist = ImageProcessing.metresToPixels(long_dist, newAltitude);
-        Point predictPoint = new Point(position.x + long_dist, position.y + lat_dist);
-        double predictSize = cameraAltitude / newAltitude * size;
-        return new TrackingObject(predictPoint, predictSize, newLocation, newAltitude);
+    public TrackingObject()
+    {
+        this.hist=new Mat();
+        this.prevRect=ImageProcessing.calculateStartingRect();
+        this.currBox=new RotatedRect();
+        this.hsvArray=new Vector<Mat>();
+        this.hueArray=new Vector<Mat>();
     }
-
 
     public LatLng getCameraLocation() {
         return cameraLocation;
