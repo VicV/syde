@@ -295,10 +295,10 @@ public class MainActivity extends DJIBaseActivity {
     }
 
     public void processFrame() {
-        if (!processing) {
+//        if (!processing) {
             processing = true;
             new ImageAsyncTask().execute(mDjiGLSurfaceView.getVisibility() == View.GONE ? mAndroidCameraSurfaceView : mDjiGLSurfaceView);
-        }
+//        }
     }
 
     public void setProcessing(boolean processing) {

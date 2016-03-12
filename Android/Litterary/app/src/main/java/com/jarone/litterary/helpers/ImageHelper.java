@@ -59,50 +59,23 @@ public class ImageHelper {
             runningBitmap = Bitmap.createBitmap(w, h, Bitmap.Config.RGB_565);
 
         }
+
         if (runningByteBuffer == null) {
             runningByteBuffer = ByteBuffer.allocateDirect(w * h * 4);
             runningByteBuffer = runningByteBuffer.order(ByteOrder.nativeOrder());
         }
+
         if (pixelsBuffer == null) {
             pixelsBuffer = new int[w * h];
         }
 
         if (w != 0 && h != 0) {
-
             GLES30.glReadPixels(0, 0, w, h, GLES30.GL_RGBA, GLES30.GL_UNSIGNED_BYTE, runningByteBuffer);
             runningByteBuffer.asIntBuffer().get(pixelsBuffer);
             runningBitmap.setPixels(pixelsBuffer, (w * h) - w, -w, 0, 0, w, h);
-
             return runningBitmap;
         }
         return null;
     }
 
-    public static Bitmap getBitmapFromGLSurfaceRetry(int w, int h, GL10 gl) {
-
-        if (runningBitmap == null) {
-            runningBitmap = Bitmap.createBitmap(w, h, Bitmap.Config.RGB_565);
-
-        }
-        if (runningByteBuffer == null) {
-            runningByteBuffer = ByteBuffer.allocateDirect(w * h * 4);
-            runningByteBuffer = runningByteBuffer.order(ByteOrder.nativeOrder());
-        }
-        if (pixelsBuffer == null) {
-            pixelsBuffer = new int[w * h];
-        }
-
-        if (w != 0 && h != 0) {
-
-            GLES30.glReadBuffer(GLES30.GL_COLOR_ATTACHMENT0);
-            GLES30.glBindBuffer(GLES30.GL_PIXEL_PACK_BUFFER, pixelsBuffer[0]);
-            GLES30.glReadPixels(0, 0, width, height, GLES30.GL_RGBA, GLES30.GL_UNSIGNED_BYTE, runningByteBuffer);
-            GLES30.glUnmapBuffer(GLES30.GL_PIXEL_PACK_BUFFER);
-            GLES30.glBindBuffer(GLES30.GL_PIXEL_PACK_BUFFER, 0);
-            runningByteBuffer.asIntBuffer().get(pixelsBuffer);
-            runningBitmap.setPixels(pixelsBuffer, (w * h) - w, -w, 0, 0, w, h);
-            return runningBitmap;
-        }
-        return null;
-    }
 }

@@ -229,7 +229,7 @@ public class ImageProcessing {
         processing.copyTo(mat);
 
         //MEDIANBLUR NOT NECESSARY AND MAKES THINGS VERY SLOW --vic&adam
-//        Imgproc.medianBlur(processingMat, processingMat, 31);
+//        Imgproc.medianBlur(processing, processing, 31);
 
 
         return blobCentres;
