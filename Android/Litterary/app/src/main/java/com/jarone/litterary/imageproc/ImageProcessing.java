@@ -155,30 +155,52 @@ public class ImageProcessing {
         }
     }
 
+    /**
+     * Identifies litter in an image and returns the processed image as a bitmap
+     * @param image
+     * @return
+     */
+    public static Bitmap processImage(Bitmap image) {
+        Mat mat = identifyLitter(image);
+        convertFrame(mat);
+        return CVPreview;
+    }
+
+    /**
+     * Set the "original" unmodified image as a Mat
+     * @param frame
+     */
     public static void setOriginalImage(Bitmap frame) {
         originalMat = new Mat();
         Utils.bitmapToMat(frame, originalMat);
     }
 
-    public static void processImage(Bitmap image) {
-        identifyLitter(image, DroneState.getLatLng());
-        if (!isTracking) {
-            convertLatestFrame();
-        }
-    }
-
+    /**
+     * Reads a bitmap image and stores it on currentMat
+     * @param image
+     */
     public static void readFrame(Bitmap image) {
         Utils.bitmapToMat(image, currentMat);
     }
 
-    public static ArrayList<LatLng> identifyLitter(Bitmap photo, LatLng origin) {
-        readFrame(photo);
+    /**
+     * Identify blobs on the given Mat and return the processed version
+     * @param photo
+     * @return
+     */
+    public static Mat identifyLitter(Bitmap photo) {
+        Mat mat = new Mat();
+        Utils.bitmapToMat(photo, mat);
         //correctDistortion();
-        detectBlobs();
+        detectBlobs(mat);
         ContextManager.getMainActivityInstance().setProcessing(false);
-        return calculateGPSCoords(blobCentres, origin);
+        return mat;
     }
 
+    /**
+     * Returns the bitmap representing the latest processed image
+     * @return
+     */
     public static Bitmap getCVPreview() {
         return CVPreview;
     }
@@ -187,67 +209,67 @@ public class ImageProcessing {
      * Detect blobs in an image using edge detection, closing, filling and thresholding
      * Returns a list of blob centres in terms of points on the image
      */
-    public static ArrayList<Point> detectBlobs() {
-        if (currentMat.empty()) {
+    public static ArrayList<Point> detectBlobs(Mat mat) {
+        if (mat.empty()) {
             return null;
         }
-        if (processingMat == null) {
-            processingMat = new Mat();
-        }
-        currentMat.copyTo(processingMat);
+        Mat processing = new Mat();
+        mat.copyTo(processing);
+        Imgproc.cvtColor(processing, processing, Imgproc.COLOR_BGR2GRAY);
+        determineCannyThreshold(processing);
+        Imgproc.Canny(processing, processing, lowThreshold, highThreshold);
+        closeImage(processing);
+        Imgproc.threshold(processing, processing, 0, 255, Imgproc.THRESH_BINARY);
+        fillImage(processing);
 
-        Imgproc.cvtColor(processingMat, processingMat, Imgproc.COLOR_BGR2GRAY);
-        determineCannyThreshold();
-        Imgproc.Canny(processingMat, processingMat, lowThreshold, highThreshold);
-        closeImage();
-        Imgproc.threshold(processingMat, processingMat, 0, 255, Imgproc.THRESH_BINARY);
-        fillImage();
         //TODO determine below threshold parameter from the drone's altitude and FOV
-        eliminateSmallBlobs(600);
+        eliminateSmallBlobs(processing, Math.pow(metresToPixels(0.3, DroneState.getAltitude()), 2));
         //clearBorders();
+        blobCentres = findBlobCentres(processing);
+        processing.copyTo(mat);
 
         //MEDIANBLUR NOT NECESSARY AND MAKES THINGS VERY SLOW --vic&adam
 //        Imgproc.medianBlur(processingMat, processingMat, 31);
 
-        blobCentres = findBlobCentres();
-        processingMat.copyTo(currentMat);
+
         return blobCentres;
     }
 
     /**
      * Perform closing operation on the image, first downscaling to speed up processing
      */
-    public static void closeImage() {
+    public static void closeImage(Mat mat) {
         int scaleFactor = 10;
         Mat element = Imgproc.getStructuringElement(Imgproc.MORPH_ELLIPSE, new Size(100 / scaleFactor, 100 / scaleFactor));
         //Rescale to smaller size to perform closing much faster
-        int width = processingMat.width();
-        int height = processingMat.height();
-        Imgproc.resize(processingMat, processingMat, new Size(processingMat.width() / scaleFactor, processingMat.height() / scaleFactor));
-        Imgproc.morphologyEx(processingMat, processingMat, Imgproc.MORPH_CLOSE, element);
-        Imgproc.resize(processingMat, processingMat, new Size(width, height));
+        int width = mat.width();
+        int height = mat.height();
+        Imgproc.resize(mat, mat, new Size(mat.width() / scaleFactor, mat.height() / scaleFactor));
+        Imgproc.morphologyEx(mat, mat, Imgproc.MORPH_CLOSE, element);
+        Imgproc.resize(mat, mat, new Size(width, height));
     }
 
-    public static void fillImage() {
-        Mat temp = processingMat.clone();
+    public static void fillImage(Mat mat) {
+        Mat temp = mat.clone();
         ArrayList<MatOfPoint> contours = new ArrayList<>();
         Imgproc.findContours(temp, contours, new Mat(), Imgproc.RETR_CCOMP, Imgproc.CHAIN_APPROX_SIMPLE);
-        fillContours(contours, 255);
+        fillContours(mat, contours, 255);
     }
 
     /**
-     * VCR1honey
      * Converts the most recently-processed Mat frame to a Bitmap and stores it in CVPreview
      *
      * @return
      */
-    public static Bitmap convertLatestFrame() {
-        if (CVPreview == null && currentMat != null && currentMat.width() > 0) {
-            CVPreview = Bitmap.createBitmap(currentMat.width(), currentMat.height(), Bitmap.Config.ARGB_8888);
-        } else if (currentMat == null || currentMat.width() <= 0) {
+    public static Bitmap convertFrame(Mat mat) {
+        if (CVPreview == null && mat != null && mat.width() > 0) {
+            CVPreview = Bitmap.createBitmap(mat.width(), mat.height(), Bitmap.Config.ARGB_8888);
+        } else if (mat == null || mat.width() <= 0) {
             return null;
         }
-        Utils.matToBitmap(currentMat, CVPreview);
+        Mat tmp = new Mat();
+        mat.copyTo(tmp);
+        Utils.matToBitmap(tmp, CVPreview);
         return CVPreview;
     }
 
@@ -256,28 +278,30 @@ public class ImageProcessing {
      *
      * @return
      */
-    public static void determineCannyThreshold() {
+
+    public static void determineCannyThreshold(Mat mat) {
         Mat _ = new Mat();
-        lowThreshold = Imgproc.threshold(processingMat, processingMat, 127, 255, Imgproc.THRESH_OTSU);
+        lowThreshold = Imgproc.threshold(mat, _, 127, 255, Imgproc.THRESH_OTSU);
         highThreshold = lowThreshold * 3;
     }
 
     /**
      * Eliminate objects that are too small (noise)
      */
-    public static ArrayList<MatOfPoint> eliminateSmallBlobs(double threshold) {
-        Mat temp = processingMat.clone();
+    public static ArrayList<MatOfPoint> eliminateSmallBlobs(Mat mat, double threshold) {
+        Mat temp = mat.clone();
         ArrayList<MatOfPoint> contours = new ArrayList<>();
         ArrayList<Double> areas = new ArrayList<>();
         Imgproc.findContours(temp, contours, new Mat(), Imgproc.RETR_CCOMP, Imgproc.CHAIN_APPROX_SIMPLE);
         ArrayList<MatOfPoint> badContours = new ArrayList<>();
         for (MatOfPoint contour : contours) {
-            areas.add(Imgproc.contourArea(contour));
-            if (Imgproc.contourArea(contour) < threshold) {
+            double size = Imgproc.contourArea(contour);
+            areas.add(size);
+            if (size < threshold) {
                 badContours.add(contour);
             }
         }
-        fillContours(badContours, 0);
+        fillContours(mat, badContours, 0);
         contours.removeAll(badContours);
         return contours;
     }
@@ -285,12 +309,12 @@ public class ImageProcessing {
     /**
      * Eliminate shapes which touch the border of the image
      */
-    public static void clearBorders() {
-        Mat temp = processingMat.clone();
+    public static void clearBorders(Mat mat) {
+        Mat temp = mat.clone();
         ArrayList<MatOfPoint> contours = new ArrayList<>();
         Imgproc.findContours(temp, contours, new Mat(), Imgproc.RETR_CCOMP, Imgproc.CHAIN_APPROX_SIMPLE);
-        int width = processingMat.width();
-        int height = processingMat.height();
+        int width = temp.width();
+        int height = temp.height();
 
         ArrayList<MatOfPoint> badContours = new ArrayList<>();
         for (MatOfPoint contour : contours) {
@@ -300,7 +324,7 @@ public class ImageProcessing {
                 }
             }
         }
-        fillContours(badContours, 0);
+        fillContours(mat, badContours, 0);
     }
 
     /**
@@ -308,8 +332,8 @@ public class ImageProcessing {
      *
      * @return
      */
-    public static ArrayList<Point> findBlobCentres() {
-        Mat temp = processingMat.clone();
+    public static ArrayList<Point> findBlobCentres(Mat mat) {
+        Mat temp = mat.clone();
         ArrayList<MatOfPoint> contours = new ArrayList<>();
         Imgproc.findContours(temp, contours, new Mat(), Imgproc.RETR_CCOMP, Imgproc.CHAIN_APPROX_SIMPLE);
         currentBlobs = contours;
@@ -333,13 +357,9 @@ public class ImageProcessing {
         return new Point(x, y);
     }
 
-    public static double contourSize(MatOfPoint contour) {
-        return Imgproc.contourArea(contour);
-    }
-
-    public static void fillContours(ArrayList<MatOfPoint> contours, int colour) {
+    public static void fillContours(Mat mat, ArrayList<MatOfPoint> contours, int colour) {
         for (int i = 0; i < contours.size(); i++) {
-            Imgproc.drawContours(processingMat, contours, i, new Scalar(colour), -1);
+            Imgproc.drawContours(mat, contours, i, new Scalar(colour), -1);
         }
     }
 
@@ -384,7 +404,48 @@ public class ImageProcessing {
     }
 
     public static double pixelDistance(Point p1, Point p2) {
-        return Math.sqrt(Math.pow(p1.x - p2.x, 2) + Math.pow(p1.y - p2.y, 2));
+       return Math.sqrt(Math.pow(p1.x - p2.x, 2) + Math.pow(p1.y - p2.y, 2));
+    }
+
+    /**
+     * Perform one "tracking interation" where we predict where the object should be in the current
+     * frame based on where it was and how far we've moved. If we find a blob near that location,
+     * it must be the tracked object. Update the track object to this new location and return the
+     * point identified
+     * @return
+     */
+//    public static Point trackObject() {
+//        if (!isTracking) {
+//            MessageHandler.w("Not tracking object!");
+//            return null;
+//        }
+//        TrackingObject tmp = trackingObject.predictPositionAndSize(DroneState.getLatLng(), DroneState.getAltitude());
+//        Point trackerObj = null;
+//        double trackerSize = 0;
+//
+//        int index = 0;
+//        for (Point centre: blobCentres) {
+//            //If we are within 50 pixels of the assumed new location of the blob
+//            double size = contourSize(currentBlobs.get(index));
+//            if (pixelDistance(centre, tmp.getPosition()) < 100000 && (Math.abs(size) - tmp.getSize()) < 100000) {
+//                trackerObj = centre;
+//                trackerSize = size;
+//                break;
+//            }
+//            index++;
+//        }
+//
+//        if (trackerObj != null) {
+//            trackingObject = new TrackingObject(trackerObj, trackerSize, DroneState.getLatLng(), DroneState.getAltitude());
+//            return trackerObj;
+//        } else {
+//            MessageHandler.w("Lost track of object!");
+//            return null;
+//        }
+//    }
+
+    public static boolean isTracking() {
+        return isTracking;
     }
 
     public static double metresToPixels(double metres, double altitude) {
@@ -395,12 +456,11 @@ public class ImageProcessing {
     /**
      * Correct distorted input stream using the chessboard pattern
      */
-    public static void correctDistortion() {
+    public static void correctDistortion(Mat mat) {
         if (isCalibrated) {
-            processingMat = currentMat;
             Mat correctedMat = new Mat();
-            Imgproc.undistort(processingMat, correctedMat, intrinsic, distCoeffs);
-            currentMat = correctedMat;
+            Imgproc.undistort(mat, correctedMat, intrinsic, distCoeffs);
+            correctedMat.copyTo(mat);
             //For testing
             /*
             Bitmap preview = Bitmap.createBitmap(processingMat.width(), processingMat.height(), Bitmap.Config.ARGB_8888);
@@ -585,7 +645,12 @@ public class ImageProcessing {
         return mat;
     }
 
-    public static void createTrackedOject(Mat mRgba, Rect region) {
+    public static ArrayList<Point> getBlobCentres()
+    {
+        return blobCentres;
+    }
+
+    public static void createTrackedObject(Mat mRgba, Rect region) {
         trackedObject.hsv = new Mat(mRgba.size(), CvType.CV_8UC3);
         trackedObject.mask = new Mat(mRgba.size(), CvType.CV_8UC1);
         trackedObject.hue = new Mat(mRgba.size(), CvType.CV_8UC1);
@@ -643,11 +708,6 @@ public class ImageProcessing {
         Utils.matToBitmap(originalMat, CVPreview);
     }
 
-
-    public static boolean isTracking() {
-        return isTracking;
-    }
-
     /**
      * Begin tracking the object closest to the centre of the camera
      */
@@ -658,13 +718,12 @@ public class ImageProcessing {
             //detectBlobs();
             trackedObject = new TrackingObject();
             isTracking = true;
-            createTrackedOject(originalMat, trackedObject.prevRect);
+            createTrackedObject(originalMat, trackedObject.prevRect);
             trackObject();
         } else {
             MessageHandler.d("Already Tracking...");
         }
     }
-
     /**
      * Stop tracking object
      */

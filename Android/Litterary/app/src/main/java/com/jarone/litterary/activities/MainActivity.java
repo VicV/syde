@@ -31,6 +31,7 @@ import com.jarone.litterary.R;
 import com.jarone.litterary.Receivers.WifiScanReceiver;
 import com.jarone.litterary.adapters.DebugMessageRecyclerAdapter;
 import com.jarone.litterary.adapters.ViewPagerAdapter;
+import com.jarone.litterary.control.AngularController;
 import com.jarone.litterary.datatypes.DebugItem;
 import com.jarone.litterary.drone.DroneState;
 import com.jarone.litterary.drone.Grabber;
@@ -79,6 +80,7 @@ public class MainActivity extends DJIBaseActivity {
     private Context mainActivity;
     private ScheduledExecutorService taskScheduler;
     private ScheduledFuture trackFuture;
+    private AngularController angularController;
 
     private LatLng[] currentPolygon = null;
     private ArrayList<LatLng> currentPhotoPoints = null;
@@ -105,7 +107,7 @@ public class MainActivity extends DJIBaseActivity {
         mDjiGLSurfaceView.setZOrderMediaOverlay(true);
         RelativeLayout.LayoutParams lp = new RelativeLayout.LayoutParams(RelativeLayout.LayoutParams.FILL_PARENT, RelativeLayout.LayoutParams.WRAP_CONTENT);
 
-        addContentView(getLayoutInflater().inflate(R.layout.surface_overlay_layout, null), lp);
+//        addContentView(getLayoutInflater().inflate(R.layout.surface_overlay_layout, null), lp);
 
         taskScheduler = Executors.newSingleThreadScheduledExecutor();
     }
@@ -194,10 +196,23 @@ public class MainActivity extends DJIBaseActivity {
                         grabber.sendCommand(Grabber.Commands.LOWER);
                         break;
                     case R.id.button_imgproc_3:
-                        if (grabber == null) {
-                            grabber = new Grabber();
+                        if (ImageProcessing.isTracking()) {
+                            ImageProcessing.stopTrackingObject();
+                            if (trackFuture != null) {
+                                trackFuture.cancel(true);
+                                trackFuture = null;
+                            }
+
+                        } else {
+                            ImageProcessing.startTrackingObject();
+                            trackFuture = taskScheduler.scheduleAtFixedRate(new Runnable() {
+                                @Override
+                                public void run() {
+                                    ImageProcessing.trackObject();
+                                }
+                            }, 0, 300, TimeUnit.MILLISECONDS);
                         }
-                        grabber.sendCommand(Grabber.Commands.OPEN);
+
                         break;
                     case R.id.button_special_1:
                         if (grabber == null) {
@@ -304,10 +319,11 @@ public class MainActivity extends DJIBaseActivity {
                             @Override
                             public void run() {
                                 if (bitmap != null) {
-                                    ImageProcessing.processImage(bitmap);
                                     ImageProcessing.setOriginalImage(bitmap);
                                     if (ImageProcessing.isTracking()) {
                                         ImageProcessing.trackObject();
+                                    } else {
+                                        ImageProcessing.processImage(bitmap);
                                     }
 //                                    CPreview.setImageBitmap(bitmap);
 

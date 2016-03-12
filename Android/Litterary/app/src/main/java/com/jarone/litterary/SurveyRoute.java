@@ -37,7 +37,8 @@ public class SurveyRoute extends NavigationRoute{
      * callback for photo taken success that executes this method again with an incremented waypoint
      * index
      */
-    private void setCallbacks() {
+    @Override
+    protected void setCallbacks() {
         //set the callbacks to take a photo when the point is reached
         GroundStation.taskDoneCallback = new Runnable() {
             @Override
@@ -86,9 +87,10 @@ public class SurveyRoute extends NavigationRoute{
         ArrayList<File> photos = findSurveyPhotos();
         ArrayList<LatLng> litter = new ArrayList<>();
         for (File photo : photos) {
+            ImageProcessing.identifyLitter(BitmapFactory.decodeFile(photo.getAbsolutePath()));
             litter.addAll(
-                ImageProcessing.identifyLitter(
-                    BitmapFactory.decodeFile(photo.getAbsolutePath()),
+                ImageProcessing.calculateGPSCoords(
+                    ImageProcessing.getBlobCentres(),
                     FileAccess.coordsFromPhoto(photo)
                 )
             );
