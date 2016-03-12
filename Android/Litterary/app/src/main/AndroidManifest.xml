@@ -63,6 +63,17 @@
 
         <activity android:name=".activities.MapActivity" />
 
+        <receiver
+            android:name="com.jarone.litterary.Receivers.WifiScanReceiver"
+            android:enabled="true"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="android.net.wifi.SCAN_RESULTS" />
+                <category android:name="android.intent.category.DEFAULT" />
+            </intent-filter>
+
+        </receiver>
+
     </application>
 
 

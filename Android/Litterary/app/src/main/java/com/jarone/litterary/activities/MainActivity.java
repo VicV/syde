@@ -5,7 +5,6 @@ import android.annotation.TargetApi;
 import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
-import android.content.IntentFilter;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.net.wifi.WifiManager;
@@ -21,14 +20,12 @@ import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.view.View;
 import android.widget.ImageView;
-import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.ToggleButton;
 
 import com.google.android.gms.maps.model.LatLng;
 import com.jarone.litterary.LitterApplication;
 import com.jarone.litterary.R;
-import com.jarone.litterary.Receivers.WifiScanReceiver;
 import com.jarone.litterary.adapters.DebugMessageRecyclerAdapter;
 import com.jarone.litterary.adapters.ViewPagerAdapter;
 import com.jarone.litterary.control.AngularController;
@@ -74,8 +71,6 @@ public class MainActivity extends DJIBaseActivity {
 
     private ImageView CPreview;
     private WifiManager wifiManager;
-
-    private WifiScanReceiver wifiScanReceiver = new WifiScanReceiver();
     private RecyclerView debugMessageRecyclerView;
     private Context mainActivity;
     private ScheduledExecutorService taskScheduler;
@@ -103,23 +98,19 @@ public class MainActivity extends DJIBaseActivity {
         ContextManager.setContext(this);
         DroneState.registerConnectedTimer();
         GroundStation.registerPhantom2Callback();
-        setupWifiReceivers();
-        mDjiGLSurfaceView.setZOrderMediaOverlay(true);
-        RelativeLayout.LayoutParams lp = new RelativeLayout.LayoutParams(RelativeLayout.LayoutParams.FILL_PARENT, RelativeLayout.LayoutParams.WRAP_CONTENT);
 
+//        mDjiGLSurfaceView.setZOrderMediaOverlay(true);
+//        RelativeLayout.LayoutParams lp = new RelativeLayout.LayoutParams(RelativeLayout.LayoutParams.FILL_PARENT, RelativeLayout.LayoutParams.WRAP_CONTENT);
 //        addContentView(getLayoutInflater().inflate(R.layout.surface_overlay_layout, null), lp);
 
         taskScheduler = Executors.newSingleThreadScheduledExecutor();
+        wifiManager = (WifiManager) getSystemService(Context.WIFI_SERVICE);
+
     }
 
-    private void setupWifiReceivers() {
-        wifiManager = (WifiManager) getSystemService(Context.WIFI_SERVICE);
-        registerReceiver(wifiScanReceiver, new IntentFilter(WifiManager.SCAN_RESULTS_AVAILABLE_ACTION));
-    }
 
     @Override
     protected void onPause() {
-        unregisterReceiver(wifiScanReceiver);
         super.onPause();
     }
 
@@ -260,17 +251,7 @@ public class MainActivity extends DJIBaseActivity {
         return new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                //TODO: REMOVE
-//                switch (v.getId()) {
-//                    case R.id.DjiSurfaceView_02:
-//                        v.setVisibility(View.INVISIBLE);
-//                        findViewById(R.id.CVPreview).setVisibility(View.VISIBLE);
-//                        break;
-//                    case R.id.CVPreview:
-//                        v.setVisibility(View.INVISIBLE);
-//                        findViewById(R.id.DjiSurfaceView_02).setVisibility(View.VISIBLE);
-//                        break;
-//                }
+                //TODO: DO SOMETHING IF NECESSARY
             }
         };
     }
@@ -296,8 +277,8 @@ public class MainActivity extends DJIBaseActivity {
 
     public void processFrame() {
 //        if (!processing) {
-            processing = true;
-            new ImageAsyncTask().execute(mDjiGLSurfaceView.getVisibility() == View.GONE ? mAndroidCameraSurfaceView : mDjiGLSurfaceView);
+        processing = true;
+        new ImageAsyncTask().execute(mDjiGLSurfaceView.getVisibility() == View.GONE ? mAndroidCameraSurfaceView : mDjiGLSurfaceView);
 //        }
     }
 
@@ -666,12 +647,21 @@ public class MainActivity extends DJIBaseActivity {
         WifiHelper.enableNetwork(SSID, wifiManager);
     }
 
+    public void setWantResults(boolean wantResults) {
+        this.wantResults = wantResults;
+    }
+
+    public boolean isWantResults() {
+        return wantResults;
+    }
+
+    private boolean wantResults = false;
+
     public void setupWifi() {
         if (wifiManager.getConnectionInfo().getSSID().startsWith("Phantom")) {
             MessageHandler.d("Drone already connected");
         } else {
-            MessageHandler.d("Performing wifi scan...");
-            registerReceiver(new WifiScanReceiver(), new IntentFilter(WifiManager.SCAN_RESULTS_AVAILABLE_ACTION));
+            wantResults = true;
             wifiManager.startScan();
         }
     }
