@@ -54,7 +54,6 @@ import java.util.concurrent.TimeUnit;
 import dji.sdk.api.DJIDrone;
 import dji.sdk.interfaces.DJIReceivedVideoDataCallBack;
 import dji.sdk.widget.DjiGLSurfaceView;
-import retrofit2.http.HEAD;
 
 
 public class MainActivity extends DJIBaseActivity {
@@ -318,10 +317,11 @@ public class MainActivity extends DJIBaseActivity {
                             @Override
                             public void run() {
                                 if (bitmap != null) {
-                                    ImageProcessing.processImage(bitmap);
                                     ImageProcessing.setOriginalImage(bitmap);
                                     if (ImageProcessing.isTracking()) {
                                         ImageProcessing.trackObject();
+                                    } else {
+                                        ImageProcessing.processImage(bitmap);
                                     }
 
                                 }

@@ -46,8 +46,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-import retrofit2.http.HEAD;
-
 /**
  * Created by vic on 11/17/15.
  */
@@ -157,21 +155,39 @@ public class ImageProcessing {
         }
     }
 
+    /**
+     * Identifies litter in an image and returns the processed image as a bitmap
+     * @param image
+     * @return
+     */
     public static Bitmap processImage(Bitmap image) {
         Mat mat = identifyLitter(image);
         convertFrame(mat);
         return CVPreview;
     }
+
+    /**
+     * Set the "original" unmodified image as a Mat
+     * @param frame
+     */
     public static void setOriginalImage(Bitmap frame) {
         originalMat = new Mat();
         Utils.bitmapToMat(frame, originalMat);
     }
 
-
+    /**
+     * Reads a bitmap image and stores it on currentMat
+     * @param image
+     */
     public static void readFrame(Bitmap image) {
         Utils.bitmapToMat(image, currentMat);
     }
 
+    /**
+     * Identify blobs on the given Mat and return the processed version
+     * @param photo
+     * @return
+     */
     public static Mat identifyLitter(Bitmap photo) {
         Mat mat = new Mat();
         Utils.bitmapToMat(photo, mat);
@@ -181,6 +197,10 @@ public class ImageProcessing {
         return mat;
     }
 
+    /**
+     * Returns the bitmap representing the latest processed image
+     * @return
+     */
     public static Bitmap getCVPreview() {
         return CVPreview;
     }
@@ -245,9 +265,6 @@ public class ImageProcessing {
         }
         Mat tmp = new Mat();
         mat.copyTo(tmp);
-        if (isTracking) {
-            Core.circle(tmp, trackingObject.getPosition(), 100, new Scalar(255, 0, 255), 4);
-        }
         Utils.matToBitmap(tmp, CVPreview);
         return CVPreview;
     }
@@ -274,8 +291,9 @@ public class ImageProcessing {
         Imgproc.findContours(temp, contours, new Mat(), Imgproc.RETR_CCOMP, Imgproc.CHAIN_APPROX_SIMPLE);
         ArrayList<MatOfPoint> badContours = new ArrayList<>();
         for (MatOfPoint contour : contours) {
-            areas.add(Imgproc.contourArea(contour));
-            if (Imgproc.contourArea(contour) < threshold) {
+            double size = Imgproc.contourArea(contour);
+            areas.add(size);
+            if (size < threshold) {
                 badContours.add(contour);
             }
         }
@@ -333,10 +351,6 @@ public class ImageProcessing {
         int x = (int) moment.get_m10() / (int) moment.get_m00();
         int y = (int) moment.get_m01() / (int) moment.get_m00();
         return new Point(x, y);
-    }
-
-    public static double contourSize(MatOfPoint contour) {
-        return Imgproc.contourArea(contour);
     }
 
     public static void fillContours(Mat mat, ArrayList<MatOfPoint> contours, int colour) {
