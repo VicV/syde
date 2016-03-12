@@ -4,7 +4,7 @@ import android.content.Context;
 import android.graphics.SurfaceTexture;
 import android.hardware.Camera;
 import android.opengl.GLES11Ext;
-import android.opengl.GLES20;
+import android.opengl.GLES30;
 import android.opengl.GLSurfaceView;
 import android.util.AttributeSet;
 import android.util.Log;
@@ -98,7 +98,7 @@ public class AndroidCameraSurfaceView extends GLSurfaceView {
 
 
         public void onDrawFrame(GL10 unused) {
-            GLES20.glClear(GLES20.GL_COLOR_BUFFER_BIT);
+            GLES30.glClear(GLES30.GL_COLOR_BUFFER_BIT);
 
             synchronized (this) {
                 if (mUpdateST) {
@@ -107,29 +107,29 @@ public class AndroidCameraSurfaceView extends GLSurfaceView {
                 }
             }
 
-            GLES20.glUseProgram(hProgram);
+            GLES30.glUseProgram(hProgram);
 
-            int ph = GLES20.glGetAttribLocation(hProgram, "vPosition");
-            int tch = GLES20.glGetAttribLocation(hProgram, "vTexCoord");
-            int th = GLES20.glGetUniformLocation(hProgram, "sTexture");
+            int ph = GLES30.glGetAttribLocation(hProgram, "vPosition");
+            int tch = GLES30.glGetAttribLocation(hProgram, "vTexCoord");
+            int th = GLES30.glGetUniformLocation(hProgram, "sTexture");
 
-            GLES20.glActiveTexture(GLES20.GL_TEXTURE0);
-            GLES20.glBindTexture(GLES11Ext.GL_TEXTURE_EXTERNAL_OES, hTex[0]);
-            GLES20.glUniform1i(th, 0);
+            GLES30.glActiveTexture(GLES30.GL_TEXTURE0);
+            GLES30.glBindTexture(GLES11Ext.GL_TEXTURE_EXTERNAL_OES, hTex[0]);
+            GLES30.glUniform1i(th, 0);
 
-            GLES20.glVertexAttribPointer(ph, 2, GLES20.GL_FLOAT, false, 4 * 2, pVertex);
-            GLES20.glVertexAttribPointer(tch, 2, GLES20.GL_FLOAT, false, 4 * 2, pTexCoord);
-            GLES20.glEnableVertexAttribArray(ph);
-            GLES20.glEnableVertexAttribArray(tch);
+            GLES30.glVertexAttribPointer(ph, 2, GLES30.GL_FLOAT, false, 4 * 2, pVertex);
+            GLES30.glVertexAttribPointer(tch, 2, GLES30.GL_FLOAT, false, 4 * 2, pTexCoord);
+            GLES30.glEnableVertexAttribArray(ph);
+            GLES30.glEnableVertexAttribArray(tch);
 
-            GLES20.glDrawArrays(GLES20.GL_TRIANGLE_STRIP, 0, 4);
+            GLES30.glDrawArrays(GLES30.GL_TRIANGLE_STRIP, 0, 4);
             ContextManager.getMainActivityInstance().processFrame();
-            GLES20.glFlush();
+            GLES30.glFlush();
         }
 
         @Override
         public void onSurfaceCreated(GL10 gl, javax.microedition.khronos.egl.EGLConfig config) {
-            //String extensions = GLES20.glGetString(GLES20.GL_EXTENSIONS);
+            //String extensions = GLES30.glGetString(GLES30.GL_EXTENSIONS);
             //Log.i("mr", "Gl extensions: " + extensions);
             //Assert.assertTrue(extensions.contains("OES_EGL_image_external"));
 
@@ -144,7 +144,7 @@ public class AndroidCameraSurfaceView extends GLSurfaceView {
             } catch (IOException ioe) {
             }
 
-            GLES20.glClearColor(1.0f, 1.0f, 0.0f, 1.0f);
+            GLES30.glClearColor(1.0f, 1.0f, 0.0f, 1.0f);
 
             String vss = "attribute vec2 vPosition;\n" +
                     "attribute vec2 vTexCoord;\n" +
@@ -165,7 +165,7 @@ public class AndroidCameraSurfaceView extends GLSurfaceView {
         }
 
         public void onSurfaceChanged(GL10 unused, int width, int height) {
-            GLES20.glViewport(0, 0, width, height);
+            GLES30.glViewport(0, 0, width, height);
             Camera.Parameters param = mCamera.getParameters();
             ArrayList<Camera.Size> psize = (ArrayList) param.getSupportedPreviewSizes();
             if (psize.size() > 0) {
@@ -187,16 +187,16 @@ public class AndroidCameraSurfaceView extends GLSurfaceView {
 
         private void initTex() {
             hTex = new int[1];
-            GLES20.glGenTextures(1, hTex, 0);
-            GLES20.glBindTexture(GLES11Ext.GL_TEXTURE_EXTERNAL_OES, hTex[0]);
-            GLES20.glTexParameteri(GLES11Ext.GL_TEXTURE_EXTERNAL_OES, GLES20.GL_TEXTURE_WRAP_S, GLES20.GL_CLAMP_TO_EDGE);
-            GLES20.glTexParameteri(GLES11Ext.GL_TEXTURE_EXTERNAL_OES, GLES20.GL_TEXTURE_WRAP_T, GLES20.GL_CLAMP_TO_EDGE);
-            GLES20.glTexParameteri(GLES11Ext.GL_TEXTURE_EXTERNAL_OES, GLES20.GL_TEXTURE_MIN_FILTER, GLES20.GL_NEAREST);
-            GLES20.glTexParameteri(GLES11Ext.GL_TEXTURE_EXTERNAL_OES, GLES20.GL_TEXTURE_MAG_FILTER, GLES20.GL_NEAREST);
+            GLES30.glGenTextures(1, hTex, 0);
+            GLES30.glBindTexture(GLES11Ext.GL_TEXTURE_EXTERNAL_OES, hTex[0]);
+            GLES30.glTexParameteri(GLES11Ext.GL_TEXTURE_EXTERNAL_OES, GLES30.GL_TEXTURE_WRAP_S, GLES30.GL_CLAMP_TO_EDGE);
+            GLES30.glTexParameteri(GLES11Ext.GL_TEXTURE_EXTERNAL_OES, GLES30.GL_TEXTURE_WRAP_T, GLES30.GL_CLAMP_TO_EDGE);
+            GLES30.glTexParameteri(GLES11Ext.GL_TEXTURE_EXTERNAL_OES, GLES30.GL_TEXTURE_MIN_FILTER, GLES30.GL_NEAREST);
+            GLES30.glTexParameteri(GLES11Ext.GL_TEXTURE_EXTERNAL_OES, GLES30.GL_TEXTURE_MAG_FILTER, GLES30.GL_NEAREST);
         }
 
         private void deleteTex() {
-            GLES20.glDeleteTextures(1, hTex, 0);
+            GLES30.glDeleteTextures(1, hTex, 0);
         }
 
         public synchronized void onFrameAvailable(SurfaceTexture st) {
@@ -205,33 +205,33 @@ public class AndroidCameraSurfaceView extends GLSurfaceView {
         }
 
         private int loadShader(String vss, String fss) {
-            int vshader = GLES20.glCreateShader(GLES20.GL_VERTEX_SHADER);
-            GLES20.glShaderSource(vshader, vss);
-            GLES20.glCompileShader(vshader);
+            int vshader = GLES30.glCreateShader(GLES30.GL_VERTEX_SHADER);
+            GLES30.glShaderSource(vshader, vss);
+            GLES30.glCompileShader(vshader);
             int[] compiled = new int[1];
-            GLES20.glGetShaderiv(vshader, GLES20.GL_COMPILE_STATUS, compiled, 0);
+            GLES30.glGetShaderiv(vshader, GLES30.GL_COMPILE_STATUS, compiled, 0);
             if (compiled[0] == 0) {
                 Log.e("Shader", "Could not compile vshader");
-                Log.v("Shader", "Could not compile vshader:" + GLES20.glGetShaderInfoLog(vshader));
-                GLES20.glDeleteShader(vshader);
+                Log.v("Shader", "Could not compile vshader:" + GLES30.glGetShaderInfoLog(vshader));
+                GLES30.glDeleteShader(vshader);
                 vshader = 0;
             }
 
-            int fshader = GLES20.glCreateShader(GLES20.GL_FRAGMENT_SHADER);
-            GLES20.glShaderSource(fshader, fss);
-            GLES20.glCompileShader(fshader);
-            GLES20.glGetShaderiv(fshader, GLES20.GL_COMPILE_STATUS, compiled, 0);
+            int fshader = GLES30.glCreateShader(GLES30.GL_FRAGMENT_SHADER);
+            GLES30.glShaderSource(fshader, fss);
+            GLES30.glCompileShader(fshader);
+            GLES30.glGetShaderiv(fshader, GLES30.GL_COMPILE_STATUS, compiled, 0);
             if (compiled[0] == 0) {
                 Log.e("Shader", "Could not compile fshader");
-                Log.v("Shader", "Could not compile fshader:" + GLES20.glGetShaderInfoLog(fshader));
-                GLES20.glDeleteShader(fshader);
+                Log.v("Shader", "Could not compile fshader:" + GLES30.glGetShaderInfoLog(fshader));
+                GLES30.glDeleteShader(fshader);
                 fshader = 0;
             }
 
-            int program = GLES20.glCreateProgram();
-            GLES20.glAttachShader(program, vshader);
-            GLES20.glAttachShader(program, fshader);
-            GLES20.glLinkProgram(program);
+            int program = GLES30.glCreateProgram();
+            GLES30.glAttachShader(program, vshader);
+            GLES30.glAttachShader(program, fshader);
+            GLES30.glLinkProgram(program);
 
             return program;
         }

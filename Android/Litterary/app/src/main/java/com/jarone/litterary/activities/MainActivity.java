@@ -5,7 +5,6 @@ import android.annotation.TargetApi;
 import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
-import android.content.IntentFilter;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.net.wifi.WifiManager;
@@ -21,14 +20,12 @@ import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.view.View;
 import android.widget.ImageView;
-import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.ToggleButton;
 
 import com.google.android.gms.maps.model.LatLng;
 import com.jarone.litterary.LitterApplication;
 import com.jarone.litterary.R;
-import com.jarone.litterary.Receivers.WifiScanReceiver;
 import com.jarone.litterary.adapters.DebugMessageRecyclerAdapter;
 import com.jarone.litterary.adapters.ViewPagerAdapter;
 import com.jarone.litterary.control.AngularController;
@@ -47,6 +44,7 @@ import com.jarone.litterary.views.AndroidCameraSurfaceView;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
@@ -75,8 +73,6 @@ public class MainActivity extends DJIBaseActivity {
 
     private ImageView CPreview;
     private WifiManager wifiManager;
-
-    private WifiScanReceiver wifiScanReceiver = new WifiScanReceiver();
     private RecyclerView debugMessageRecyclerView;
     private Context mainActivity;
     private ScheduledExecutorService taskScheduler;
@@ -96,31 +92,24 @@ public class MainActivity extends DJIBaseActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         mainActivity = this;
-
         setupViewPager();
-
         verifyStoragePermissions(this);
         registerCamera();
         ContextManager.setContext(this);
         DroneState.registerConnectedTimer();
         GroundStation.registerPhantom2Callback();
-        setupWifiReceivers();
-        mDjiGLSurfaceView.setZOrderMediaOverlay(true);
-        RelativeLayout.LayoutParams lp = new RelativeLayout.LayoutParams(RelativeLayout.LayoutParams.FILL_PARENT, RelativeLayout.LayoutParams.WRAP_CONTENT);
 
+//        mDjiGLSurfaceView.setZOrderMediaOverlay(true);
+//        RelativeLayout.LayoutParams lp = new RelativeLayout.LayoutParams(RelativeLayout.LayoutParams.FILL_PARENT, RelativeLayout.LayoutParams.WRAP_CONTENT);
 //        addContentView(getLayoutInflater().inflate(R.layout.surface_overlay_layout, null), lp);
 
         taskScheduler = Executors.newSingleThreadScheduledExecutor();
+        wifiManager = (WifiManager) getSystemService(Context.WIFI_SERVICE);
     }
 
-    private void setupWifiReceivers() {
-        wifiManager = (WifiManager) getSystemService(Context.WIFI_SERVICE);
-        registerReceiver(wifiScanReceiver, new IntentFilter(WifiManager.SCAN_RESULTS_AVAILABLE_ACTION));
-    }
 
     @Override
     protected void onPause() {
-        unregisterReceiver(wifiScanReceiver);
         super.onPause();
     }
 
@@ -263,17 +252,7 @@ public class MainActivity extends DJIBaseActivity {
         return new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                //TODO: REMOVE
-//                switch (v.getId()) {
-//                    case R.id.DjiSurfaceView_02:
-//                        v.setVisibility(View.INVISIBLE);
-//                        findViewById(R.id.CVPreview).setVisibility(View.VISIBLE);
-//                        break;
-//                    case R.id.CVPreview:
-//                        v.setVisibility(View.INVISIBLE);
-//                        findViewById(R.id.DjiSurfaceView_02).setVisibility(View.VISIBLE);
-//                        break;
-//                }
+                //TODO: DO SOMETHING IF NECESSARY
             }
         };
     }
@@ -289,8 +268,7 @@ public class MainActivity extends DJIBaseActivity {
             @Override
             public void onResult(byte[] videoBuffer, int size) {
                 mDjiGLSurfaceView.setDataToDecoder(videoBuffer, size);
-                if (!processing && canStartProcessing) {
-                    processing = true;
+                if (canStartProcessing) {
                     processFrame();
                 }
             }
@@ -298,8 +276,16 @@ public class MainActivity extends DJIBaseActivity {
         DJIDrone.getDjiCamera().setReceivedVideoDataCallBack(mReceivedVideoDataCallBack);
     }
 
+    public ArrayBlockingQueue<ImageAsyncTask> runningTasks = new ArrayBlockingQueue<>(4);
+
     public void processFrame() {
-        new ImageAsyncTask().execute(mDjiGLSurfaceView.getVisibility() == View.GONE ? mAndroidCameraSurfaceView : mDjiGLSurfaceView);
+        ImageAsyncTask newTask = new ImageAsyncTask();
+        if (runningTasks.offer(newTask)) {
+            newTask.execute(mDjiGLSurfaceView.getVisibility() == View.GONE ? mAndroidCameraSurfaceView : mDjiGLSurfaceView);
+        }
+//        if (!processing) {
+//            processing = true;
+//        }
     }
 
     public void setProcessing(boolean processing) {
@@ -308,13 +294,13 @@ public class MainActivity extends DJIBaseActivity {
 
     public class ImageAsyncTask extends AsyncTask<GLSurfaceView, Void, Void> {
 
+        private ImageAsyncTask context = this;
+
         @Override
         protected Void doInBackground(GLSurfaceView... params) {
             ImageHelper.createBitmapFromFrame(new ImageHelper.BitmapCreatedCallback() {
                 @Override
                 public void onBitmapCreated(final Bitmap bitmap) {
-
-
                     if (CPreview != null) {
                         CPreview.postDelayed(new Runnable() {
                             @Override
@@ -326,8 +312,8 @@ public class MainActivity extends DJIBaseActivity {
                                     } else {
                                         ImageProcessing.processImage(bitmap);
                                     }
+                                    runningTasks.remove(context);
 //                                    CPreview.setImageBitmap(bitmap);
-
                                 }
                             }
                         }, 400);
@@ -337,6 +323,11 @@ public class MainActivity extends DJIBaseActivity {
 
             }, params[0]);
             return null;
+        }
+
+        @Override
+        protected void onPostExecute(Void aVoid) {
+            super.onPostExecute(aVoid);
         }
     }
 
@@ -432,6 +423,7 @@ public class MainActivity extends DJIBaseActivity {
             }, 500);
             super.onPostExecute(aVoid);
         }
+
     }
 
     /**
@@ -501,7 +493,7 @@ public class MainActivity extends DJIBaseActivity {
                     lastWifi = wifiManager.getConnectionInfo().getSSID();
                     connectIcon.setImageDrawable(getDrawable(R.drawable.wifi_connected_small));
                     connectText.setText("connected");
-                } else {
+                } else if (!wifiManager.getConnectionInfo().getSSID().contains("Phantom")) {
                     connectText.setText("connect");
                     connectIcon.setImageDrawable(getDrawable(R.drawable.wifi_not_connected_small));
                 }
@@ -517,8 +509,10 @@ public class MainActivity extends DJIBaseActivity {
                     currentModeText.setText(DroneState.flightMode.name());
                     lastMode = mode;
                 }
+
                 double currentLat = DroneState.getLatitude();
                 double currentLong = DroneState.getLongitude();
+
                 if (currentLat != lastLat || currentLong != lastLong) {
                     lastLat = currentLat;
                     lastLong = currentLong;
@@ -666,12 +660,21 @@ public class MainActivity extends DJIBaseActivity {
         WifiHelper.enableNetwork(SSID, wifiManager);
     }
 
+    public void setWantResults(boolean wantResults) {
+        this.wantResults = wantResults;
+    }
+
+    public boolean isWantResults() {
+        return wantResults;
+    }
+
+    private boolean wantResults = false;
+
     public void setupWifi() {
         if (wifiManager.getConnectionInfo().getSSID().startsWith("Phantom")) {
             MessageHandler.d("Drone already connected");
         } else {
-            MessageHandler.d("Performing wifi scan...");
-            registerReceiver(new WifiScanReceiver(), new IntentFilter(WifiManager.SCAN_RESULTS_AVAILABLE_ACTION));
+            wantResults = true;
             wifiManager.startScan();
         }
     }
