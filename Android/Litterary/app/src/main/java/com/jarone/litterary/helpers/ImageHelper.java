@@ -1,7 +1,7 @@
 package com.jarone.litterary.helpers;
 
 import android.graphics.Bitmap;
-import android.opengl.GLES20;
+import android.opengl.GLES30;
 import android.opengl.GLSurfaceView;
 
 import com.jarone.litterary.views.AndroidCameraSurfaceView;
@@ -69,29 +69,38 @@ public class ImageHelper {
 
         if (w != 0 && h != 0) {
 
-//            if (gl == null) {
-            GLES20.glReadPixels(0, 0, w, h, GLES20.GL_RGBA, GLES20.GL_UNSIGNED_BYTE, runningByteBuffer);
-//            } else {
-//                gl.glReadPixels(0, 0, w, h, GLES20.GL_RGBA, GLES20.GL_UNSIGNED_BYTE, runningByteBuffer);
-//            }
+            GLES30.glReadPixels(0, 0, w, h, GLES30.GL_RGBA, GLES30.GL_UNSIGNED_BYTE, runningByteBuffer);
             runningByteBuffer.asIntBuffer().get(pixelsBuffer);
             runningBitmap.setPixels(pixelsBuffer, (w * h) - w, -w, 0, 0, w, h);
 
+            return runningBitmap;
+        }
+        return null;
+    }
 
-            //THE FOLLOWING IS NOT REALLY NECESSARY.
+    public static Bitmap getBitmapFromGLSurfaceRetry(int w, int h, GL10 gl) {
 
-//            short sBuffer[] = new short[screenshotSize];
-//            ShortBuffer sb = ShortBuffer.wrap(sBuffer);
-//            bitmap.copyPixelsToBuffer(sb);
+        if (runningBitmap == null) {
+            runningBitmap = Bitmap.createBitmap(w, h, Bitmap.Config.RGB_565);
 
-            // Making created bitmap (from OpenGL points) compatible with
-            // Android bitmap
-//            for (int i = 0; i < screenshotSize; ++i) {
-//                short v = sBuffer[i];
-//                sBuffer[i] = (short) (((v & 0x1f) << 11) | (v & 0x7e0) | ((v & 0xf800) >> 11));
-//            }
-//            sb.rewind();
-//            bitmap.copyPixelsFromBuffer(sb);
+        }
+        if (runningByteBuffer == null) {
+            runningByteBuffer = ByteBuffer.allocateDirect(w * h * 4);
+            runningByteBuffer = runningByteBuffer.order(ByteOrder.nativeOrder());
+        }
+        if (pixelsBuffer == null) {
+            pixelsBuffer = new int[w * h];
+        }
+
+        if (w != 0 && h != 0) {
+
+            GLES30.glReadBuffer(GLES30.GL_COLOR_ATTACHMENT0);
+            GLES30.glBindBuffer(GLES30.GL_PIXEL_PACK_BUFFER, pixelsBuffer[0]);
+            GLES30.glReadPixels(0, 0, width, height, GLES30.GL_RGBA, GLES30.GL_UNSIGNED_BYTE, runningByteBuffer);
+            GLES30.glUnmapBuffer(GLES30.GL_PIXEL_PACK_BUFFER);
+            GLES30.glBindBuffer(GLES30.GL_PIXEL_PACK_BUFFER, 0);
+            runningByteBuffer.asIntBuffer().get(pixelsBuffer);
+            runningBitmap.setPixels(pixelsBuffer, (w * h) - w, -w, 0, 0, w, h);
             return runningBitmap;
         }
         return null;

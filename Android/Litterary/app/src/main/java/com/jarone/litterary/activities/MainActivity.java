@@ -271,8 +271,7 @@ public class MainActivity extends DJIBaseActivity {
             @Override
             public void onResult(byte[] videoBuffer, int size) {
                 mDjiGLSurfaceView.setDataToDecoder(videoBuffer, size);
-                if (!processing && canStartProcessing) {
-                    processing = true;
+                if (canStartProcessing) {
                     processFrame();
                 }
             }
@@ -281,7 +280,10 @@ public class MainActivity extends DJIBaseActivity {
     }
 
     public void processFrame() {
-        new ImageAsyncTask().execute(mDjiGLSurfaceView.getVisibility() == View.GONE ? mAndroidCameraSurfaceView : mDjiGLSurfaceView);
+        if (!processing) {
+            processing = true;
+            new ImageAsyncTask().execute(mDjiGLSurfaceView.getVisibility() == View.GONE ? mAndroidCameraSurfaceView : mDjiGLSurfaceView);
+        }
     }
 
     public void setProcessing(boolean processing) {
@@ -413,6 +415,7 @@ public class MainActivity extends DJIBaseActivity {
             }, 500);
             super.onPostExecute(aVoid);
         }
+
     }
 
     /**
