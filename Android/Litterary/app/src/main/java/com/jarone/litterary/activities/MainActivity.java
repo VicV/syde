@@ -43,6 +43,7 @@ import com.jarone.litterary.views.AndroidCameraSurfaceView;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
@@ -90,9 +91,7 @@ public class MainActivity extends DJIBaseActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         mainActivity = this;
-
         setupViewPager();
-
         verifyStoragePermissions(this);
         registerCamera();
         ContextManager.setContext(this);
@@ -105,7 +104,6 @@ public class MainActivity extends DJIBaseActivity {
 
         taskScheduler = Executors.newSingleThreadScheduledExecutor();
         wifiManager = (WifiManager) getSystemService(Context.WIFI_SERVICE);
-
     }
 
 
@@ -275,10 +273,15 @@ public class MainActivity extends DJIBaseActivity {
         DJIDrone.getDjiCamera().setReceivedVideoDataCallBack(mReceivedVideoDataCallBack);
     }
 
+    public ArrayBlockingQueue<ImageAsyncTask> runningTasks = new ArrayBlockingQueue<>(4);
+
     public void processFrame() {
+        ImageAsyncTask newTask = new ImageAsyncTask();
+        if (runningTasks.offer(newTask)) {
+            newTask.execute(mDjiGLSurfaceView.getVisibility() == View.GONE ? mAndroidCameraSurfaceView : mDjiGLSurfaceView);
+        }
 //        if (!processing) {
-        processing = true;
-        new ImageAsyncTask().execute(mDjiGLSurfaceView.getVisibility() == View.GONE ? mAndroidCameraSurfaceView : mDjiGLSurfaceView);
+//            processing = true;
 //        }
     }
 
@@ -288,13 +291,13 @@ public class MainActivity extends DJIBaseActivity {
 
     public class ImageAsyncTask extends AsyncTask<GLSurfaceView, Void, Void> {
 
+        private ImageAsyncTask context = this;
+
         @Override
         protected Void doInBackground(GLSurfaceView... params) {
             ImageHelper.createBitmapFromFrame(new ImageHelper.BitmapCreatedCallback() {
                 @Override
                 public void onBitmapCreated(final Bitmap bitmap) {
-
-
                     if (CPreview != null) {
                         CPreview.postDelayed(new Runnable() {
                             @Override
@@ -306,8 +309,8 @@ public class MainActivity extends DJIBaseActivity {
                                     } else {
                                         ImageProcessing.processImage(bitmap);
                                     }
+                                    runningTasks.remove(context);
 //                                    CPreview.setImageBitmap(bitmap);
-
                                 }
                             }
                         }, 400);
@@ -317,6 +320,11 @@ public class MainActivity extends DJIBaseActivity {
 
             }, params[0]);
             return null;
+        }
+
+        @Override
+        protected void onPostExecute(Void aVoid) {
+            super.onPostExecute(aVoid);
         }
     }
 
@@ -482,7 +490,7 @@ public class MainActivity extends DJIBaseActivity {
                     lastWifi = wifiManager.getConnectionInfo().getSSID();
                     connectIcon.setImageDrawable(getDrawable(R.drawable.wifi_connected_small));
                     connectText.setText("connected");
-                } else {
+                } else if (!wifiManager.getConnectionInfo().getSSID().contains("Phantom")) {
                     connectText.setText("connect");
                     connectIcon.setImageDrawable(getDrawable(R.drawable.wifi_not_connected_small));
                 }
@@ -498,8 +506,10 @@ public class MainActivity extends DJIBaseActivity {
                     currentModeText.setText(DroneState.flightMode.name());
                     lastMode = mode;
                 }
+
                 double currentLat = DroneState.getLatitude();
                 double currentLong = DroneState.getLongitude();
+
                 if (currentLat != lastLat || currentLong != lastLong) {
                     lastLat = currentLat;
                     lastLong = currentLong;

@@ -18,7 +18,7 @@ public class WifiScanReceiver extends BroadcastReceiver {
     @Override
     public void onReceive(Context context, Intent intent) {
 
-        if (ContextManager.getMainActivityInstance().isWantResults()) {
+        if (ContextManager.getMainActivityInstance() != null && ContextManager.getMainActivityInstance().isWantResults()) {
 
             MessageHandler.d("Received wifi list...");
 
