@@ -323,6 +323,7 @@ public class MainActivity extends DJIBaseActivity {
                                     } else {
                                         ImageProcessing.processImage(bitmap);
                                     }
+//                                    CPreview.setImageBitmap(bitmap);
 
                                 }
                             }
@@ -463,8 +464,15 @@ public class MainActivity extends DJIBaseActivity {
     private TextView currentModeText;
     private TextView currentLocation;
     private TextView targetLocation;
-    private TextView droneConnected;
+    private TextView droneConnectedText;
     private ImageView modeButton;
+    private String lastWifi = "";
+    private int lastMode = -6;
+    private double lastLat = -99999;
+    private double lastLong = -99999;
+    private double lastTargetLat = -9999999;
+    private double lastTargetLong = -999999;
+    private boolean lastConnected = false;
 
     private void setupInterfaceUpdate() {
         connectIcon = ((ImageView) findViewById(R.id.connect_icon));
@@ -473,7 +481,7 @@ public class MainActivity extends DJIBaseActivity {
         currentModeText = ((TextView) findViewById(R.id.currentMode));
         currentLocation = ((TextView) findViewById(R.id.currentLocation));
         targetLocation = ((TextView) findViewById(R.id.targetLocation));
-        droneConnected = ((TextView) findViewById(R.id.droneConnected));
+        droneConnectedText = ((TextView) findViewById(R.id.droneConnected));
         modeButton = (ImageView) findViewById(R.id.switch_mode_icon);
     }
 
@@ -485,34 +493,51 @@ public class MainActivity extends DJIBaseActivity {
             @TargetApi(Build.VERSION_CODES.LOLLIPOP)
             @Override
             public void run() {
-                if (wifiManager.getConnectionInfo().getSSID().contains("Phantom")) {
+                String currentSSID = wifiManager.getConnectionInfo().getSSID();
+                if (!currentSSID.equals(lastWifi) && wifiManager.getConnectionInfo().getSSID().contains("Phantom")) {
+                    lastWifi = wifiManager.getConnectionInfo().getSSID();
                     connectIcon.setImageDrawable(getDrawable(R.drawable.wifi_connected_small));
                     connectText.setText("connected");
                 } else {
                     connectText.setText("connect");
                     connectIcon.setImageDrawable(getDrawable(R.drawable.wifi_not_connected_small));
                 }
-                if (DroneState.getMode() == DroneState.DIRECT_MODE) {
+                int mode = DroneState.getMode();
+                if (mode != lastMode && mode == DroneState.DIRECT_MODE) {
                     modeButton.setImageDrawable(getDrawable(R.drawable.direct_small));
                     switchModeText.setText("direct");
                     currentModeText.setText("DIRECT");
-
-
-                } else if (DroneState.getMode() == DroneState.WAYPOINT_MODE) {
+                    lastMode = mode;
+                } else if (mode != lastMode && mode == DroneState.WAYPOINT_MODE) {
                     modeButton.setImageDrawable(getDrawable(R.drawable.map_pin_small));
                     switchModeText.setText("waypoint");
                     currentModeText.setText(DroneState.flightMode.name());
+                    lastMode = mode;
                 }
-                currentLocation.setText(
-                        LocationHelper.formatForDisplay(DroneState.getLatitude(), DroneState.getLongitude()));
+                double currentLat = DroneState.getLatitude();
+                double currentLong = DroneState.getLongitude();
+                if (currentLat != lastLat || currentLong != lastLong) {
+                    lastLat = currentLat;
+                    lastLong = currentLong;
+                    currentLocation.setText(LocationHelper.formatForDisplay(currentLat, currentLong));
 
-                targetLocation.setText(
-                        LocationHelper.formatForDisplay(
-                                GroundStation.getCurrentTarget().latitude,
-                                GroundStation.getCurrentTarget().longitude)
+                }
+                double currentTargetLat = GroundStation.getCurrentTarget().latitude;
+                double currentTargetLong = GroundStation.getCurrentTarget().longitude;
+                if (currentTargetLat != lastTargetLat || currentTargetLong != lastTargetLong) {
+                    lastTargetLat = currentTargetLat;
+                    lastTargetLong = currentTargetLong;
+                    targetLocation.setText(
+                            LocationHelper.formatForDisplay(
+                                    currentTargetLat,
+                                    currentTargetLong));
+                }
 
-                );
-                droneConnected.setText("" + DroneState.droneConnected);
+                boolean droneConnected = DroneState.droneConnected;
+                if (lastConnected != droneConnected) {
+                    lastConnected = droneConnected;
+                    droneConnectedText.setText(String.valueOf(droneConnected));
+                }
 //                if (GroundStation.executingController()) {
 //                    ((TextView) findViewById(R.id.pid_angle)).setText("" + GroundStation.getAngularController().getLastAction());
 //                    ((TextView) findViewById(R.id.pid_error)).setText("" + GroundStation.getAngularController().getLastError());

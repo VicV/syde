@@ -21,6 +21,8 @@ public class ImageHelper {
     public static Bitmap runningBitmap;
     private static ByteBuffer runningByteBuffer;
     private static int[] pixelsBuffer;
+    private static int height = -1;
+    private static int width = -1;
 
 
     public interface BitmapCreatedCallback {
@@ -29,6 +31,10 @@ public class ImageHelper {
 
     // Create a bitmap from the current surface frame.
     public static void createBitmapFromFrame(final BitmapCreatedCallback bitmapCreatedCallback, final GLSurfaceView surface) {
+        if (width == -1 || height == -1) {
+            width = surface.getWidth();
+            height = surface.getHeight();
+        }
 
         surface.queueEvent(new Runnable() {
             @Override
@@ -40,7 +46,7 @@ public class ImageHelper {
                     EGL10 egl = (EGL10) EGLContext.getEGL();
                     gl = (GL10) egl.eglGetCurrentContext().getGL();
                 }
-                Bitmap frame = ImageHelper.getBitmapFromGLSurface(surface.getWidth(), surface.getHeight(), gl);
+                Bitmap frame = ImageHelper.getBitmapFromGLSurface(width, height, gl);
                 bitmapCreatedCallback.onBitmapCreated(frame);
             }
         });
@@ -51,6 +57,7 @@ public class ImageHelper {
 
         if (runningBitmap == null) {
             runningBitmap = Bitmap.createBitmap(w, h, Bitmap.Config.RGB_565);
+
         }
         if (runningByteBuffer == null) {
             runningByteBuffer = ByteBuffer.allocateDirect(w * h * 4);
@@ -61,11 +68,12 @@ public class ImageHelper {
         }
 
         if (w != 0 && h != 0) {
-            if (gl == null) {
-                GLES20.glReadPixels(0, 0, w, h, GLES20.GL_RGBA, GLES20.GL_UNSIGNED_BYTE, runningByteBuffer);
-            } else {
-                gl.glReadPixels(0, 0, w, h, GLES20.GL_RGBA, GLES20.GL_UNSIGNED_BYTE, runningByteBuffer);
-            }
+
+//            if (gl == null) {
+            GLES20.glReadPixels(0, 0, w, h, GLES20.GL_RGBA, GLES20.GL_UNSIGNED_BYTE, runningByteBuffer);
+//            } else {
+//                gl.glReadPixels(0, 0, w, h, GLES20.GL_RGBA, GLES20.GL_UNSIGNED_BYTE, runningByteBuffer);
+//            }
             runningByteBuffer.asIntBuffer().get(pixelsBuffer);
             runningBitmap.setPixels(pixelsBuffer, (w * h) - w, -w, 0, 0, w, h);
 

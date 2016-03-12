@@ -225,9 +225,13 @@ public class ImageProcessing {
         //TODO determine below threshold parameter from the drone's altitude and FOV
         eliminateSmallBlobs(processing, Math.pow(metresToPixels(0.3, DroneState.getAltitude()), 2));
         //clearBorders();
-        Imgproc.medianBlur(processing, processing, 31);
         blobCentres = findBlobCentres(processing);
         processing.copyTo(mat);
+
+        //MEDIANBLUR NOT NECESSARY AND MAKES THINGS VERY SLOW --vic&adam
+//        Imgproc.medianBlur(processingMat, processingMat, 31);
+
+
         return blobCentres;
     }
 
