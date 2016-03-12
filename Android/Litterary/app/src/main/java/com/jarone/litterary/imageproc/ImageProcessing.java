@@ -161,7 +161,7 @@ public class ImageProcessing {
      * @return
      */
     public static Bitmap processImage(Bitmap image) {
-        Mat mat = identifyLitter(image);
+        Mat mat = identifyLitterMat(image);
         convertFrame(mat);
         return CVPreview;
     }
@@ -184,15 +184,23 @@ public class ImageProcessing {
     }
 
     /**
-     * Identify blobs on the given Mat and return the processed version
+     * Identify blobs on the given Mat and return the identified litter points
      * @param photo
      * @return
      */
-    public static Mat identifyLitter(Bitmap photo) {
+    public static ArrayList<Point> identifyLitter(Bitmap photo) {
         Mat mat = new Mat();
         Utils.bitmapToMat(photo, mat);
         //correctDistortion();
-        detectBlobs(mat);
+        ArrayList<Point> points = detectBlobs(mat);
+        ContextManager.getMainActivityInstance().setProcessing(false);
+        return points;
+    }
+
+    public static Mat identifyLitterMat(Bitmap photo) {
+        Mat mat = new Mat();
+        Utils.bitmapToMat(photo, mat);
+        ArrayList<Point> points = detectBlobs(mat);
         ContextManager.getMainActivityInstance().setProcessing(false);
         return mat;
     }
@@ -253,6 +261,7 @@ public class ImageProcessing {
         Mat temp = mat.clone();
         ArrayList<MatOfPoint> contours = new ArrayList<>();
         Imgproc.findContours(temp, contours, new Mat(), Imgproc.RETR_CCOMP, Imgproc.CHAIN_APPROX_SIMPLE);
+        temp.release();
         fillContours(mat, contours, 255);
     }
 
@@ -293,6 +302,7 @@ public class ImageProcessing {
         ArrayList<MatOfPoint> contours = new ArrayList<>();
         ArrayList<Double> areas = new ArrayList<>();
         Imgproc.findContours(temp, contours, new Mat(), Imgproc.RETR_CCOMP, Imgproc.CHAIN_APPROX_SIMPLE);
+        temp.release();
         ArrayList<MatOfPoint> badContours = new ArrayList<>();
         for (MatOfPoint contour : contours) {
             double size = Imgproc.contourArea(contour);
@@ -315,7 +325,7 @@ public class ImageProcessing {
         Imgproc.findContours(temp, contours, new Mat(), Imgproc.RETR_CCOMP, Imgproc.CHAIN_APPROX_SIMPLE);
         int width = temp.width();
         int height = temp.height();
-
+        temp.release();
         ArrayList<MatOfPoint> badContours = new ArrayList<>();
         for (MatOfPoint contour : contours) {
             for (Point p : contour.toArray()) {
@@ -336,6 +346,7 @@ public class ImageProcessing {
         Mat temp = mat.clone();
         ArrayList<MatOfPoint> contours = new ArrayList<>();
         Imgproc.findContours(temp, contours, new Mat(), Imgproc.RETR_CCOMP, Imgproc.CHAIN_APPROX_SIMPLE);
+        temp.release();
         currentBlobs = contours;
         ArrayList<Point> centres = new ArrayList<>();
         for (MatOfPoint contour : currentBlobs) {
@@ -400,7 +411,11 @@ public class ImageProcessing {
      * @return
      */
     public static double distanceFromTarget(AngularController.ActiveAngle angle) {
-        return 10;
+        if (angle == AngularController.ActiveAngle.PITCH) {
+            return originalMat.height() / 2 - trackedObject.getPosition().y;
+        } else {
+            return originalMat.width() / 2 - trackedObject.getPosition().x;
+        }
     }
 
     public static double pixelDistance(Point p1, Point p2) {

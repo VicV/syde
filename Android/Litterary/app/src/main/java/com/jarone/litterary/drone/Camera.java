@@ -4,11 +4,16 @@ import com.jarone.litterary.handlers.MessageHandler;
 import com.jarone.litterary.helpers.FileAccess;
 
 import java.io.BufferedOutputStream;
-import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
+import java.text.DateFormat;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
+import java.util.Locale;
 
 import dji.sdk.api.Camera.DJICameraSettingsTypeDef;
 import dji.sdk.api.DJIDrone;
@@ -25,7 +30,8 @@ import dji.sdk.util.DjiLocationCoordinate2D;
  */
 public class Camera {
 
-    public static int requestedGimbalAngle = 1000;
+    public static final DateFormat dateFormat = new SimpleDateFormat("yyyy-MMM-dd kk:mm:ss", Locale.ENGLISH);
+    public static int requestedGimbalAngle = DJIDrone.getDjiGimbal().getGimbalPitchMaxAngle();
     /**
      * The callback which is executed when a photo is successfully taken. This will be changed
      * by calling classes
@@ -81,42 +87,105 @@ public class Camera {
             @Override
             public void onResult(List<DJIMedia> list, DJIError djiError) {
                 if (djiError.errorCode == 0) {
-                    try {
-                        FileOutputStream out = new FileOutputStream(formatFileName());
-                        final OutputStream outFile = new BufferedOutputStream(out);
-                        final int[] curProgress = {0};
-                        DJIDrone.getDjiCamera().fetchMediaData(list.get(0), new DJIReceivedFileDataCallBack() {
-                            @Override
-                            public void onResult(byte[] bytes, int size, int progress, DJIError djiError) {
-                                if (djiError.errorCode == DJIError.RESULT_OK) {
-                                    try {
-                                        outFile.write(bytes, 0, size);
-                                        if (progress % 10 == 0 && progress > curProgress[0]) {
-                                            MessageHandler.d(size + " " + progress + " " + djiError.errorDescription);
-                                            curProgress[0] = progress;
-                                        }
-
-                                        if (progress == 100) {
-                                            outFile.close();
-                                            engageCameraMode();
-                                        }
-                                    } catch (IOException e) {
-                                        engageCameraMode();
-                                    }
-                                } else {
-                                    engageCameraMode();
-                                }
-                            }
-                        });
-                    } catch (FileNotFoundException e) {
-                        MessageHandler.d(e.getMessage());
-                        engageCameraMode();
-                    }
+                    downloadPhotoData(list.get(0), new Runnable() {
+                        @Override
+                        public void run() {
+                            engageCameraMode();
+                        }
+                    });
+                } else {
+                    engageCameraMode();
                 }
             }
         });
     }
 
+    public static void downloadPhotosSince(final long timestamp, final Runnable callback) {
+        DJIDrone.getDjiCamera().fetchMediaList(new DJIMediaFetchCallBack() {
+            @Override
+            public void onResult(List<DJIMedia> list, DJIError djiError) {
+                if (djiError.errorCode == 0) {
+                    if (list.size() < 1) {
+                        return;
+                    }
+                    int index = 0;
+                    Date date = parseDate(list.get(index).createTime);
+                    ArrayList<DJIMedia> validPhotos = new ArrayList<DJIMedia>();
+                    while (index < list.size() && date != null && date.after(new Date(timestamp))){
+                        if (list.get(index).durationSeconds == 0) {
+                            validPhotos.add(list.get(index));
+                        }
+                        date = parseDate(list.get(index).createTime);
+                        index++;
+                    }
+                    downloadPhotoList(validPhotos, 0, callback);
+                } else {
+                    engageCameraMode();
+                }
+            }
+        });
+    }
+
+    public static void downloadPhotoList(final ArrayList<DJIMedia> list, final int index, final Runnable callback) {
+        Date date = parseDate(list.get(index).createTime);
+        if (date != null) {
+            MessageHandler.d("Downloading photo from " + date.toString());
+            downloadPhotoData(list.get(index), new Runnable() {
+                @Override
+                public void run() {
+                    if (index + 1 < list.size()) {
+                        downloadPhotoList(list, index + 1, callback);
+                    } else {
+                        callback.run();
+                        engageCameraMode();
+                    }
+                }
+            });
+        }
+    }
+
+
+    public static void downloadPhotoData(DJIMedia file, final Runnable callback) {
+        try {
+            FileOutputStream out = new FileOutputStream(formatFileName(parseDate(file.createTime).getTime()));
+            final OutputStream outFile = new BufferedOutputStream(out);
+            final int[] curProgress = {0};
+            DJIDrone.getDjiCamera().fetchMediaData(file, new DJIReceivedFileDataCallBack() {
+                @Override
+                public void onResult(byte[] bytes, int size, int progress, DJIError djiError) {
+                    if (djiError.errorCode == DJIError.RESULT_OK) {
+                        try {
+                            outFile.write(bytes, 0, size);
+                            if (progress % 10 == 0 && progress > curProgress[0]) {
+                                MessageHandler.d(size + " " + progress + " " + djiError.errorDescription);
+                                curProgress[0] = progress;
+                            }
+
+                            if (progress == 100) {
+                                outFile.close();
+                                //engageCameraMode();
+                                callback.run();
+                            }
+                        } catch (IOException e) {
+                            engageCameraMode();
+                        }
+                    } else {
+                        engageCameraMode();
+                    }
+                }
+            });
+        } catch (IOException e) {
+            MessageHandler.e(e.getMessage());
+        }
+    }
+
+    public static Date parseDate(String date) {
+        try {
+            return dateFormat.parse(date);
+        } catch (ParseException e) {
+            return null;
+        }
+    }
     public static void engageCameraMode() {
         engageCameraMode(new Runnable() {
             @Override
@@ -143,6 +212,10 @@ public class Camera {
         return FileAccess.formatFileName("survey", System.currentTimeMillis() + ".jpg").toString();
     }
 
+    public static String formatFileName(long time) {
+        return FileAccess.formatFileName("survey", time + ".jpg").toString();
+    }
+
     /**
      * Set gimbal angle to a value between 1000 (straight down) and 0 (horizontal)
      * @param angle
@@ -150,6 +223,13 @@ public class Camera {
     public static void setGimbalPitch(int angle) {
         DJIDrone.getDjiGimbal().updateGimbalAttitude(
                 getGimbalRotation(angle),
+                new DJIGimbalRotation(false, false, false, 0),
+                new DJIGimbalRotation(false, false, false, 0)
+        );
+    }
+    public static void setGimbalDown() {
+        DJIDrone.getDjiGimbal().updateGimbalAttitude(
+                getGimbalRotation(DJIDrone.getDjiGimbal().getGimbalPitchMaxAngle()),
                 new DJIGimbalRotation(false, false, false, 0),
                 new DJIGimbalRotation(false, false, false, 0)
         );

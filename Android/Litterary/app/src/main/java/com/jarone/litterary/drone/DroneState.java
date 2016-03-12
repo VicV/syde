@@ -76,9 +76,10 @@ public class DroneState {
             @Override
             public void run() {
                 droneConnected = false;
-                updateDroneState();
+                //pdateDroneState();
                 registerBatteryUpdate();
                 GroundStation.registerPhantom2Callback();
+                Camera.setGimbalDown();
             }
         }, 5000, 5000, TimeUnit.MILLISECONDS);
     }
@@ -105,13 +106,7 @@ public class DroneState {
                 yaw = state.yaw;
                 DroneState.state = state;
 
-                Camera.setGimbalPitch(Camera.requestedGimbalAngle);
-
                 droneConnected = true;
-                if (connectedTimer != null) {
-                    connectedTimer.cancel(true);
-                    registerConnectedTimer();
-                }
             }
         };
 

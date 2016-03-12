@@ -13,25 +13,32 @@ public class MessageHandler {
 
     public static void d(final String message) {
         Log.d("MessageHandler", message);
-        runOnUIThread(DebugItem.DebugLevel.DEBUG, message);
+        runOnUIThread(DebugItem.DebugLevel.DEBUG, message, true);
     }
 
     public static void e(final String message) {
         Log.e("MessageHandler", message);
-        runOnUIThread(DebugItem.DebugLevel.ERROR, message);
+        runOnUIThread(DebugItem.DebugLevel.ERROR, message, true);
     }
 
     public static void w(final String message) {
         Log.w("MessageHandler", message);
-        runOnUIThread(DebugItem.DebugLevel.WARN, message);
+        runOnUIThread(DebugItem.DebugLevel.WARN, message, true);
     }
 
-    public static void runOnUIThread(final DebugItem.DebugLevel level, final String message) {
+    public static void log(final String message) {
+        Log.d("MessageHandler", message);
+        runOnUIThread(DebugItem.DebugLevel.DEBUG, message, false);
+    }
+
+    public static void runOnUIThread(final DebugItem.DebugLevel level, final String message, final boolean makeToast) {
         ContextManager.getMainActivityInstance().runOnUiThread(new Runnable() {
             @Override
             public void run() {
-                Toast toast = Toast.makeText(ContextManager.getContext(), message, Toast.LENGTH_SHORT);
-                toast.show();
+                if (makeToast) {
+                    Toast toast = Toast.makeText(ContextManager.getContext(), message, Toast.LENGTH_SHORT);
+                    toast.show();
+                }
                 ContextManager.getMainActivityInstance().updateMessageList(new DebugItem(level, message, System.currentTimeMillis()));
             }
         });

@@ -33,6 +33,7 @@ import com.jarone.litterary.adapters.DebugMessageRecyclerAdapter;
 import com.jarone.litterary.adapters.ViewPagerAdapter;
 import com.jarone.litterary.control.AngularController;
 import com.jarone.litterary.datatypes.DebugItem;
+import com.jarone.litterary.drone.Camera;
 import com.jarone.litterary.drone.DroneState;
 import com.jarone.litterary.drone.Grabber;
 import com.jarone.litterary.drone.GroundStation;
@@ -184,10 +185,12 @@ public class MainActivity extends DJIBaseActivity {
             public void onClick(View view) {
                 switch (view.getId()) {
                     case R.id.button_imgproc_1:
-                        if (grabber == null) {
-                            grabber = new Grabber();
-                        }
-                        grabber.sendCommand(Grabber.Commands.RAISE);
+                        Camera.downloadPhotosSince(Camera.parseDate("2016-Mar-01 12:00:00").getTime(), new Runnable() {
+                            @Override
+                            public void run() {
+                                MessageHandler.d("DONE DOWNLOADING!!");
+                            }
+                        });
                         break;
                     case R.id.button_imgproc_2:
                         if (grabber == null) {
@@ -689,20 +692,18 @@ public class MainActivity extends DJIBaseActivity {
             public void onClick(View v) {
                 switch (v.getId()) {
                     case (R.id.button_special_1):
-                        ImageProcessing.startTrackingObject();
-                        trackFuture = taskScheduler.scheduleAtFixedRate(new Runnable() {
-                            @Override
-                            public void run() {
-                                //ImageProcessing.trackObject();
-                            }
-                        }, 0, 300, TimeUnit.MILLISECONDS);
+                        if (ImageProcessing.isTracking()) {
+                            angularController = new AngularController();
+                            angularController.startExecutionLoop();
+                        } else {
+                            ImageProcessing.startTrackingObject();
+                        }
                         break;
                     case (R.id.button_special_2):
-                        ImageProcessing.stopTrackingObject();
-                        if (trackFuture != null) {
-                            trackFuture.cancel(true);
-                            trackFuture = null;
+                        if (angularController != null) {
+                            angularController.stopExecutionLoop();
                         }
+                        ImageProcessing.stopTrackingObject();
                         break;
                 }
             }
