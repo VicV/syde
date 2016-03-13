@@ -397,11 +397,13 @@ public class ImageProcessing {
     }
 
     public static Rect calculateStartingRect() {
-
         Point object = closestToCentre(blobCentres);
-        int x = (int) object.x;
-        int y = (int) object.y;
-        return new Rect(x, y, 20, 20);
+        if (object != null) {
+            int x = (int) object.x;
+            int y = (int) object.y;
+            return new Rect(x, y, 20, 20);
+        }
+        return null;
     }
 
     /**
@@ -732,9 +734,13 @@ public class ImageProcessing {
             MessageHandler.d("Started Tracking...");
             //detectBlobs();
             trackedObject = new TrackingObject();
-            isTracking = true;
-            createTrackedObject(originalMat, trackedObject.prevRect);
-            trackObject();
+            if (trackedObject.prevRect != null) {
+                isTracking = true;
+                createTrackedObject(originalMat, trackedObject.prevRect);
+                trackObject();
+            } else {
+                MessageHandler.d("Couldn't find object to track!");
+            }
         } else {
             MessageHandler.d("Already Tracking...");
         }
