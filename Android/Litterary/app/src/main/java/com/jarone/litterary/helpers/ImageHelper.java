@@ -4,8 +4,6 @@ import android.graphics.Bitmap;
 import android.opengl.GLES30;
 import android.opengl.GLSurfaceView;
 
-import com.jarone.litterary.views.AndroidCameraSurfaceView;
-
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 
@@ -40,12 +38,8 @@ public class ImageHelper {
             @Override
             public void run() {
                 GL10 gl;
-                if (surface instanceof AndroidCameraSurfaceView) {
-                    gl = ((AndroidCameraSurfaceView) surface).getGl10();
-                } else {
-                    EGL10 egl = (EGL10) EGLContext.getEGL();
-                    gl = (GL10) egl.eglGetCurrentContext().getGL();
-                }
+                EGL10 egl = (EGL10) EGLContext.getEGL();
+                gl = (GL10) egl.eglGetCurrentContext().getGL();
                 Bitmap frame = ImageHelper.getBitmapFromGLSurface(width, height, gl);
                 bitmapCreatedCallback.onBitmapCreated(frame);
             }

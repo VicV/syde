@@ -188,6 +188,7 @@ public class ImageProcessing {
 
     /***
      * Identify blobs on the given Mat and return the identified litter points
+     *
      * @param photo
      * @return
      */
@@ -236,13 +237,12 @@ public class ImageProcessing {
 
         //TODO determine below threshold parameter from the drone's altitude and FOV
         //eliminateSmallBlobs(processing, Math.pow(metresToPixels(0.3, DroneState.getAltitude()), 2));
-        //clearBorders();
+//        clearBorders(processing);
         blobCentres = findBlobCentres(processing);
         processing.copyTo(mat);
 
         //MEDIANBLUR NOT NECESSARY AND MAKES THINGS VERY SLOW --vic&adam
 //        Imgproc.medianBlur(processing, processing, 31);
-
 
         return blobCentres;
     }
@@ -294,8 +294,8 @@ public class ImageProcessing {
 
     public static void determineCannyThreshold(Mat mat) {
         Mat _ = new Mat();
-        highThreshold = Imgproc.threshold(mat, _, 127, 255, Imgproc.THRESH_OTSU | Imgproc.THRESH_BINARY);
-        lowThreshold = highThreshold * 0.3;
+        highThreshold = Imgproc.threshold(mat, _, 127, 255, Imgproc.THRESH_OTSU);
+        lowThreshold = highThreshold * 0.333;
     }
 
     /**
@@ -374,7 +374,7 @@ public class ImageProcessing {
             int x = (int) moment.get_m10() / (int) moment.get_m00();
             int y = (int) moment.get_m01() / (int) moment.get_m00();
             return new Point(x, y);
-        }catch (ArithmeticException e) {
+        } catch (ArithmeticException e) {
             //divided by zero, image moment is invalid for this contour
             return null;
         }
