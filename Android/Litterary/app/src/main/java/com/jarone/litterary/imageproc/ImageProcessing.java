@@ -11,7 +11,6 @@ import com.google.myjson.Gson;
 import com.google.myjson.JsonObject;
 import com.google.myjson.JsonParser;
 import com.jarone.litterary.control.AngularController;
-import com.jarone.litterary.drone.DroneState;
 import com.jarone.litterary.handlers.MessageHandler;
 import com.jarone.litterary.helpers.ContextManager;
 import com.jarone.litterary.helpers.FileAccess;
@@ -163,7 +162,7 @@ public class ImageProcessing {
      * @return
      */
     public static Bitmap processImage(Bitmap image) {
-        Mat mat = identifyLitter(image);
+        Mat mat = identifyLitterMat(image);
         convertFrame(mat);
         return CVPreview;
     }
@@ -187,17 +186,24 @@ public class ImageProcessing {
         Utils.bitmapToMat(image, currentMat);
     }
 
-    /**
-     * Identify blobs on the given Mat and return the processed version
-     *
+    /***
+     * Identify blobs on the given Mat and return the identified litter points
      * @param photo
      * @return
      */
-    public static Mat identifyLitter(Bitmap photo) {
+    public static ArrayList<Point> identifyLitter(Bitmap photo) {
         Mat mat = new Mat();
         Utils.bitmapToMat(photo, mat);
         //correctDistortion();
-        detectBlobs(mat);
+        ArrayList<Point> points = detectBlobs(mat);
+        ContextManager.getMainActivityInstance().setProcessing(false);
+        return points;
+    }
+
+    public static Mat identifyLitterMat(Bitmap photo) {
+        Mat mat = new Mat();
+        Utils.bitmapToMat(photo, mat);
+        ArrayList<Point> points = detectBlobs(mat);
         ContextManager.getMainActivityInstance().setProcessing(false);
         return mat;
     }
@@ -229,7 +235,7 @@ public class ImageProcessing {
         fillImage(processing);
 
         //TODO determine below threshold parameter from the drone's altitude and FOV
-        eliminateSmallBlobs(processing, Math.pow(metresToPixels(0.3, DroneState.getAltitude()), 2));
+        //eliminateSmallBlobs(processing, Math.pow(metresToPixels(0.3, DroneState.getAltitude()), 2));
         //clearBorders();
         blobCentres = findBlobCentres(processing);
         processing.copyTo(mat);
@@ -246,7 +252,7 @@ public class ImageProcessing {
      */
     public static void closeImage(Mat mat) {
         int scaleFactor = 10;
-        Mat element = Imgproc.getStructuringElement(Imgproc.MORPH_ELLIPSE, new Size(100 / scaleFactor, 100 / scaleFactor));
+        Mat element = Imgproc.getStructuringElement(Imgproc.MORPH_ELLIPSE, new Size(150 / scaleFactor, 150 / scaleFactor));
         //Rescale to smaller size to perform closing much faster
         int width = mat.width();
         int height = mat.height();
@@ -259,6 +265,7 @@ public class ImageProcessing {
         Mat temp = mat.clone();
         ArrayList<MatOfPoint> contours = new ArrayList<>();
         Imgproc.findContours(temp, contours, new Mat(), Imgproc.RETR_CCOMP, Imgproc.CHAIN_APPROX_SIMPLE);
+        temp.release();
         fillContours(mat, contours, 255);
     }
 
@@ -287,8 +294,8 @@ public class ImageProcessing {
 
     public static void determineCannyThreshold(Mat mat) {
         Mat _ = new Mat();
-        lowThreshold = Imgproc.threshold(mat, _, 127, 255, Imgproc.THRESH_OTSU);
-        highThreshold = lowThreshold * 3;
+        highThreshold = Imgproc.threshold(mat, _, 127, 255, Imgproc.THRESH_OTSU | Imgproc.THRESH_BINARY);
+        lowThreshold = highThreshold * 0.3;
     }
 
     /**
@@ -299,6 +306,7 @@ public class ImageProcessing {
         ArrayList<MatOfPoint> contours = new ArrayList<>();
         ArrayList<Double> areas = new ArrayList<>();
         Imgproc.findContours(temp, contours, new Mat(), Imgproc.RETR_CCOMP, Imgproc.CHAIN_APPROX_SIMPLE);
+        temp.release();
         ArrayList<MatOfPoint> badContours = new ArrayList<>();
         for (MatOfPoint contour : contours) {
             double size = Imgproc.contourArea(contour);
@@ -321,7 +329,7 @@ public class ImageProcessing {
         Imgproc.findContours(temp, contours, new Mat(), Imgproc.RETR_CCOMP, Imgproc.CHAIN_APPROX_SIMPLE);
         int width = temp.width();
         int height = temp.height();
-
+        temp.release();
         ArrayList<MatOfPoint> badContours = new ArrayList<>();
         for (MatOfPoint contour : contours) {
             for (Point p : contour.toArray()) {
@@ -342,10 +350,14 @@ public class ImageProcessing {
         Mat temp = mat.clone();
         ArrayList<MatOfPoint> contours = new ArrayList<>();
         Imgproc.findContours(temp, contours, new Mat(), Imgproc.RETR_CCOMP, Imgproc.CHAIN_APPROX_SIMPLE);
+        temp.release();
         currentBlobs = contours;
         ArrayList<Point> centres = new ArrayList<>();
         for (MatOfPoint contour : currentBlobs) {
-            centres.add(contourCentroid(contour));
+            Point centre = contourCentroid(contour);
+            if (centre != null) {
+                centres.add(centre);
+            }
         }
         return centres;
     }
@@ -358,9 +370,14 @@ public class ImageProcessing {
      */
     public static Point contourCentroid(MatOfPoint contour) {
         Moments moment = Imgproc.moments(contour);
-        int x = (int) moment.get_m10() / (int) moment.get_m00();
-        int y = (int) moment.get_m01() / (int) moment.get_m00();
-        return new Point(x, y);
+        try {
+            int x = (int) moment.get_m10() / (int) moment.get_m00();
+            int y = (int) moment.get_m01() / (int) moment.get_m00();
+            return new Point(x, y);
+        }catch (ArithmeticException e) {
+            //divided by zero, image moment is invalid for this contour
+            return null;
+        }
     }
 
     public static void fillContours(Mat mat, ArrayList<MatOfPoint> contours, int colour) {
@@ -392,11 +409,13 @@ public class ImageProcessing {
     }
 
     public static Rect calculateStartingRect() {
-
         Point object = closestToCentre(blobCentres);
-        int x = (int) object.x;
-        int y = (int) object.y;
-        return new Rect(x, y, 20, 20);
+        if (object != null) {
+            int x = (int) object.x;
+            int y = (int) object.y;
+            return new Rect(x, y, 20, 20);
+        }
+        return null;
     }
 
     /**
@@ -406,7 +425,11 @@ public class ImageProcessing {
      * @return
      */
     public static double distanceFromTarget(AngularController.ActiveAngle angle) {
-        return 10;
+        if (angle == AngularController.ActiveAngle.PITCH) {
+            return originalMat.height() / 2 - trackedObject.getPosition().y;
+        } else {
+            return originalMat.width() / 2 - trackedObject.getPosition().x;
+        }
     }
 
     public static double pixelDistance(Point p1, Point p2) {
@@ -722,9 +745,13 @@ public class ImageProcessing {
             MessageHandler.d("Started Tracking...");
             //detectBlobs();
             trackedObject = new TrackingObject();
-            isTracking = true;
-            createTrackedObject(originalMat, trackedObject.prevRect);
-            trackObject();
+            if (trackedObject.prevRect != null) {
+                isTracking = true;
+                createTrackedObject(originalMat, trackedObject.prevRect);
+                trackObject();
+            } else {
+                MessageHandler.d("Couldn't find object to track!");
+            }
         } else {
             MessageHandler.d("Already Tracking...");
         }

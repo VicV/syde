@@ -21,7 +21,6 @@ import android.support.v7.widget.RecyclerView;
 import android.view.View;
 import android.widget.ImageView;
 import android.widget.TextView;
-import android.widget.ToggleButton;
 
 import com.google.android.gms.maps.model.LatLng;
 import com.jarone.litterary.LitterApplication;
@@ -44,8 +43,6 @@ import com.jarone.litterary.views.AndroidCameraSurfaceView;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.concurrent.ArrayBlockingQueue;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 
@@ -74,7 +71,6 @@ public class MainActivity extends DJIBaseActivity {
     private WifiManager wifiManager;
     private RecyclerView debugMessageRecyclerView;
     private Context mainActivity;
-    private ScheduledExecutorService taskScheduler;
     private ScheduledFuture trackFuture;
     private AngularController angularController;
 
@@ -102,7 +98,6 @@ public class MainActivity extends DJIBaseActivity {
 //        RelativeLayout.LayoutParams lp = new RelativeLayout.LayoutParams(RelativeLayout.LayoutParams.FILL_PARENT, RelativeLayout.LayoutParams.WRAP_CONTENT);
 //        addContentView(getLayoutInflater().inflate(R.layout.surface_overlay_layout, null), lp);
 
-        taskScheduler = Executors.newSingleThreadScheduledExecutor();
         wifiManager = (WifiManager) getSystemService(Context.WIFI_SERVICE);
     }
 
@@ -113,7 +108,7 @@ public class MainActivity extends DJIBaseActivity {
     }
 
     private void registerUpdateInterface() {
-        taskScheduler.scheduleAtFixedRate(new Runnable() {
+        LitterApplication.getInstance().getScheduler().scheduleAtFixedRate(new Runnable() {
             @Override
             public void run() {
                 updateInterface();
@@ -138,18 +133,16 @@ public class MainActivity extends DJIBaseActivity {
         return new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                ToggleButton button = (ToggleButton) v;
-                if (button.isChecked()) {
-                    GroundStation.engageJoystick();
-                } else {
+                if (DroneState.getMode() == DroneState.DIRECT_MODE) {
                     GroundStation.engageGroundStation();
+                } else {
+                    GroundStation.engageJoystick();
                 }
                 /**
                  * Reset the button to its previous state because it can't actually change until
                  * the drone itself changes modes. This will be taken care of in the updateInterface
                  * calls
                  */
-                button.setChecked(!button.isChecked());
             }
         };
     }
@@ -173,10 +166,13 @@ public class MainActivity extends DJIBaseActivity {
             public void onClick(View view) {
                 switch (view.getId()) {
                     case R.id.button_imgproc_1:
-                        if (grabber == null) {
-                            grabber = new Grabber();
-                        }
-                        grabber.sendCommand(Grabber.Commands.RAISE);
+//                        Camera.downloadPhotosSince(Camera.parseDate("2016-Mar-01 12:00:00").getTime(), new Runnable() {
+//                            @Override
+//                            public void run() {
+//                                MessageHandler.d("DONE DOWNLOADING!!");
+//                            }
+//                        });
+                        GroundStation.setAngles(0, 0, 0, 1);
                         break;
                     case R.id.button_imgproc_2:
                         if (grabber == null) {
@@ -194,7 +190,7 @@ public class MainActivity extends DJIBaseActivity {
 
                         } else {
                             ImageProcessing.startTrackingObject();
-                            trackFuture = taskScheduler.scheduleAtFixedRate(new Runnable() {
+                            trackFuture = LitterApplication.getInstance().getScheduler().scheduleAtFixedRate(new Runnable() {
                                 @Override
                                 public void run() {
                                     ImageProcessing.trackObject();
@@ -273,7 +269,7 @@ public class MainActivity extends DJIBaseActivity {
         DJIDrone.getDjiCamera().setReceivedVideoDataCallBack(mReceivedVideoDataCallBack);
     }
 
-    public ArrayBlockingQueue<ImageAsyncTask> runningTasks = new ArrayBlockingQueue<>(4);
+    public ArrayBlockingQueue<ImageAsyncTask> runningTasks = new ArrayBlockingQueue<>(1);
 
     public void processFrame() {
         ImageAsyncTask newTask = new ImageAsyncTask();
@@ -299,7 +295,7 @@ public class MainActivity extends DJIBaseActivity {
                 @Override
                 public void onBitmapCreated(final Bitmap bitmap) {
                     if (CPreview != null) {
-                        CPreview.postDelayed(new Runnable() {
+                        CPreview.post(new Runnable() {
                             @Override
                             public void run() {
                                 if (bitmap != null) {
@@ -310,11 +306,12 @@ public class MainActivity extends DJIBaseActivity {
                                         ImageProcessing.processImage(bitmap);
                                     }
                                     runningTasks.remove(context);
-//                                    CPreview.setImageBitmap(bitmap);
+                                    //CPreview.setImageBitmap(bitmap);
                                 }
                             }
-                        }, 400);
+                        });
                     }
+
                     // MessageHandler.d("Bitmap: " + count);
                 }
 
@@ -686,28 +683,28 @@ public class MainActivity extends DJIBaseActivity {
 
     }
 
-    public View.OnClickListener getTrackListener() {
+    public View.OnClickListener getStartTrackListener() {
         return new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                switch (v.getId()) {
-                    case (R.id.button_special_1):
-                        ImageProcessing.startTrackingObject();
-                        trackFuture = taskScheduler.scheduleAtFixedRate(new Runnable() {
-                            @Override
-                            public void run() {
-                                //ImageProcessing.trackObject();
-                            }
-                        }, 0, 300, TimeUnit.MILLISECONDS);
-                        break;
-                    case (R.id.button_special_2):
-                        ImageProcessing.stopTrackingObject();
-                        if (trackFuture != null) {
-                            trackFuture.cancel(true);
-                            trackFuture = null;
-                        }
-                        break;
+                if (ImageProcessing.isTracking()) {
+                    angularController = new AngularController();
+                    angularController.startExecutionLoop();
+                } else {
+                    ImageProcessing.startTrackingObject();
                 }
+            }
+        };
+    }
+
+    public View.OnClickListener getStopTrackListener() {
+        return new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if (angularController != null) {
+                    angularController.stopExecutionLoop();
+                }
+                ImageProcessing.stopTrackingObject();
             }
         };
     }
@@ -729,8 +726,8 @@ public class MainActivity extends DJIBaseActivity {
             findViewById(R.id.button_special_camera).setOnClickListener(getDevButtonListener());
 
             //Dev stuff
-            findViewById(R.id.button_special_1).setOnClickListener(getTrackListener());
-            findViewById(R.id.button_special_2).setOnClickListener(getTrackListener());
+            findViewById(R.id.button_special_1).setOnClickListener(getStartTrackListener());
+            findViewById(R.id.button_special_2).setOnClickListener(getStopTrackListener());
             findViewById(R.id.button_special_3).setOnClickListener(getDevButtonListener());
             findViewById(R.id.button_imgproc_1).setOnClickListener(getDevButtonListener());
             findViewById(R.id.button_imgproc_2).setOnClickListener(getDevButtonListener());

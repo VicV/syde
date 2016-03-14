@@ -18,22 +18,23 @@ import java.util.concurrent.TimeUnit;
  */
 public class AngularController {
 
-    LatLng startLocation;
     ScheduledExecutorService taskScheduler;
     private ScheduledFuture controlsLoopFuture;
     private ArrayList<ScheduledFuture> generateTasks = new ArrayList<>();
 
     float MAX_ANGLE = 500;
-    private long SAMPLING_TIME = 200;
-    double CONVERGENCE_THRESHOLD = 0.1;
+    private long SAMPLING_TIME = 1000;
 
-    float P = 500;
+    float P = 250;
     float I = 0;
     float D = 10;
 
+    int loopIterations = 0;
     float errorSum = 0;
     private float lastError = 0;
     private float lastAction = 0;
+    private boolean descend = false;
+    private int descendTimer = 0;
 
     private boolean flip = false;
     boolean canFlip = true;
@@ -58,14 +59,18 @@ public class AngularController {
      * Initiates the PID control loop using the SAMPLING_TIME
      */
     public void startExecutionLoop() {
-        startLocation = DroneState.getLatLng();
-        GroundStation.setAngles(0, 0, 0);
-        controlsLoopFuture = taskScheduler.scheduleAtFixedRate(new Runnable() {
+        GroundStation.engageJoystick(new Runnable() {
             @Override
             public void run() {
-                controlsLoop();
+                GroundStation.setAngles(0, 0, 0);
+                controlsLoopFuture = taskScheduler.scheduleAtFixedRate(new Runnable() {
+                    @Override
+                    public void run() {
+                        controlsLoop();
+                    }
+                },0, SAMPLING_TIME, TimeUnit.MILLISECONDS);
             }
-        },0, SAMPLING_TIME, TimeUnit.MILLISECONDS);
+        });
     }
 
     /**
@@ -73,39 +78,53 @@ public class AngularController {
      * a rate of SAMPLING_TIME
      */
     public void controlsLoop() {
-        if (!DroneState.hasValidLocation()) {
-            executeAction(0);
-            return;
-        }
-        float distance = LocationHelper.distanceBetween(startLocation, DroneState.getLatLng());
-        float error;
 
-        //Set error based on status of flip variable to trigger movement towards or away from start
-        if (flip) {
-            error = 10 - distance;
-        } else {
-            error = -distance;
-        }
-
+        float error = (float)ImageProcessing.distanceFromTarget(activeAngle);
         float action = PID(error);
 
         if (Math.abs(action) > MAX_ANGLE) {
             action = MAX_ANGLE * Math.signum(action);
         }
 
-        if (Math.abs(error) < CONVERGENCE_THRESHOLD && canFlip) {
-            flip = !flip;
-            canFlip = false;
-            lastError = 0;
-            errorSum = 0;
-        } else if (Math.abs(error) > CONVERGENCE_THRESHOLD) {
-            canFlip = true;
-        }
-
         lastError = error;
         errorSum += error;
-        executeAction(action);
+
+        lastAction = action;
+        if (descend) {
+            GroundStation.setAngles(0, 0, 0, 2);
+        } else {
+            if (activeAngle == ActiveAngle.PITCH) {
+                GroundStation.setAngles(action, 0, 0);
+            } else {
+                GroundStation.setAngles(0, 0, action);
+            }
+        }
+
+       // MessageHandler.log("" + action + " " + error + activeAngle);
+
+        //Switch active controlled angle every second
+        loopIterations++;
+        if (loopIterations > 5000 / SAMPLING_TIME) {
+            if (activeAngle == ActiveAngle.ROLL && !descend) {
+                descend = true;
+                MessageHandler.d("Descending");
+            } else if (activeAngle == ActiveAngle.PITCH) {
+                activeAngle = ActiveAngle.ROLL;
+                MessageHandler.d("Switching angle to " + activeAngle);
+            } else if (descend) {
+                descend = false;
+                activeAngle = ActiveAngle.PITCH;
+                MessageHandler.d("Switching angle to " + activeAngle);
+            }
+            loopIterations = 0;
+        }
+
     }
+
+    public void stopExecutionLoop() {
+        controlsLoopFuture.cancel(true);
+    }
+
 
     /**
      * Based on the given distance, determine the next action for the drone to undertake and perform it
@@ -114,6 +133,10 @@ public class AngularController {
     public void performNextAction(double distance, Runnable callback) {
         TableEntry action = ControlTable.findMatchForDistance(distance);
         flyAtAngleForTime(action.angle, action.time,  activeAngle == ActiveAngle.PITCH, callback);
+        toggleActiveAngle();
+    }
+
+    public void toggleActiveAngle() {
         if (activeAngle == ActiveAngle.PITCH) {
             activeAngle = ActiveAngle.ROLL;
         } else {
@@ -251,14 +274,6 @@ public class AngularController {
      */
     private float PID(float error) {
         return error * P + errorSum * SAMPLING_TIME * I + (error - lastError)/SAMPLING_TIME * D;
-    }
-    private void executeAction(float action) {
-        lastAction = action;
-        GroundStation.setAngles(action, 0, 0);
-    }
-
-    public void stopExecutionLoop() {
-        controlsLoopFuture.cancel(true);
     }
 
     public float getLastAction() {

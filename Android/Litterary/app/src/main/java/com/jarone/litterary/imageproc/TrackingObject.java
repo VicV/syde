@@ -48,7 +48,7 @@ public class TrackingObject {
         return cameraLocation;
     }
 
-    public Point getPosition() { return position; }
+    public Point getPosition() { return currBox.center; }
 
     public double getSize() { return size; }
 }
