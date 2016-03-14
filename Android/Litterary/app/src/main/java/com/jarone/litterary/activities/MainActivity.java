@@ -278,7 +278,7 @@ public class MainActivity extends DJIBaseActivity {
     public void processFrame() {
         ImageAsyncTask newTask = new ImageAsyncTask();
         if (runningTasks.offer(newTask)) {
-            newTask.execute(mDjiGLSurfaceView.getVisibility() == View.GONE ? mAndroidCameraSurfaceView : mDjiGLSurfaceView);
+            newTask.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, mDjiGLSurfaceView.getVisibility() == View.GONE ? mAndroidCameraSurfaceView : mDjiGLSurfaceView);
         }
 //        if (!processing) {
 //            processing = true;

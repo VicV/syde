@@ -38,12 +38,22 @@ public class LitterApplication extends Application {
     private ScheduledExecutorService taskScheduler;
 
 
-    /**
-     * The log tag
-     **/
-    private static final String TAG = "Litterary";
-
     public static DroneState droneState = new DroneState();
+
+    //For android 23, the DJI library doesn't know where to look for things. So we force them to load.
+    static {
+        try {
+            System.loadLibrary("DJICam");
+            System.loadLibrary("djivideo");
+            System.loadLibrary("ffmpeg-neon");
+            System.loadLibrary("FlyForbid");
+            System.loadLibrary("GroudStation");
+            System.loadLibrary("FlyForbid-p2v");
+            System.loadLibrary("GroudStation-p2v");
+        } catch (Exception e) {
+            MessageHandler.w("Problem loading libraries: " + e.getMessage());
+        }
+    }
 
     @Override
     public void onCreate() {
@@ -61,7 +71,6 @@ public class LitterApplication extends Application {
     private void initSDK() {
         DJIDrone.initWithType(this.getApplicationContext(), DJIDroneTypeDef.DJIDroneType.DJIDrone_Vision);
     }
-
 
     private void activateDJI() {
         new Thread() {

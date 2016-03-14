@@ -143,7 +143,8 @@ public class ImageProcessing {
 
     public static void initializeOpenCV() {
         MessageHandler.d("INITIALIZING OPENCV");
-        OpenCVLoader.initAsync("2.4.8", ContextManager.getActivity(), loaderCallback);
+
+        OpenCVLoader.initAsync(OpenCVLoader.OPENCV_VERSION_3_0_0, ContextManager.getActivity(), loaderCallback);
     }
 
     public static void setSourceImage(String source) {
@@ -157,6 +158,7 @@ public class ImageProcessing {
 
     /**
      * Identifies litter in an image and returns the processed image as a bitmap
+     *
      * @param image
      * @return
      */
@@ -168,6 +170,7 @@ public class ImageProcessing {
 
     /**
      * Set the "original" unmodified image as a Mat
+     *
      * @param frame
      */
     public static void setOriginalImage(Bitmap frame) {
@@ -177,6 +180,7 @@ public class ImageProcessing {
 
     /**
      * Reads a bitmap image and stores it on currentMat
+     *
      * @param image
      */
     public static void readFrame(Bitmap image) {
@@ -185,6 +189,7 @@ public class ImageProcessing {
 
     /**
      * Identify blobs on the given Mat and return the processed version
+     *
      * @param photo
      * @return
      */
@@ -199,6 +204,7 @@ public class ImageProcessing {
 
     /**
      * Returns the bitmap representing the latest processed image
+     *
      * @return
      */
     public static Bitmap getCVPreview() {
@@ -404,7 +410,7 @@ public class ImageProcessing {
     }
 
     public static double pixelDistance(Point p1, Point p2) {
-       return Math.sqrt(Math.pow(p1.x - p2.x, 2) + Math.pow(p1.y - p2.y, 2));
+        return Math.sqrt(Math.pow(p1.x - p2.x, 2) + Math.pow(p1.y - p2.y, 2));
     }
 
     /**
@@ -412,6 +418,7 @@ public class ImageProcessing {
      * frame based on where it was and how far we've moved. If we find a blob near that location,
      * it must be the tracked object. Update the track object to this new location and return the
      * point identified
+     *
      * @return
      */
 //    public static Point trackObject() {
@@ -443,7 +450,6 @@ public class ImageProcessing {
 //            return null;
 //        }
 //    }
-
     public static boolean isTracking() {
         return isTracking;
     }
@@ -645,8 +651,7 @@ public class ImageProcessing {
         return mat;
     }
 
-    public static ArrayList<Point> getBlobCentres()
-    {
+    public static ArrayList<Point> getBlobCentres() {
         return blobCentres;
     }
 
@@ -704,7 +709,7 @@ public class ImageProcessing {
         trackedObject.currBox = Video.CamShift(trackedObject.prob, trackedObject.prevRect, new TermCriteria(TermCriteria.EPS, 10, 1));
         trackedObject.prevRect = trackedObject.currBox.boundingRect();
         trackedObject.currBox.angle = -trackedObject.currBox.angle;
-        Core.ellipse(originalMat, trackedObject.currBox, RECT_COLOR, 6);
+        Imgproc.ellipse(originalMat, trackedObject.currBox, RECT_COLOR, 6);
         Utils.matToBitmap(originalMat, CVPreview);
     }
 
@@ -724,6 +729,7 @@ public class ImageProcessing {
             MessageHandler.d("Already Tracking...");
         }
     }
+
     /**
      * Stop tracking object
      */
