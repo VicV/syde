@@ -1,10 +1,9 @@
 package com.jarone.litterary.drone;
 
 import com.google.android.gms.maps.model.LatLng;
+import com.jarone.litterary.LitterApplication;
 import com.jarone.litterary.SurveyRoute;
 
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 
@@ -67,16 +66,13 @@ public class DroneState {
 
     public static SurveyRoute currentSurveyRoute;
 
-    private static ScheduledExecutorService taskScheduler = Executors.newSingleThreadScheduledExecutor();
-
     private static ScheduledFuture connectedTimer;
 
     public static void registerConnectedTimer() {
-        connectedTimer = taskScheduler.scheduleAtFixedRate(new Runnable() {
+        connectedTimer = LitterApplication.getInstance().getScheduler().scheduleAtFixedRate(new Runnable() {
             @Override
             public void run() {
                 droneConnected = false;
-                //pdateDroneState();
                 registerBatteryUpdate();
                 GroundStation.registerPhantom2Callback();
                 Camera.setGimbalDown();

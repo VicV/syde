@@ -329,7 +329,7 @@ public class GroundStation {
      * @param roll
      */
     public static void setAngles(final double pitch, final double yaw, final double roll) {
-       setAngles(pitch, yaw, roll, (int)DroneState.getAltitude());
+       setAngles(pitch, yaw, roll, 0);
     }
 
     public static void setAngles(final double pitch, final double yaw, final double roll, final int altitude) {
@@ -343,7 +343,7 @@ public class GroundStation {
                 DJIDrone.getDjiGroundStation().setAircraftJoystick((int) yaw, (int) pitch, (int) roll, altitude, new DJIGroundStationExecuteCallBack() {
                     @Override
                     public void onResult(DJIGroundStationTypeDef.GroundStationResult groundStationResult) {
-                        //MessageHandler.d("Engage Joystick: " + groundStationResult.toString());
+                        //MessageHandler.log("Engage Joystick: " + groundStationResult.toString());
                         if (resultSuccess(groundStationResult)) {
                             DroneState.setMode(DroneState.DIRECT_MODE);
                         }

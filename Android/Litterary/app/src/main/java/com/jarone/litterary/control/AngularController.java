@@ -23,7 +23,7 @@ public class AngularController {
     private ArrayList<ScheduledFuture> generateTasks = new ArrayList<>();
 
     float MAX_ANGLE = 500;
-    private long SAMPLING_TIME = 100;
+    private long SAMPLING_TIME = 1000;
 
     float P = 250;
     float I = 0;
@@ -33,6 +33,8 @@ public class AngularController {
     float errorSum = 0;
     private float lastError = 0;
     private float lastAction = 0;
+    private boolean descend = false;
+    private int descendTimer = 0;
 
     private boolean flip = false;
     boolean canFlip = true;
@@ -86,16 +88,37 @@ public class AngularController {
 
         lastError = error;
         errorSum += error;
-        executeAction(action);
 
-        MessageHandler.log("" + action + " " + error + activeAngle);
+        lastAction = action;
+        if (descend) {
+            GroundStation.setAngles(0, 0, 0, 2);
+        } else {
+            if (activeAngle == ActiveAngle.PITCH) {
+                GroundStation.setAngles(action, 0, 0);
+            } else {
+                GroundStation.setAngles(0, 0, action);
+            }
+        }
+
+       // MessageHandler.log("" + action + " " + error + activeAngle);
 
         //Switch active controlled angle every second
         loopIterations++;
-        if (loopIterations > 1000 / SAMPLING_TIME) {
-            toggleActiveAngle();
+        if (loopIterations > 5000 / SAMPLING_TIME) {
+            if (activeAngle == ActiveAngle.ROLL && !descend) {
+                descend = true;
+                MessageHandler.d("Descending");
+            } else if (activeAngle == ActiveAngle.PITCH) {
+                activeAngle = ActiveAngle.ROLL;
+                MessageHandler.d("Switching angle to " + activeAngle);
+            } else if (descend) {
+                descend = false;
+                activeAngle = ActiveAngle.PITCH;
+                MessageHandler.d("Switching angle to " + activeAngle);
+            }
             loopIterations = 0;
         }
+
     }
 
     public void stopExecutionLoop() {
@@ -251,10 +274,6 @@ public class AngularController {
      */
     private float PID(float error) {
         return error * P + errorSum * SAMPLING_TIME * I + (error - lastError)/SAMPLING_TIME * D;
-    }
-    private void executeAction(float action) {
-        lastAction = action;
-        GroundStation.setAngles(action, 0, 0);
     }
 
     public float getLastAction() {

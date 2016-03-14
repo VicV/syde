@@ -11,7 +11,6 @@ import com.google.myjson.Gson;
 import com.google.myjson.JsonObject;
 import com.google.myjson.JsonParser;
 import com.jarone.litterary.control.AngularController;
-import com.jarone.litterary.drone.DroneState;
 import com.jarone.litterary.handlers.MessageHandler;
 import com.jarone.litterary.helpers.ContextManager;
 import com.jarone.litterary.helpers.FileAccess;
@@ -231,7 +230,7 @@ public class ImageProcessing {
         fillImage(processing);
 
         //TODO determine below threshold parameter from the drone's altitude and FOV
-        eliminateSmallBlobs(processing, Math.pow(metresToPixels(0.3, DroneState.getAltitude()), 2));
+        //eliminateSmallBlobs(processing, Math.pow(metresToPixels(0.3, DroneState.getAltitude()), 2));
         //clearBorders();
         blobCentres = findBlobCentres(processing);
         processing.copyTo(mat);
@@ -248,7 +247,7 @@ public class ImageProcessing {
      */
     public static void closeImage(Mat mat) {
         int scaleFactor = 10;
-        Mat element = Imgproc.getStructuringElement(Imgproc.MORPH_ELLIPSE, new Size(100 / scaleFactor, 100 / scaleFactor));
+        Mat element = Imgproc.getStructuringElement(Imgproc.MORPH_ELLIPSE, new Size(150 / scaleFactor, 150 / scaleFactor));
         //Rescale to smaller size to perform closing much faster
         int width = mat.width();
         int height = mat.height();
@@ -290,8 +289,8 @@ public class ImageProcessing {
 
     public static void determineCannyThreshold(Mat mat) {
         Mat _ = new Mat();
-        lowThreshold = Imgproc.threshold(mat, _, 127, 255, Imgproc.THRESH_OTSU);
-        highThreshold = lowThreshold * 3;
+        highThreshold = Imgproc.threshold(mat, _, 127, 255, Imgproc.THRESH_OTSU | Imgproc.THRESH_BINARY);
+        lowThreshold = highThreshold * 0.3;
     }
 
     /**
@@ -350,7 +349,10 @@ public class ImageProcessing {
         currentBlobs = contours;
         ArrayList<Point> centres = new ArrayList<>();
         for (MatOfPoint contour : currentBlobs) {
-            centres.add(contourCentroid(contour));
+            Point centre = contourCentroid(contour);
+            if (centre != null) {
+                centres.add(centre);
+            }
         }
         return centres;
     }
@@ -363,9 +365,14 @@ public class ImageProcessing {
      */
     public static Point contourCentroid(MatOfPoint contour) {
         Moments moment = Imgproc.moments(contour);
-        int x = (int) moment.get_m10() / (int) moment.get_m00();
-        int y = (int) moment.get_m01() / (int) moment.get_m00();
-        return new Point(x, y);
+        try {
+            int x = (int) moment.get_m10() / (int) moment.get_m00();
+            int y = (int) moment.get_m01() / (int) moment.get_m00();
+            return new Point(x, y);
+        }catch (ArithmeticException e) {
+            //divided by zero, image moment is invalid for this contour
+            return null;
+        }
     }
 
     public static void fillContours(Mat mat, ArrayList<MatOfPoint> contours, int colour) {
