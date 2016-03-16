@@ -64,7 +64,7 @@ public class ImageHelper {
         }
 
         if (w != 0 && h != 0) {
-            GLES30.glReadPixels(0, 0, w, h, GLES30.GL_RGBA, GLES30.GL_UNSIGNED_BYTE, runningByteBuffer);
+            gl.glReadPixels(0, 0, w, h, GLES30.GL_RGBA, GLES30.GL_UNSIGNED_BYTE, runningByteBuffer);
             runningByteBuffer.asIntBuffer().get(pixelsBuffer);
             runningBitmap.setPixels(pixelsBuffer, (w * h) - w, -w, 0, 0, w, h);
             runningByteBuffer.clear();

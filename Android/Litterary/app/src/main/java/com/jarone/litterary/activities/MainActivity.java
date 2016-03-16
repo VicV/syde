@@ -318,8 +318,8 @@ public class MainActivity extends DJIBaseActivity {
                                     } else {
                                         ImageProcessing.processImage(bitmap);
                                     }
+                                    CPreview.setImageBitmap(ImageProcessing.getCVPreview());
                                     runningTasks.remove(context);
-                                    //CPreview.setImageBitmap(bitmap);
                                 }
                             }
                         });
@@ -547,9 +547,10 @@ public class MainActivity extends DJIBaseActivity {
 //                    ((TextView) findViewById(R.id.pid_error)).setText("" + GroundStation.getAngularController().getLastError());
 //                }
 
-                if (LitterApplication.devMode) {
-                    CPreview.setImageBitmap(ImageProcessing.getCVPreview());
-                }
+//                if (LitterApplication.devMode) {
+//                    CPreview.setImageBitmap(ImageProcessing.getCVPreview());
+//                }
+
 //                if (currentPhotoPoints != null && currentPhotoPoints.size() > 0) {
 //                    findViewById(R.id.remaining_items).setVisibility(View.VISIBLE);
 //                    //TODO: UPDATE ON EACH PICTURE TAKEN

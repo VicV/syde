@@ -2,35 +2,22 @@ package com.jarone.litterary.imageproc;
 
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
-import android.media.Image;
-import android.os.AsyncTask;
-import android.util.Base64;
 
 import com.google.android.gms.maps.model.LatLng;
-import com.google.myjson.Gson;
-import com.google.myjson.JsonObject;
-import com.google.myjson.JsonParser;
 import com.jarone.litterary.control.AngularController;
 import com.jarone.litterary.handlers.MessageHandler;
 import com.jarone.litterary.helpers.ContextManager;
-import com.jarone.litterary.helpers.FileAccess;
-import com.jarone.litterary.helpers.SerializationUtils;
 
 import org.opencv.android.BaseLoaderCallback;
 import org.opencv.android.LoaderCallbackInterface;
-import org.opencv.android.OpenCVLoader;
 import org.opencv.android.Utils;
-import org.opencv.calib3d.Calib3d;
 import org.opencv.core.Core;
 import org.opencv.core.CvType;
 import org.opencv.core.Mat;
 import org.opencv.core.MatOfFloat;
 import org.opencv.core.MatOfInt;
 import org.opencv.core.MatOfPoint;
-import org.opencv.core.MatOfPoint2f;
-import org.opencv.core.MatOfPoint3f;
 import org.opencv.core.Point;
-import org.opencv.core.Point3;
 import org.opencv.core.Rect;
 import org.opencv.core.Scalar;
 import org.opencv.core.Size;
@@ -58,9 +45,6 @@ public class ImageProcessing {
     //For the tracking algorithm (keep track of coloured image)
     private static Mat originalMat;
 
-    //The temporary image used for intermediate processing
-    private static Mat processingMat;
-
     //Stores the list of blobs detected from the current Mat
     private static ArrayList<MatOfPoint> currentBlobs;
 
@@ -70,13 +54,9 @@ public class ImageProcessing {
 
     //The Bitmap representation of the current result image
     private static Bitmap CVPreview = null;
-
     private static TrackingObject trackingObject;
-
     private static boolean isTracking;
-
     private static TrackingObject trackedObject;
-    private static Mat bgr;
     private static final Scalar RECT_COLOR = new Scalar(0, 255, 0, 255);
 
     //measured result 114.8 degrees
@@ -85,45 +65,8 @@ public class ImageProcessing {
     private static final double imageX = 4384;
     private static final double imageY = 2466;
 
-    // the saved chessboard image
-    private static Mat savedImage;
-    // the calibrated camera frame
-    private static Image undistortedImage;
-
-    // various variables needed for the calibration
-    private static List<Mat> imagePoints;
-    private static List<Mat> objectPoints;
-    private static MatOfPoint3f obj;
-    private static MatOfPoint2f imageCorners;
-    private static int boardsNumber;
-    private static int numCornersHor;
-    private static int numCornersVer;
-    public static Mat intrinsic;
-    public static Mat distCoeffs;
-    private static boolean isCalibrated;
 
     private static ArrayList<Point> blobCentres;
-
-    /**
-     * Init all the (global) variables needed in the controller
-     */
-    public static void init() {
-        numCornersHor = 9;
-        numCornersVer = 6;
-        obj = new MatOfPoint3f();
-        imageCorners = new MatOfPoint2f();
-        savedImage = new Mat();
-        undistortedImage = null;
-        imagePoints = new ArrayList<>();
-        objectPoints = new ArrayList<>();
-        intrinsic = new Mat(3, 3, CvType.CV_32FC1);
-        distCoeffs = new Mat();
-        boardsNumber = 9;
-        isCalibrated = false;
-        int numSquares = numCornersHor * numCornersVer;
-        for (int j = 0; j < numSquares; j++)
-            obj.push_back(new MatOfPoint3f(new Point3(j / numCornersHor, j % numCornersVer, 0.0f)));
-    }
 
     public static BaseLoaderCallback loaderCallback = new BaseLoaderCallback(ContextManager.getContext()) {
         @Override
@@ -139,12 +82,6 @@ public class ImageProcessing {
             }
         }
     };
-
-    public static void initializeOpenCV() {
-        MessageHandler.d("INITIALIZING OPENCV");
-
-        OpenCVLoader.initAsync(OpenCVLoader.OPENCV_VERSION_3_0_0, ContextManager.getActivity(), loaderCallback);
-    }
 
     public static void setSourceImage(String source) {
         try {
@@ -218,6 +155,25 @@ public class ImageProcessing {
         return CVPreview;
     }
 
+    //    public static ArrayList<Point> detectBlobsVic(Mat mat) {
+    //        Mat out = new Mat();
+    //
+    //        FeatureDetector blobDetector;
+    //
+    //        blobDetector = FeatureDetector.create(FeatureDetector.SIFT);
+    //
+    //        MatOfKeyPoint keypoints1 = new MatOfKeyPoint();
+    //
+    //        Imgproc.cvtColor(mat, out, Imgproc.COLOR_RGBA2GRAY);
+    //        blobDetector.detect(mat, keypoints1);
+    //
+    //        org.opencv.core.Scalar cores = new org.opencv.core.Scalar(0, 0, 255);
+    //
+    //        org.opencv.features2d.Features2d.drawKeypoints(out, keypoints1, out, cores, 2);
+    //
+    //    }
+
+
     /**
      * Detect blobs in an image using edge detection, closing, filling and thresholding
      * Returns a list of blob centres in terms of points on the image
@@ -232,7 +188,7 @@ public class ImageProcessing {
         determineCannyThreshold(processing);
         Imgproc.Canny(processing, processing, lowThreshold, highThreshold);
         closeImage(processing);
-        Imgproc.threshold(processing, processing, 0, 255, Imgproc.THRESH_BINARY);
+        Imgproc.threshold(processing, processing, lowThreshold, highThreshold, Imgproc.THRESH_BINARY);
         fillImage(processing);
 
         //TODO determine below threshold parameter from the drone's altitude and FOV
@@ -276,13 +232,11 @@ public class ImageProcessing {
      */
     public static Bitmap convertFrame(Mat mat) {
         if (CVPreview == null && mat != null && mat.width() > 0) {
-            CVPreview = Bitmap.createBitmap(mat.width(), mat.height(), Bitmap.Config.ARGB_8888);
+            CVPreview = Bitmap.createBitmap(mat.width(), mat.height(), Bitmap.Config.RGB_565);
         } else if (mat == null || mat.width() <= 0) {
             return null;
         }
-        Mat tmp = new Mat();
-        mat.copyTo(tmp);
-        Utils.matToBitmap(tmp, CVPreview);
+        Utils.matToBitmap(mat, CVPreview);
         return CVPreview;
     }
 
@@ -436,43 +390,6 @@ public class ImageProcessing {
         return Math.sqrt(Math.pow(p1.x - p2.x, 2) + Math.pow(p1.y - p2.y, 2));
     }
 
-    /**
-     * Perform one "tracking interation" where we predict where the object should be in the current
-     * frame based on where it was and how far we've moved. If we find a blob near that location,
-     * it must be the tracked object. Update the track object to this new location and return the
-     * point identified
-     *
-     * @return
-     */
-//    public static Point trackObject() {
-//        if (!isTracking) {
-//            MessageHandler.w("Not tracking object!");
-//            return null;
-//        }
-//        TrackingObject tmp = trackingObject.predictPositionAndSize(DroneState.getLatLng(), DroneState.getAltitude());
-//        Point trackerObj = null;
-//        double trackerSize = 0;
-//
-//        int index = 0;
-//        for (Point centre: blobCentres) {
-//            //If we are within 50 pixels of the assumed new location of the blob
-//            double size = contourSize(currentBlobs.get(index));
-//            if (pixelDistance(centre, tmp.getPosition()) < 100000 && (Math.abs(size) - tmp.getSize()) < 100000) {
-//                trackerObj = centre;
-//                trackerSize = size;
-//                break;
-//            }
-//            index++;
-//        }
-//
-//        if (trackerObj != null) {
-//            trackingObject = new TrackingObject(trackerObj, trackerSize, DroneState.getLatLng(), DroneState.getAltitude());
-//            return trackerObj;
-//        } else {
-//            MessageHandler.w("Lost track of object!");
-//            return null;
-//        }
-//    }
     public static boolean isTracking() {
         return isTracking;
     }
@@ -482,197 +399,6 @@ public class ImageProcessing {
         return degrees / CAMERA_FOVX * imageX;
     }
 
-    /**
-     * Correct distorted input stream using the chessboard pattern
-     */
-    public static void correctDistortion(Mat mat) {
-        if (isCalibrated) {
-            Mat correctedMat = new Mat();
-            Imgproc.undistort(mat, correctedMat, intrinsic, distCoeffs);
-            correctedMat.copyTo(mat);
-            //For testing
-            /*
-            Bitmap preview = Bitmap.createBitmap(processingMat.width(), processingMat.height(), Bitmap.Config.ARGB_8888);
-            Utils.matToBitmap(correctedMat, preview);
-            CVPreview = preview;*/
-        }
-    }
-
-    private static void loadCalibrationImages() {
-        init();
-        try {
-            //TODO take new checkerboard images that do not fail and change boardsNumber appropriately
-            for (int j = 1; j < boardsNumber + 1; j++) {
-                InputStream i = ContextManager.getActivity().getAssets().open("c" + j + ".jpg");
-                Bitmap decoded = BitmapFactory.decodeStream(i);
-                int nh = (int) (decoded.getHeight() * (2000.0 / decoded.getWidth()));
-                Bitmap scaled = Bitmap.createScaledBitmap(decoded, 2000, nh, true);
-                readFrame(scaled);
-                savedImage = currentMat;
-                findAndDrawPoints();
-            }
-        } catch (IOException e) {
-            MessageHandler.d("Error Loading Calibration Images: " + e);
-        }
-        // reach the correct number of images needed for the calibration
-        calibrateCamera();
-    }
-
-    /**
-     * Find and draws the points needed for the calibration on the chessboard
-     */
-    private static void findAndDrawPoints() {
-        // init
-        MessageHandler.d("Finding points");
-        Mat grayImage = new Mat();
-        // I would perform this operation only before starting the calibration
-        // process
-        // convert the frame in gray scale
-        Imgproc.cvtColor(savedImage, grayImage, Imgproc.COLOR_BGR2GRAY);
-        // the size of the chessboard
-        Size boardSize = new Size(numCornersHor, numCornersVer);
-
-        // look for the inner chessboard corners
-        boolean found = Calib3d.findChessboardCorners(grayImage, boardSize, imageCorners,
-                Calib3d.CALIB_CB_ADAPTIVE_THRESH + Calib3d.CALIB_CB_NORMALIZE_IMAGE + Calib3d.CALIB_CB_FAST_CHECK);
-        MessageHandler.d("Done finding");
-        if (found) {
-            MessageHandler.d("Find successful");
-            TermCriteria term = new TermCriteria(TermCriteria.EPS | TermCriteria.MAX_ITER, 30, 0.1);
-            Imgproc.cornerSubPix(grayImage, imageCorners, new Size(11, 11), new Size(-1, -1), term);
-            // save the current frame for further elaborations
-            grayImage.copyTo(savedImage);
-            // show the chessboard inner corners on screen
-            Calib3d.drawChessboardCorners(savedImage, boardSize, imageCorners, found);
-            imagePoints.add(imageCorners);
-            objectPoints.add(obj);
-        }
-    }
-
-    private static void calibrateCamera() {
-        // init needed variables according to OpenCV docs
-        List<Mat> rvecs = new ArrayList<>();
-        List<Mat> tvecs = new ArrayList<>();
-        intrinsic.put(0, 0, 1);
-        intrinsic.put(1, 1, 1);
-
-        // calibrate!
-        Calib3d.calibrateCamera(objectPoints, imagePoints, savedImage.size(), intrinsic, distCoeffs, rvecs, tvecs);
-        Bitmap preview = Bitmap.createBitmap(currentMat.width(), currentMat.height(), Bitmap.Config.ARGB_8888);
-        Utils.matToBitmap(currentMat, preview);
-        CVPreview = preview;
-        saveCalibration();
-        isCalibrated = true;
-    }
-
-    public static void saveCalibration() {
-        FileAccess.saveToFile("calibration", "dist", matToJson(distCoeffs));
-        FileAccess.saveToFile("calibration", "intrinsic", matToJson(intrinsic));
-    }
-
-    public static void loadCalibration() {
-        String dist = FileAccess.loadFromFile("calibration", "dist");
-        String intrins = FileAccess.loadFromFile("calibration", "intrinsic");
-
-        distCoeffs = matFromJson(dist);
-        intrinsic = matFromJson(intrins);
-        isCalibrated = true;
-    }
-
-    public static class CalibrateTask extends AsyncTask<Void, Void, Boolean> {
-        @Override
-        protected void onPreExecute() {
-            super.onPreExecute();
-        }
-
-        @Override
-        protected Boolean doInBackground(Void... params) {
-
-            loadCalibrationImages();
-            return true;
-        }
-    }
-
-    public static String matToJson(Mat mat) {
-        JsonObject obj = new JsonObject();
-
-        if (mat.isContinuous()) {
-            int cols = mat.cols();
-            int rows = mat.rows();
-            int elemSize = (int) mat.elemSize();
-            int type = mat.type();
-
-            obj.addProperty("rows", rows);
-            obj.addProperty("cols", cols);
-            obj.addProperty("type", type);
-
-            // We cannot set binary data to a json object, so:
-            // Encoding data byte array to Base64.
-            String dataString;
-
-            if (type == CvType.CV_32S || type == CvType.CV_32SC2 || type == CvType.CV_32SC3 || type == CvType.CV_16S) {
-                int[] data = new int[cols * rows * elemSize];
-                mat.get(0, 0, data);
-                dataString = new String(Base64.encode(SerializationUtils.toByteArray(data), Base64.DEFAULT));
-            } else if (type == CvType.CV_32F || type == CvType.CV_32FC2) {
-                float[] data = new float[cols * rows * elemSize];
-                mat.get(0, 0, data);
-                dataString = new String(Base64.encode(SerializationUtils.toByteArray(data), Base64.DEFAULT));
-            } else if (type == CvType.CV_64F || type == CvType.CV_64FC2) {
-                double[] data = new double[cols * rows * elemSize];
-                mat.get(0, 0, data);
-                dataString = new String(Base64.encode(SerializationUtils.toByteArray(data), Base64.DEFAULT));
-            } else if (type == CvType.CV_8U) {
-                byte[] data = new byte[cols * rows * elemSize];
-                mat.get(0, 0, data);
-                dataString = new String(Base64.encode(data, Base64.DEFAULT));
-            } else {
-
-                throw new UnsupportedOperationException("unknown type");
-            }
-            obj.addProperty("data", dataString);
-
-            Gson gson = new Gson();
-            String json = gson.toJson(obj);
-
-            return json;
-        } else {
-            System.out.println("Mat not continuous.");
-        }
-        return "{}";
-    }
-
-    public static Mat matFromJson(String json) {
-
-
-        JsonParser parser = new JsonParser();
-        JsonObject JsonObject = parser.parse(json).getAsJsonObject();
-
-        int rows = JsonObject.get("rows").getAsInt();
-        int cols = JsonObject.get("cols").getAsInt();
-        int type = JsonObject.get("type").getAsInt();
-
-        Mat mat = new Mat(rows, cols, type);
-
-        String dataString = JsonObject.get("data").getAsString();
-        if (type == CvType.CV_32S || type == CvType.CV_32SC2 || type == CvType.CV_32SC3 || type == CvType.CV_16S) {
-            int[] data = SerializationUtils.toIntArray(Base64.decode(dataString.getBytes(), Base64.DEFAULT));
-            mat.put(0, 0, data);
-        } else if (type == CvType.CV_32F || type == CvType.CV_32FC2) {
-            float[] data = SerializationUtils.toFloatArray(Base64.decode(dataString.getBytes(), Base64.DEFAULT));
-            mat.put(0, 0, data);
-        } else if (type == CvType.CV_64F || type == CvType.CV_64FC2) {
-            double[] data = SerializationUtils.toDoubleArray(Base64.decode(dataString.getBytes(), Base64.DEFAULT));
-            mat.put(0, 0, data);
-        } else if (type == CvType.CV_8U) {
-            byte[] data = Base64.decode(dataString.getBytes(), Base64.DEFAULT);
-            mat.put(0, 0, data);
-        } else {
-
-            throw new UnsupportedOperationException("unknown type");
-        }
-        return mat;
-    }
 
     public static ArrayList<Point> getBlobCentres() {
         return blobCentres;
