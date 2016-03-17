@@ -243,10 +243,21 @@ public class MainActivity extends DJIBaseActivity {
 
                                 @Override
                                 public Mat onCameraFrame(CameraBridgeViewBase.CvCameraViewFrame cvCameraViewFrame) {
+                                    Mat mat = cvCameraViewFrame.rgba();
                                     if (!processing) {
                                         processing = true;
-                                        ImageDirectFromCameraAsyncTask newTask = new ImageDirectFromCameraAsyncTask();
-                                        newTask.execute(cvCameraViewFrame.rgba());
+                                        //ImageDirectFromCameraAsyncTask newTask = new ImageDirectFromCameraAsyncTask();
+                                        //if (runningTasks.offer(newTask)) {
+                                          //  newTask.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, mat);
+                                        //}
+                                        final Bitmap result = ImageProcessing.processImage(mat);
+                                        runOnUiThread(new Runnable() {
+                                            @Override
+                                            public void run() {
+                                                CPreview.setImageBitmap(result);
+                                            }
+                                        });
+                                        processing = false;
                                     }
 
                                     return cvCameraViewFrame.rgba();
@@ -298,7 +309,7 @@ public class MainActivity extends DJIBaseActivity {
         DJIDrone.getDjiCamera().setReceivedVideoDataCallBack(mReceivedVideoDataCallBack);
     }
 
-    public ArrayBlockingQueue<AsyncTask> runningTasks = new ArrayBlockingQueue<>(5);
+    public ArrayBlockingQueue<AsyncTask> runningTasks = new ArrayBlockingQueue<>(1);
 
     public void processFrame() {
         ImageAsyncTask newTask = new ImageAsyncTask();
@@ -361,6 +372,7 @@ public class MainActivity extends DJIBaseActivity {
         protected void onPostExecute(Bitmap processedImage) {
             CPreview.setImageBitmap(processedImage);
             processing = false;
+            runningTasks.remove(context);
             super.onPostExecute(processedImage);
         }
     }
@@ -522,8 +534,7 @@ public class MainActivity extends DJIBaseActivity {
             @TargetApi(Build.VERSION_CODES.LOLLIPOP)
             @Override
             public void run() {
-                String currentSSID = wifiManager.getConnectionInfo().getSSID();
-                if (!currentSSID.equals(lastWifi) && wifiManager.getConnectionInfo().getSSID().contains("Phantom")) {
+                if (!wifiManager.getConnectionInfo().getSSID().equals(lastWifi) && wifiManager.getConnectionInfo().getSSID().contains("Phantom")) {
                     lastWifi = wifiManager.getConnectionInfo().getSSID();
                     connectIcon.setImageDrawable(getDrawable(R.drawable.wifi_connected_small));
                     connectText.setText("connected");

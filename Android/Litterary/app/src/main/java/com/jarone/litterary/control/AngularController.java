@@ -104,6 +104,7 @@ public class AngularController {
 
         //Switch active controlled angle every second
         loopIterations++;
+        //TODO switch more often if error is increasing past some threshold
         if (loopIterations > 5000 / SAMPLING_TIME) {
             if (activeAngle == ActiveAngle.ROLL && !descend) {
                 descend = true;

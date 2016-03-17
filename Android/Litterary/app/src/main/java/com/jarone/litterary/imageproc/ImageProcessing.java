@@ -5,7 +5,6 @@ import android.graphics.BitmapFactory;
 
 import com.google.android.gms.maps.model.LatLng;
 import com.jarone.litterary.control.AngularController;
-import com.jarone.litterary.drone.DroneState;
 import com.jarone.litterary.handlers.MessageHandler;
 import com.jarone.litterary.helpers.ContextManager;
 
@@ -45,6 +44,14 @@ public class ImageProcessing {
 
     //For the tracking algorithm (keep track of coloured image)
     private static Mat originalMat;
+
+    private static Mat processingMat;
+
+    private static Mat r;
+    private static Mat g;
+    private static Mat b;
+
+    private static Mat temp;
 
     //Stores the list of blobs detected from the current Mat
     private static ArrayList<MatOfPoint> currentBlobs;
@@ -157,7 +164,8 @@ public class ImageProcessing {
     }
 
     public static Mat identifyLitterMatFromMat(Mat mat) {
-        ArrayList<Point> points = detectBlobs(mat);
+        //ArrayList<Point> points = detectBlobs(mat);
+        detectBlobs(mat);
         return mat;
     }
 
@@ -198,27 +206,39 @@ public class ImageProcessing {
             return null;
         }
 
-        Mat processing = new Mat();
-        mat.copyTo(processing);
+        if (processingMat == null) {
+            processingMat = new Mat();
+        }
 
+
+        if (r == null) {
+            r = new Mat();
+        }
+        if (g == null) {
+            g = new Mat();
+        }
+        if (b == null) {
+            b = new Mat();
+        }
+
+//        Mat processing = new Mat();
+        mat.copyTo(processingMat);
+//
         ArrayList<Mat> channels = new ArrayList<>();
-        Core.split(processing, channels);
+        Core.split(processingMat, channels);
+        if (channels.size() < 3) {
+            return blobCentres;
+        }
         Scalar rMean = Core.mean(channels.get(0));
         Scalar gMean = Core.mean(channels.get(1));
         Scalar bMean = Core.mean(channels.get(2));
-        Mat r = new Mat();
-        Mat b = new Mat();
-        Mat g = new Mat();
+
         Imgproc.threshold(channels.get(0), r, rMean.val[0] - 30, 255, Imgproc.THRESH_BINARY_INV);
         Imgproc.threshold(channels.get(1), b, gMean.val[0] - 30, 255, Imgproc.THRESH_BINARY_INV);
         Imgproc.threshold(channels.get(2), g, bMean.val[0] - 30, 255, Imgproc.THRESH_BINARY_INV);
 
-        Mat output = new Mat();
-
-        Core.add(r, b, output);
-        Core.add(output, g, output);
-        output.copyTo(processing);
-
+        Core.add(r, b, processingMat);
+        Core.add(processingMat, g, processingMat);
 
 
 //        Imgproc.cvtColor(processing, processing, Imgproc.COLOR_BGR2GRAY);
@@ -231,15 +251,15 @@ public class ImageProcessing {
 //        fillImage(processing);
 //
 //        //TODO determine below threshold parameter from the drone's altitude and FOV
-        eliminateSmallBlobs(processing, Math.pow(metresToPixels(0.05, DroneState.getAltitude()), 2));
-        Imgproc.threshold(processing, processing, 0, 255, Imgproc.THRESH_BINARY);
-        clearBorders(processing);
-
-        blobCentres = findBlobCentres(processing);
-        for (Point p : blobCentres) {
-            Imgproc.ellipse(processing, p, new Size(50, 50), 0, 0, 360, new Scalar(0, 0 ,255));
-        }
-        processing.copyTo(mat);
+//        eliminateSmallBlobs(processing, Math.pow(metresToPixels(0.05, DroneState.getAltitude()), 2));
+//        Imgproc.threshold(processing, processing, 0, 255, Imgproc.THRESH_BINARY);
+//        clearBorders(processing);
+//
+        blobCentres = findBlobCentres(processingMat);
+//        for (Point p : blobCentres) {
+//            Imgproc.ellipse(processing, p, new Size(50, 50), 0, 0, 360, new Scalar(0, 0 ,255));
+//        }
+        processingMat.copyTo(mat);
 
         //MEDIANBLUR NOT NECESSARY AND MAKES THINGS VERY SLOW --vic&adam
 //        Imgproc.medianBlur(processing, processing, 31);
@@ -274,14 +294,13 @@ public class ImageProcessing {
      *
      * @return
      */
-    public static Bitmap convertFrame(Mat mat) {
+    public static void convertFrame(Mat mat) {
         if (CVPreview == null && mat != null && mat.width() > 0) {
             CVPreview = Bitmap.createBitmap(mat.width(), mat.height(), Bitmap.Config.RGB_565);
         } else if (mat == null || mat.width() <= 0) {
-            return null;
+            return;
         }
         Utils.matToBitmap(mat, CVPreview);
-        return CVPreview;
     }
 
     /**
