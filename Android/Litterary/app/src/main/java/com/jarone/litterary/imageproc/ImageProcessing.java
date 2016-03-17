@@ -11,6 +11,7 @@ import com.google.myjson.Gson;
 import com.google.myjson.JsonObject;
 import com.google.myjson.JsonParser;
 import com.jarone.litterary.control.AngularController;
+import com.jarone.litterary.drone.DroneState;
 import com.jarone.litterary.handlers.MessageHandler;
 import com.jarone.litterary.helpers.ContextManager;
 import com.jarone.litterary.helpers.FileAccess;
@@ -220,6 +221,7 @@ public class ImageProcessing {
         if (mat.empty()) {
             return null;
         }
+
         Mat processing = new Mat();
         mat.copyTo(processing);
         Imgproc.cvtColor(processing, processing, Imgproc.COLOR_BGR2GRAY);
@@ -230,7 +232,7 @@ public class ImageProcessing {
         fillImage(processing);
 
         //TODO determine below threshold parameter from the drone's altitude and FOV
-        //eliminateSmallBlobs(processing, Math.pow(metresToPixels(0.3, DroneState.getAltitude()), 2));
+        eliminateSmallBlobs(processing, Math.pow(metresToPixels(0.3, DroneState.getAltitude()), 2));
         //clearBorders();
         blobCentres = findBlobCentres(processing);
         processing.copyTo(mat);
