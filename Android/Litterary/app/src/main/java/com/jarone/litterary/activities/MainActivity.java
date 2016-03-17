@@ -41,7 +41,6 @@ import com.jarone.litterary.imageproc.ImageProcessing;
 import com.jarone.litterary.views.AndroidCameraSurfaceView;
 
 import org.opencv.android.CameraGLSurfaceView;
-import org.opencv.features2d.FeatureDetector;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -284,6 +283,9 @@ public class MainActivity extends DJIBaseActivity {
         mAndroidCameraSurfaceViewOld = (AndroidCameraSurfaceView) findViewById(R.id.android_camera_surfaceview_jacinta);
         mAndroidCameraSurfaceView = (CameraGLSurfaceView) findViewById(R.id.android_camera_surfaceview);
         mDjiGLSurfaceView = (DjiGLSurfaceView) findViewById(R.id.DJI_camera_surfaceview);
+        mDjiGLSurfaceView.setScaleY(4f);
+        mAndroidCameraSurfaceView.setScaleY(4f);
+        mAndroidCameraSurfaceViewOld.setScaleY(4f);
         mDjiGLSurfaceView.start();
 
         DJIReceivedVideoDataCallBack mReceivedVideoDataCallBack = new DJIReceivedVideoDataCallBack() {
@@ -297,8 +299,6 @@ public class MainActivity extends DJIBaseActivity {
 
         };
         DJIDrone.getDjiCamera().setReceivedVideoDataCallBack(mReceivedVideoDataCallBack);
-        FeatureDetector detector = FeatureDetector.create(FeatureDetector.SIMPLEBLOB);
-        detector.
     }
 
     public ArrayBlockingQueue<ImageAsyncTask> runningTasks = new ArrayBlockingQueue<>(5);
