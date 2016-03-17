@@ -5,7 +5,6 @@ import android.graphics.BitmapFactory;
 
 import com.google.android.gms.maps.model.LatLng;
 import com.jarone.litterary.control.AngularController;
-import com.jarone.litterary.drone.DroneState;
 import com.jarone.litterary.handlers.MessageHandler;
 import com.jarone.litterary.helpers.ContextManager;
 
@@ -17,12 +16,15 @@ import org.opencv.core.CvType;
 import org.opencv.core.Mat;
 import org.opencv.core.MatOfFloat;
 import org.opencv.core.MatOfInt;
+import org.opencv.core.MatOfKeyPoint;
 import org.opencv.core.MatOfPoint;
 import org.opencv.core.Point;
 import org.opencv.core.Rect;
 import org.opencv.core.Scalar;
 import org.opencv.core.Size;
 import org.opencv.core.TermCriteria;
+import org.opencv.features2d.FeatureDetector;
+import org.opencv.features2d.Features2d;
 import org.opencv.imgproc.Imgproc;
 import org.opencv.imgproc.Moments;
 import org.opencv.video.Video;
@@ -187,22 +189,40 @@ public class ImageProcessing {
         Mat processing = new Mat();
         mat.copyTo(processing);
         Imgproc.cvtColor(processing, processing, Imgproc.COLOR_BGR2GRAY);
+        Scalar mean = Core.mean(processing);
+        Imgproc.threshold(processing, processing, mean.val[0] - 20, 255, Imgproc.THRESH_BINARY_INV);
         determineCannyThreshold(processing);
         Imgproc.Canny(processing, processing, lowThreshold, highThreshold);
         closeImage(processing);
-        Imgproc.threshold(processing, processing, lowThreshold, highThreshold, Imgproc.THRESH_BINARY);
+        Imgproc.threshold(processing, processing, 0, 255, Imgproc.THRESH_BINARY);
         fillImage(processing);
 
         //TODO determine below threshold parameter from the drone's altitude and FOV
-        eliminateSmallBlobs(processing, Math.pow(metresToPixels(0.3, DroneState.getAltitude()), 2));
-        clearBorders(processing);
-        blobCentres = findBlobCentres(processing);
+        //eliminateSmallBlobs(processing, Math.pow(metresToPixels(0.05, DroneState.getAltitude()), 2));
+        //clearBorders(processing);
+        //blobCentres = findBlobCentres(processing);
         processing.copyTo(mat);
 
         //MEDIANBLUR NOT NECESSARY AND MAKES THINGS VERY SLOW --vic&adam
 //        Imgproc.medianBlur(processing, processing, 31);
-    
+
         return blobCentres;
+    }
+
+    public static ArrayList<Point> detectBlobsCv(Mat mat) {
+        if (mat.empty()) {
+            return null;
+        }
+        Mat processing = new Mat();
+        mat.copyTo(processing);
+        Imgproc.cvtColor(processing, processing, Imgproc.COLOR_BGR2GRAY);
+        FeatureDetector detector = FeatureDetector.create(FeatureDetector.SIMPLEBLOB);
+        MatOfKeyPoint keypoints = new MatOfKeyPoint();
+        detector.detect(processing, keypoints);
+        Scalar cores = new Scalar(0,0,255);
+        Features2d.drawKeypoints(processing, keypoints, processing, cores, Features2d.DRAW_OVER_OUTIMG | Features2d.DRAW_RICH_KEYPOINTS | Features2d.NOT_DRAW_SINGLE_POINTS);
+        processing.copyTo(mat);
+        return new ArrayList<>();
     }
 
     /**
