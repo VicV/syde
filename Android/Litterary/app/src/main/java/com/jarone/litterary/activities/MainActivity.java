@@ -40,7 +40,8 @@ import com.jarone.litterary.helpers.WifiHelper;
 import com.jarone.litterary.imageproc.ImageProcessing;
 import com.jarone.litterary.views.AndroidCameraSurfaceView;
 
-import org.opencv.android.CameraGLSurfaceView;
+import org.opencv.android.CameraBridgeViewBase;
+import org.opencv.core.Mat;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -67,7 +68,7 @@ public class MainActivity extends DJIBaseActivity {
     public static ArrayList<DebugItem> messageList;
 
     private DjiGLSurfaceView mDjiGLSurfaceView;
-    private CameraGLSurfaceView mAndroidCameraSurfaceView;
+    private CameraBridgeViewBase mAndroidCameraSurfaceView;
     private AndroidCameraSurfaceView mAndroidCameraSurfaceViewOld;
 
     private ImageView CPreview;
@@ -83,6 +84,9 @@ public class MainActivity extends DJIBaseActivity {
     private boolean canStartProcessing = false;
 
     Grabber grabber;
+
+    private CameraBridgeViewBase mOpenCvCameraView;
+
 
     //Activity is starting.
     @Override
@@ -235,7 +239,8 @@ public class MainActivity extends DJIBaseActivity {
                             mDjiGLSurfaceView.pause();
                             mDjiGLSurfaceView.destroy();
                             mAndroidCameraSurfaceView.setVisibility(View.VISIBLE);
-                            mAndroidCameraSurfaceView.setCameraTextureListener(new CameraGLSurfaceView.CameraTextureListener() {
+                            mAndroidCameraSurfaceView.enableView();
+                            mAndroidCameraSurfaceView.setCvCameraViewListener(new CameraBridgeViewBase.CvCameraViewListener2() {
                                 @Override
                                 public void onCameraViewStarted(int i, int i1) {
 
@@ -247,9 +252,13 @@ public class MainActivity extends DJIBaseActivity {
                                 }
 
                                 @Override
-                                public boolean onCameraTexture(int i, int i1, int i2, int i3) {
-                                    processFrame();
-                                    return false;
+                                public Mat onCameraFrame(CameraBridgeViewBase.CvCameraViewFrame cvCameraViewFrame) {
+                                    ImageDirectFromCameraAsyncTask newTask = new ImageDirectFromCameraAsyncTask();
+                                    if (runningTasks.offer(newTask)) {
+                                        newTask.execute(cvCameraViewFrame.rgba());
+                                    }
+
+                                    return cvCameraViewFrame.rgba();
                                 }
                             });
                         }
@@ -277,11 +286,9 @@ public class MainActivity extends DJIBaseActivity {
         };
     }
 
-    private boolean processing = false;
-
     private void registerCamera() {
         mAndroidCameraSurfaceViewOld = (AndroidCameraSurfaceView) findViewById(R.id.android_camera_surfaceview_jacinta);
-        mAndroidCameraSurfaceView = (CameraGLSurfaceView) findViewById(R.id.android_camera_surfaceview);
+        mAndroidCameraSurfaceView = (CameraBridgeViewBase) findViewById(R.id.android_camera_surfaceview);
         mDjiGLSurfaceView = (DjiGLSurfaceView) findViewById(R.id.DJI_camera_surfaceview);
         mDjiGLSurfaceView.start();
 
@@ -298,17 +305,13 @@ public class MainActivity extends DJIBaseActivity {
         DJIDrone.getDjiCamera().setReceivedVideoDataCallBack(mReceivedVideoDataCallBack);
     }
 
-    public ArrayBlockingQueue<ImageAsyncTask> runningTasks = new ArrayBlockingQueue<>(5);
+    public ArrayBlockingQueue<AsyncTask> runningTasks = new ArrayBlockingQueue<>(5);
 
     public void processFrame() {
         ImageAsyncTask newTask = new ImageAsyncTask();
         if (runningTasks.offer(newTask)) {
-            newTask.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, mDjiGLSurfaceView.getVisibility() == View.GONE ? (mAndroidCameraSurfaceView.getVisibility() == View.GONE ? mAndroidCameraSurfaceViewOld : mAndroidCameraSurfaceView) : mDjiGLSurfaceView);
+            newTask.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, mDjiGLSurfaceView.getVisibility() == View.GONE ? mAndroidCameraSurfaceViewOld : mDjiGLSurfaceView);
         }
-    }
-
-    public void setProcessing(boolean processing) {
-        this.processing = processing;
     }
 
     public class ImageAsyncTask extends AsyncTask<GLSurfaceView, Void, Void> {
@@ -349,6 +352,23 @@ public class MainActivity extends DJIBaseActivity {
         @Override
         protected void onPostExecute(Void aVoid) {
             super.onPostExecute(aVoid);
+        }
+    }
+
+    public class ImageDirectFromCameraAsyncTask extends AsyncTask<Mat, Bitmap, Bitmap> {
+
+        private ImageDirectFromCameraAsyncTask context = this;
+
+        @Override
+        protected Bitmap doInBackground(Mat... params) {
+            return ImageProcessing.processImage(params[0]);
+        }
+
+        @Override
+        protected void onPostExecute(Bitmap processedImage) {
+            CPreview.setImageBitmap(processedImage);
+            runningTasks.remove(context);
+            super.onPostExecute(processedImage);
         }
     }
 

@@ -106,6 +106,17 @@ public class ImageProcessing {
     }
 
     /**
+     * Identifies litter in a mat and returns the processed image as a bitmap
+     *
+     * @return
+     */
+    public static Bitmap processImage(Mat mat) {
+        identifyLitterMatFromMat(mat);
+        convertFrame(mat);
+        return CVPreview;
+    }
+
+    /**
      * Set the "original" unmodified image as a Mat
      *
      * @param frame
@@ -135,7 +146,6 @@ public class ImageProcessing {
         Utils.bitmapToMat(photo, mat);
         //correctDistortion();
         ArrayList<Point> points = detectBlobs(mat);
-        ContextManager.getMainActivityInstance().setProcessing(false);
         return points;
     }
 
@@ -143,7 +153,11 @@ public class ImageProcessing {
         Mat mat = new Mat();
         Utils.bitmapToMat(photo, mat);
         ArrayList<Point> points = detectBlobs(mat);
-        ContextManager.getMainActivityInstance().setProcessing(false);
+        return mat;
+    }
+
+    public static Mat identifyLitterMatFromMat(Mat mat) {
+        ArrayList<Point> points = detectBlobs(mat);
         return mat;
     }
 
@@ -186,8 +200,10 @@ public class ImageProcessing {
 
         Mat processing = new Mat();
         mat.copyTo(processing);
-        Imgproc.cvtColor(processing, processing, Imgproc.COLOR_BGR2GRAY);
+        Imgproc.cvtColor(processing, processing, Imgproc.COLOR_);
+
         determineCannyThreshold(processing);
+
         Imgproc.Canny(processing, processing, lowThreshold, highThreshold);
         closeImage(processing);
         Imgproc.threshold(processing, processing, lowThreshold, highThreshold, Imgproc.THRESH_BINARY);

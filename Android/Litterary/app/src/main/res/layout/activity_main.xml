@@ -17,7 +17,7 @@
             android:gravity="center"
             android:text="lalalala" />
 
-        <org.opencv.android.CameraGLSurfaceView
+        <org.opencv.android.JavaCameraView
             android:id="@+id/android_camera_surfaceview"
             android:layout_width="fill_parent"
             android:layout_height="212dp"
