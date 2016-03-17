@@ -70,50 +70,56 @@ public class SurveyRoute extends NavigationRoute{
     }
 
     /**
-     * Downloads all the photos taken since the survey started, loads them from the file system,
+     * Downloads all the photos taken since the survey started, then analyzes them
+     */
+    public void downloadAndAnalyzeSurveyPhotos() {
+        Camera.downloadPhotosSince(startTime, new Runnable() {
+            @Override
+            public void run() {
+                analyzeSurveyPhotos();
+            }
+        });
+
+    }
+
+    /**
+     * Loads all the photos taken since the survey started from the file system,
      * and runs them through blob detection to identify the GPS points of all the litter
      *
      */
     public void analyzeSurveyPhotos() {
-        //Download all photos since survey started
-        Camera.downloadPhotosSince(startTime, new Runnable() {
-            @Override
-            public void run() {
-                //Load photos from external storage directory
-                String path = Environment.getExternalStorageDirectory().toString()+"/Litterary/survey";
-                File f = new File(path);
-                File files[] = f.listFiles();
+        //Load photos from external storage directory
+        String path = Environment.getExternalStorageDirectory().toString()+"/Litterary/survey";
+        File f = new File(path);
+        File files[] = f.listFiles();
 
-                ArrayList<File> surveyPhotos = new ArrayList<>();
+        ArrayList<File> surveyPhotos = new ArrayList<>();
 
-                //We only care about photos with timestamps that fall within the survey time
-                for (File file : files) {
-                    long timestamp = Long.parseLong(file.getName().split(".jpg")[0]);
-                    if (timestamp > startTime && timestamp < endTime) {
-                        surveyPhotos.add(file);
-                    }
-                }
-
-                //Uses previously loaded photos to identify litter
-                ArrayList<LatLng> litter = new ArrayList<>();
-                for (File photo : surveyPhotos) {
-                    ArrayList<Point> points = ImageProcessing.identifyLitter(BitmapFactory.decodeFile(photo.getAbsolutePath()));
-                    litter.addAll(
-                            ImageProcessing.calculateGPSCoords(
-                                    points,
-                                    FileAccess.coordsFromPhoto(photo)
-                            )
-                    );
-                }
-                //Remove points very close to each other, then initialize a new collection route
-                //using the optimized route provided by route optimizer
-                litterPoints = LocationHelper.removeDuplicates(litter);
-                LatLng[] points = RouteOptimization.createOptimizedCollectionRoute(litterPoints);
-                CollectionRoute pickup = new CollectionRoute(points, altitude, heading);
-                pickup.save();
+        //We only care about photos with timestamps that fall within the survey time
+        for (File file : files) {
+            long timestamp = Long.parseLong(file.getName().split(".jpg")[0]);
+            if (timestamp > startTime && timestamp < endTime) {
+                surveyPhotos.add(file);
             }
-        });
+        }
 
+        //Uses previously loaded photos to identify litter
+        ArrayList<LatLng> litter = new ArrayList<>();
+        for (File photo : surveyPhotos) {
+            ArrayList<Point> points = ImageProcessing.identifyLitter(BitmapFactory.decodeFile(photo.getAbsolutePath()));
+            litter.addAll(
+                    ImageProcessing.calculateGPSCoords(
+                            points,
+                            FileAccess.coordsFromPhoto(photo)
+                    )
+            );
+        }
+        //Remove points very close to each other, then initialize a new collection route
+        //using the optimized route provided by route optimizer
+        litterPoints = LocationHelper.removeDuplicates(litter);
+        LatLng[] points = RouteOptimization.createOptimizedCollectionRoute(litterPoints);
+        CollectionRoute pickup = new CollectionRoute(points, altitude, heading);
+        pickup.save();
     }
 
 }
