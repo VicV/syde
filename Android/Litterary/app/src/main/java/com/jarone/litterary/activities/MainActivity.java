@@ -222,16 +222,6 @@ public class MainActivity extends DJIBaseActivity {
                         break;
                     case R.id.button_special_3:
                         canStartProcessing = true;
-//                        ImageProcessing.loadCalibration();
-//                        try {
-//                            InputStream i = ContextManager.getActivity().getAssets().open("c2.jpg");
-//                            Bitmap decoded = BitmapFactory.decodeStream(i);
-//                            int nh = (int) (decoded.getHeight() * (2000.0 / decoded.getWidth()));
-//                            Bitmap scaled = Bitmap.createScaledBitmap(decoded, 2000, nh, true);
-//                            ImageProcessing.readFrame(scaled);
-//                            ImageProcessing.correctDistortion();
-//                        } catch (IOException e) {
-//                        }
                         break;
                     case R.id.button_special_camera:
                         if (mDjiGLSurfaceView.getVisibility() != View.GONE) {
@@ -253,8 +243,9 @@ public class MainActivity extends DJIBaseActivity {
 
                                 @Override
                                 public Mat onCameraFrame(CameraBridgeViewBase.CvCameraViewFrame cvCameraViewFrame) {
-                                    ImageDirectFromCameraAsyncTask newTask = new ImageDirectFromCameraAsyncTask();
-                                    if (runningTasks.offer(newTask)) {
+                                    if (!processing) {
+                                        processing = true;
+                                        ImageDirectFromCameraAsyncTask newTask = new ImageDirectFromCameraAsyncTask();
                                         newTask.execute(cvCameraViewFrame.rgba());
                                     }
 
@@ -276,6 +267,8 @@ public class MainActivity extends DJIBaseActivity {
             }
         };
     }
+
+    boolean processing = false;
 
     public View.OnClickListener getCameraViewListener() {
         return new View.OnClickListener() {
@@ -367,7 +360,7 @@ public class MainActivity extends DJIBaseActivity {
         @Override
         protected void onPostExecute(Bitmap processedImage) {
             CPreview.setImageBitmap(processedImage);
-            runningTasks.remove(context);
+            processing = false;
             super.onPostExecute(processedImage);
         }
     }

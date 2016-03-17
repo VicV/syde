@@ -200,19 +200,45 @@ public class ImageProcessing {
 
         Mat processing = new Mat();
         mat.copyTo(processing);
-        Imgproc.cvtColor(processing, processing, Imgproc.COLOR_);
 
-        determineCannyThreshold(processing);
+        ArrayList<Mat> channels = new ArrayList<>();
+        Core.split(processing, channels);
+        Scalar rMean = Core.mean(channels.get(0));
+        Scalar gMean = Core.mean(channels.get(1));
+        Scalar bMean = Core.mean(channels.get(2));
+        Mat r = new Mat();
+        Mat b = new Mat();
+        Mat g = new Mat();
+        Imgproc.threshold(channels.get(0), r, rMean.val[0] - 30, 255, Imgproc.THRESH_BINARY_INV);
+        Imgproc.threshold(channels.get(1), b, gMean.val[0] - 30, 255, Imgproc.THRESH_BINARY_INV);
+        Imgproc.threshold(channels.get(2), g, bMean.val[0] - 30, 255, Imgproc.THRESH_BINARY_INV);
 
-        Imgproc.Canny(processing, processing, lowThreshold, highThreshold);
-        closeImage(processing);
-        Imgproc.threshold(processing, processing, lowThreshold, highThreshold, Imgproc.THRESH_BINARY);
-        fillImage(processing);
+        Mat output = new Mat();
 
-        //TODO determine below threshold parameter from the drone's altitude and FOV
-        eliminateSmallBlobs(processing, Math.pow(metresToPixels(0.3, DroneState.getAltitude()), 2));
+        Core.add(r, b, output);
+        Core.add(output, g, output);
+        output.copyTo(processing);
+
+
+
+//        Imgproc.cvtColor(processing, processing, Imgproc.COLOR_BGR2GRAY);
+//        Scalar mean = Core.mean(processing);
+//        Imgproc.threshold(processing, processing, mean.val[0] - 10, 255, Imgproc.THRESH_BINARY_INV);
+//        determineCannyThreshold(processing);
+//        Imgproc.Canny(processing, processing, lowThreshold, highThreshold);
+//        closeImage(processing);
+//        Imgproc.threshold(processing, processing, 0, 255, Imgproc.THRESH_BINARY);
+//        fillImage(processing);
+//
+//        //TODO determine below threshold parameter from the drone's altitude and FOV
+        eliminateSmallBlobs(processing, Math.pow(metresToPixels(0.05, DroneState.getAltitude()), 2));
+        Imgproc.threshold(processing, processing, 0, 255, Imgproc.THRESH_BINARY);
         clearBorders(processing);
+
         blobCentres = findBlobCentres(processing);
+        for (Point p : blobCentres) {
+            Imgproc.ellipse(processing, p, new Size(50, 50), 0, 0, 360, new Scalar(0, 0 ,255));
+        }
         processing.copyTo(mat);
 
         //MEDIANBLUR NOT NECESSARY AND MAKES THINGS VERY SLOW --vic&adam
@@ -226,11 +252,11 @@ public class ImageProcessing {
      */
     public static void closeImage(Mat mat) {
         int scaleFactor = 10;
-        Mat element = Imgproc.getStructuringElement(Imgproc.MORPH_ELLIPSE, new Size(150 / scaleFactor, 150 / scaleFactor));
+        Mat element = Imgproc.getStructuringElement(Imgproc.MORPH_ELLIPSE, new Size(100 / scaleFactor, 100 / scaleFactor));
         //Rescale to smaller size to perform closing much faster
         int width = mat.width();
         int height = mat.height();
-        Imgproc.resize(mat, mat, new Size(mat.width() / scaleFactor, mat.height() / scaleFactor));
+        Imgproc.resize(mat, mat, new Size(width / scaleFactor, height / scaleFactor));
         Imgproc.morphologyEx(mat, mat, Imgproc.MORPH_CLOSE, element);
         Imgproc.resize(mat, mat, new Size(width, height));
     }
