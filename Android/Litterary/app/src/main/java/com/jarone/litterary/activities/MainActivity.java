@@ -283,9 +283,6 @@ public class MainActivity extends DJIBaseActivity {
         mAndroidCameraSurfaceViewOld = (AndroidCameraSurfaceView) findViewById(R.id.android_camera_surfaceview_jacinta);
         mAndroidCameraSurfaceView = (CameraGLSurfaceView) findViewById(R.id.android_camera_surfaceview);
         mDjiGLSurfaceView = (DjiGLSurfaceView) findViewById(R.id.DJI_camera_surfaceview);
-        mDjiGLSurfaceView.setScaleY(4f);
-        mAndroidCameraSurfaceView.setScaleY(4f);
-        mAndroidCameraSurfaceViewOld.setScaleY(4f);
         mDjiGLSurfaceView.start();
 
         DJIReceivedVideoDataCallBack mReceivedVideoDataCallBack = new DJIReceivedVideoDataCallBack() {
