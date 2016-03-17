@@ -201,7 +201,7 @@ public class ImageProcessing {
 
         //MEDIANBLUR NOT NECESSARY AND MAKES THINGS VERY SLOW --vic&adam
 //        Imgproc.medianBlur(processing, processing, 31);
-    
+
         return blobCentres;
     }
 
