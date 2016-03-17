@@ -7,7 +7,7 @@
 
     <RelativeLayout
         android:id="@+id/surface_layout"
-        android:layout_width="fill_parent"
+        android:layout_width="414dp"
         android:layout_height="212dp">
 
         <TextView
@@ -17,7 +17,7 @@
             android:gravity="center"
             android:text="lalalala" />
 
-        <com.jarone.litterary.views.AndroidCameraSurfaceView
+        <org.opencv.android.CameraGLSurfaceView
             android:id="@+id/android_camera_surfaceview"
             android:layout_width="fill_parent"
             android:layout_height="212dp"

@@ -38,7 +38,8 @@ import com.jarone.litterary.helpers.ImageHelper;
 import com.jarone.litterary.helpers.LocationHelper;
 import com.jarone.litterary.helpers.WifiHelper;
 import com.jarone.litterary.imageproc.ImageProcessing;
-import com.jarone.litterary.views.AndroidCameraSurfaceView;
+
+import org.opencv.android.CameraGLSurfaceView;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -65,7 +66,7 @@ public class MainActivity extends DJIBaseActivity {
     public static ArrayList<DebugItem> messageList;
 
     private DjiGLSurfaceView mDjiGLSurfaceView;
-    private AndroidCameraSurfaceView mAndroidCameraSurfaceView;
+    private CameraGLSurfaceView mAndroidCameraSurfaceView;
 
     private ImageView CPreview;
     private WifiManager wifiManager;
@@ -231,9 +232,24 @@ public class MainActivity extends DJIBaseActivity {
                             mDjiGLSurfaceView.setVisibility(View.GONE);
                             mDjiGLSurfaceView.pause();
                             mDjiGLSurfaceView.destroy();
-                            AndroidCameraSurfaceView androidCamera = (AndroidCameraSurfaceView) findViewById(R.id.android_camera_surfaceview);
-                            androidCamera.setVisibility(View.VISIBLE);
-                            androidCamera.setupSurfaceView();
+                            mAndroidCameraSurfaceView.setVisibility(View.VISIBLE);
+                            mAndroidCameraSurfaceView.setCameraTextureListener(new CameraGLSurfaceView.CameraTextureListener() {
+                                @Override
+                                public void onCameraViewStarted(int i, int i1) {
+
+                                }
+
+                                @Override
+                                public void onCameraViewStopped() {
+
+                                }
+
+                                @Override
+                                public boolean onCameraTexture(int i, int i1, int i2, int i3) {
+                                    processFrame();
+                                    return false;
+                                }
+                            });
                         }
                         break;
                 }
@@ -253,7 +269,7 @@ public class MainActivity extends DJIBaseActivity {
     private boolean processing = false;
 
     private void registerCamera() {
-        mAndroidCameraSurfaceView = (AndroidCameraSurfaceView) findViewById(R.id.android_camera_surfaceview);
+        mAndroidCameraSurfaceView = (CameraGLSurfaceView) findViewById(R.id.android_camera_surfaceview);
         mDjiGLSurfaceView = (DjiGLSurfaceView) findViewById(R.id.DJI_camera_surfaceview);
         mDjiGLSurfaceView.start();
 
@@ -269,16 +285,13 @@ public class MainActivity extends DJIBaseActivity {
         DJIDrone.getDjiCamera().setReceivedVideoDataCallBack(mReceivedVideoDataCallBack);
     }
 
-    public ArrayBlockingQueue<ImageAsyncTask> runningTasks = new ArrayBlockingQueue<>(1);
+    public ArrayBlockingQueue<ImageAsyncTask> runningTasks = new ArrayBlockingQueue<>(5);
 
     public void processFrame() {
         ImageAsyncTask newTask = new ImageAsyncTask();
         if (runningTasks.offer(newTask)) {
             newTask.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, mDjiGLSurfaceView.getVisibility() == View.GONE ? mAndroidCameraSurfaceView : mDjiGLSurfaceView);
         }
-//        if (!processing) {
-//            processing = true;
-//        }
     }
 
     public void setProcessing(boolean processing) {
@@ -305,8 +318,8 @@ public class MainActivity extends DJIBaseActivity {
                                     } else {
                                         ImageProcessing.processImage(bitmap);
                                     }
+                                    CPreview.setImageBitmap(ImageProcessing.getCVPreview());
                                     runningTasks.remove(context);
-                                    //CPreview.setImageBitmap(bitmap);
                                 }
                             }
                         });
@@ -534,9 +547,10 @@ public class MainActivity extends DJIBaseActivity {
 //                    ((TextView) findViewById(R.id.pid_error)).setText("" + GroundStation.getAngularController().getLastError());
 //                }
 
-                if (LitterApplication.devMode) {
-                    CPreview.setImageBitmap(ImageProcessing.getCVPreview());
-                }
+//                if (LitterApplication.devMode) {
+//                    CPreview.setImageBitmap(ImageProcessing.getCVPreview());
+//                }
+
 //                if (currentPhotoPoints != null && currentPhotoPoints.size() > 0) {
 //                    findViewById(R.id.remaining_items).setVisibility(View.VISIBLE);
 //                    //TODO: UPDATE ON EACH PICTURE TAKEN

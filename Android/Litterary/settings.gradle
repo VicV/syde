@@ -1,1 +1,2 @@
-include ':app', ':opencv-android', ':DJI-SDK-LIB'
+include ':app', ':DJI-SDK-LIB'
+include ':openCVLibrary310'
