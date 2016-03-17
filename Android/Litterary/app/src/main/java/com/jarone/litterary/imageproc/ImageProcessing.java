@@ -217,7 +217,7 @@ public class ImageProcessing {
 //
 //        //TODO determine below threshold parameter from the drone's altitude and FOV
         eliminateSmallBlobs(processing, Math.pow(metresToPixels(0.05, DroneState.getAltitude()), 2));
-        Imgproc.threshold(processing, processing, 0, 255, Imgproc.THRESH_BINARY);
+        //Imgproc.threshold(processing, processing, 0, 255, Imgproc.THRESH_BINARY);
         clearBorders(processing);
 
         blobCentres = findBlobCentres(processing);
