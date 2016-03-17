@@ -195,13 +195,13 @@ public class ImageProcessing {
 
         //TODO determine below threshold parameter from the drone's altitude and FOV
         eliminateSmallBlobs(processing, Math.pow(metresToPixels(0.3, DroneState.getAltitude()), 2));
-//      clearBorders(processing);
+        clearBorders(processing);
         blobCentres = findBlobCentres(processing);
         processing.copyTo(mat);
 
         //MEDIANBLUR NOT NECESSARY AND MAKES THINGS VERY SLOW --vic&adam
 //        Imgproc.medianBlur(processing, processing, 31);
-
+    
         return blobCentres;
     }
 
@@ -289,7 +289,7 @@ public class ImageProcessing {
         ArrayList<MatOfPoint> badContours = new ArrayList<>();
         for (MatOfPoint contour : contours) {
             for (Point p : contour.toArray()) {
-                if (p.x <= 0 || p.x >= width || p.y <= 0 || p.y >= height) {
+                if (p.x <= 5 || p.x >= width - 5 || p.y <= 5 || p.y >= height - 5) {
                     badContours.add(contour);
                 }
             }

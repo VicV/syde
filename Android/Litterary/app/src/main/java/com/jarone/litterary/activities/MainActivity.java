@@ -124,7 +124,7 @@ public class MainActivity extends DJIBaseActivity {
                 if (!GroundStation.getCurrentSurveyRoute().isFinished()) {
                     MessageHandler.d("Survey Still Executing!");
                 } else {
-                    GroundStation.getCurrentSurveyRoute().analyzeSurveyPhotos();
+                    GroundStation.getCurrentSurveyRoute().downloadAndAnalyzeSurveyPhotos();
                 }
             }
         };
