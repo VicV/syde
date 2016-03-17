@@ -36,8 +36,8 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginEnd="5dp"
-            android:elevation="5dp"
             android:layout_marginStart="5dp"
+            android:elevation="5dp"
             android:gravity="center_horizontal"
             android:orientation="horizontal">
 
@@ -97,35 +97,42 @@
 
             <Button
                 android:id="@+id/button_special_1"
-                android:layout_width="wrap_content"
-                android:layout_height="40dp"
+                android:layout_width="70dp"
+                android:layout_height="35dp"
                 android:fontFeatureSettings="smcp"
-                android:text="Special 1"
+                android:text="Spec1"
                 android:textColor="#999" />
 
             <Button
                 android:id="@+id/button_special_2"
-                android:layout_width="wrap_content"
-                android:layout_height="40dp"
+                android:layout_width="70dp"
+                android:layout_height="35dp"
                 android:fontFeatureSettings="smcp"
-                android:text="Special 2"
-
+                android:text="Spec2"
                 android:textColor="#999" />
 
             <Button
                 android:id="@+id/button_special_3"
-                android:layout_width="wrap_content"
-                android:layout_height="40dp"
+                android:layout_width="70dp"
+                android:layout_height="35dp"
                 android:fontFeatureSettings="smcp"
-                android:text="Special 3"
+                android:text="Spec3"
                 android:textColor="#999" />
 
             <Button
                 android:id="@+id/button_special_camera"
-                android:layout_width="wrap_content"
-                android:layout_height="40dp"
+                android:layout_width="70dp"
+                android:layout_height="35dp"
                 android:fontFeatureSettings="smcp"
                 android:text="Cam"
+                android:textColor="#999" />
+
+            <Button
+                android:id="@+id/button_special_camera_2"
+                android:layout_width="70dp"
+                android:layout_height="35dp"
+                android:fontFeatureSettings="smcp"
+                android:text="Cam2"
                 android:textColor="#999" />
 
         </LinearLayout>

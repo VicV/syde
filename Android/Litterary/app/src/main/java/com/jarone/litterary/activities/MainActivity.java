@@ -38,8 +38,10 @@ import com.jarone.litterary.helpers.ImageHelper;
 import com.jarone.litterary.helpers.LocationHelper;
 import com.jarone.litterary.helpers.WifiHelper;
 import com.jarone.litterary.imageproc.ImageProcessing;
+import com.jarone.litterary.views.AndroidCameraSurfaceView;
 
 import org.opencv.android.CameraGLSurfaceView;
+import org.opencv.features2d.FeatureDetector;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -67,6 +69,7 @@ public class MainActivity extends DJIBaseActivity {
 
     private DjiGLSurfaceView mDjiGLSurfaceView;
     private CameraGLSurfaceView mAndroidCameraSurfaceView;
+    private AndroidCameraSurfaceView mAndroidCameraSurfaceViewOld;
 
     private ImageView CPreview;
     private WifiManager wifiManager;
@@ -252,6 +255,15 @@ public class MainActivity extends DJIBaseActivity {
                             });
                         }
                         break;
+                    case R.id.button_special_camera_2:
+                        if (mDjiGLSurfaceView.getVisibility() != View.GONE) {
+                            mDjiGLSurfaceView.setVisibility(View.GONE);
+                            mDjiGLSurfaceView.pause();
+                            mDjiGLSurfaceView.destroy();
+                            mAndroidCameraSurfaceViewOld.setVisibility(View.VISIBLE);
+                            mAndroidCameraSurfaceViewOld.setupSurfaceView();
+                        }
+                        break;
                 }
             }
         };
@@ -269,6 +281,7 @@ public class MainActivity extends DJIBaseActivity {
     private boolean processing = false;
 
     private void registerCamera() {
+        mAndroidCameraSurfaceViewOld = (AndroidCameraSurfaceView) findViewById(R.id.android_camera_surfaceview_jacinta);
         mAndroidCameraSurfaceView = (CameraGLSurfaceView) findViewById(R.id.android_camera_surfaceview);
         mDjiGLSurfaceView = (DjiGLSurfaceView) findViewById(R.id.DJI_camera_surfaceview);
         mDjiGLSurfaceView.start();
@@ -281,8 +294,11 @@ public class MainActivity extends DJIBaseActivity {
                     processFrame();
                 }
             }
+
         };
         DJIDrone.getDjiCamera().setReceivedVideoDataCallBack(mReceivedVideoDataCallBack);
+        FeatureDetector detector = FeatureDetector.create(FeatureDetector.SIMPLEBLOB);
+        detector.
     }
 
     public ArrayBlockingQueue<ImageAsyncTask> runningTasks = new ArrayBlockingQueue<>(5);
@@ -290,7 +306,7 @@ public class MainActivity extends DJIBaseActivity {
     public void processFrame() {
         ImageAsyncTask newTask = new ImageAsyncTask();
         if (runningTasks.offer(newTask)) {
-            newTask.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, mDjiGLSurfaceView.getVisibility() == View.GONE ? mAndroidCameraSurfaceView : mDjiGLSurfaceView);
+            newTask.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, mDjiGLSurfaceView.getVisibility() == View.GONE ? (mAndroidCameraSurfaceView.getVisibility() == View.GONE ? mAndroidCameraSurfaceViewOld : mAndroidCameraSurfaceView) : mDjiGLSurfaceView);
         }
     }
 
@@ -319,8 +335,9 @@ public class MainActivity extends DJIBaseActivity {
                                         ImageProcessing.processImage(bitmap);
                                     }
                                     CPreview.setImageBitmap(ImageProcessing.getCVPreview());
-                                    runningTasks.remove(context);
                                 }
+                                runningTasks.remove(context);
+
                             }
                         });
                     }
@@ -738,6 +755,7 @@ public class MainActivity extends DJIBaseActivity {
         if (LitterApplication.devMode) {
             findViewById(R.id.CVPreview).setOnClickListener(getCameraViewListener());
             findViewById(R.id.button_special_camera).setOnClickListener(getDevButtonListener());
+            findViewById(R.id.button_special_camera_2).setOnClickListener(getDevButtonListener());
 
             //Dev stuff
             findViewById(R.id.button_special_1).setOnClickListener(getStartTrackListener());

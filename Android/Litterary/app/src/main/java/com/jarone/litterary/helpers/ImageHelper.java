@@ -29,7 +29,7 @@ public class ImageHelper {
 
     // Create a bitmap from the current surface frame.
     public static void createBitmapFromFrame(final BitmapCreatedCallback bitmapCreatedCallback, final GLSurfaceView surface) {
-        if (width == -1 || height == -1) {
+        if ((width == -1 || width == 0) || (height == 0 || height == -1)) {
             width = surface.getWidth();
             height = surface.getHeight();
         }
@@ -49,6 +49,9 @@ public class ImageHelper {
 
     public static Bitmap getBitmapFromGLSurface(int w, int h, GL10 gl) {
 
+        if (w == 0 || h == 0) {
+            return null;
+        }
         if (runningBitmap == null) {
             runningBitmap = Bitmap.createBitmap(w, h, Bitmap.Config.RGB_565);
 

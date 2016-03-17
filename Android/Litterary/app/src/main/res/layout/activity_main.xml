@@ -24,6 +24,13 @@
             android:elevation="5dp"
             android:visibility="gone" />
 
+        <com.jarone.litterary.views.AndroidCameraSurfaceView
+            android:id="@+id/android_camera_surfaceview_jacinta"
+            android:layout_width="fill_parent"
+            android:layout_height="212dp"
+            android:elevation="5dp"
+            android:visibility="gone" />
+
         <dji.sdk.widget.DjiGLSurfaceView
             android:id="@+id/DJI_camera_surfaceview"
             android:layout_width="fill_parent"
