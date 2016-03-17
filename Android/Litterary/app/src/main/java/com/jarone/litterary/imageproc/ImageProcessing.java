@@ -5,6 +5,7 @@ import android.graphics.BitmapFactory;
 
 import com.google.android.gms.maps.model.LatLng;
 import com.jarone.litterary.control.AngularController;
+import com.jarone.litterary.drone.DroneState;
 import com.jarone.litterary.handlers.MessageHandler;
 import com.jarone.litterary.helpers.ContextManager;
 
@@ -16,15 +17,12 @@ import org.opencv.core.CvType;
 import org.opencv.core.Mat;
 import org.opencv.core.MatOfFloat;
 import org.opencv.core.MatOfInt;
-import org.opencv.core.MatOfKeyPoint;
 import org.opencv.core.MatOfPoint;
 import org.opencv.core.Point;
 import org.opencv.core.Rect;
 import org.opencv.core.Scalar;
 import org.opencv.core.Size;
 import org.opencv.core.TermCriteria;
-import org.opencv.features2d.FeatureDetector;
-import org.opencv.features2d.Features2d;
 import org.opencv.imgproc.Imgproc;
 import org.opencv.imgproc.Moments;
 import org.opencv.video.Video;
@@ -188,19 +186,44 @@ public class ImageProcessing {
 
         Mat processing = new Mat();
         mat.copyTo(processing);
-        Imgproc.cvtColor(processing, processing, Imgproc.COLOR_BGR2GRAY);
-        Scalar mean = Core.mean(processing);
-        Imgproc.threshold(processing, processing, mean.val[0] - 20, 255, Imgproc.THRESH_BINARY_INV);
-        determineCannyThreshold(processing);
-        Imgproc.Canny(processing, processing, lowThreshold, highThreshold);
-        closeImage(processing);
-        Imgproc.threshold(processing, processing, 0, 255, Imgproc.THRESH_BINARY);
-        fillImage(processing);
+        ArrayList<Mat> channels = new ArrayList<>();
+        Core.split(processing, channels);
+        Scalar rMean = Core.mean(channels.get(0));
+        Scalar gMean = Core.mean(channels.get(1));
+        Scalar bMean = Core.mean(channels.get(2));
+        Mat r = new Mat();
+        Mat b = new Mat();
+        Mat g = new Mat();
+        Imgproc.threshold(channels.get(0), r, rMean.val[0] - 30, 255, Imgproc.THRESH_BINARY_INV);
+        Imgproc.threshold(channels.get(1), b, gMean.val[0] - 30, 255, Imgproc.THRESH_BINARY_INV);
+        Imgproc.threshold(channels.get(2), g, bMean.val[0] - 30, 255, Imgproc.THRESH_BINARY_INV);
 
-        //TODO determine below threshold parameter from the drone's altitude and FOV
-        //eliminateSmallBlobs(processing, Math.pow(metresToPixels(0.05, DroneState.getAltitude()), 2));
-        //clearBorders(processing);
-        //blobCentres = findBlobCentres(processing);
+        Mat output = new Mat();
+
+        Core.add(r, b, output);
+        Core.add(output, g, output);
+        output.copyTo(processing);
+        closeImage(processing);
+
+
+//        Imgproc.cvtColor(processing, processing, Imgproc.COLOR_BGR2GRAY);
+//        Scalar mean = Core.mean(processing);
+//        Imgproc.threshold(processing, processing, mean.val[0] - 10, 255, Imgproc.THRESH_BINARY_INV);
+//        determineCannyThreshold(processing);
+//        Imgproc.Canny(processing, processing, lowThreshold, highThreshold);
+//        closeImage(processing);
+//        Imgproc.threshold(processing, processing, 0, 255, Imgproc.THRESH_BINARY);
+//        fillImage(processing);
+//
+//        //TODO determine below threshold parameter from the drone's altitude and FOV
+        eliminateSmallBlobs(processing, Math.pow(metresToPixels(0.05, DroneState.getAltitude()), 2));
+        Imgproc.threshold(processing, processing, 0, 255, Imgproc.THRESH_BINARY);
+        clearBorders(processing);
+
+        blobCentres = findBlobCentres(processing);
+        for (Point p : blobCentres) {
+            Imgproc.ellipse(processing, p, new Size(50, 50), 0, 0, 360, new Scalar(0, 0 ,255));
+        }
         processing.copyTo(mat);
 
         //MEDIANBLUR NOT NECESSARY AND MAKES THINGS VERY SLOW --vic&adam
@@ -209,32 +232,16 @@ public class ImageProcessing {
         return blobCentres;
     }
 
-    public static ArrayList<Point> detectBlobsCv(Mat mat) {
-        if (mat.empty()) {
-            return null;
-        }
-        Mat processing = new Mat();
-        mat.copyTo(processing);
-        Imgproc.cvtColor(processing, processing, Imgproc.COLOR_BGR2GRAY);
-        FeatureDetector detector = FeatureDetector.create(FeatureDetector.SIMPLEBLOB);
-        MatOfKeyPoint keypoints = new MatOfKeyPoint();
-        detector.detect(processing, keypoints);
-        Scalar cores = new Scalar(0,0,255);
-        Features2d.drawKeypoints(processing, keypoints, processing, cores, Features2d.DRAW_OVER_OUTIMG | Features2d.DRAW_RICH_KEYPOINTS | Features2d.NOT_DRAW_SINGLE_POINTS);
-        processing.copyTo(mat);
-        return new ArrayList<>();
-    }
-
     /**
      * Perform closing operation on the image, first downscaling to speed up processing
      */
     public static void closeImage(Mat mat) {
         int scaleFactor = 10;
-        Mat element = Imgproc.getStructuringElement(Imgproc.MORPH_ELLIPSE, new Size(150 / scaleFactor, 150 / scaleFactor));
+        Mat element = Imgproc.getStructuringElement(Imgproc.MORPH_ELLIPSE, new Size(100 / scaleFactor, 100 / scaleFactor));
         //Rescale to smaller size to perform closing much faster
         int width = mat.width();
         int height = mat.height();
-        Imgproc.resize(mat, mat, new Size(mat.width() / scaleFactor, mat.height() / scaleFactor));
+        Imgproc.resize(mat, mat, new Size(width / scaleFactor, height / scaleFactor));
         Imgproc.morphologyEx(mat, mat, Imgproc.MORPH_CLOSE, element);
         Imgproc.resize(mat, mat, new Size(width, height));
     }
