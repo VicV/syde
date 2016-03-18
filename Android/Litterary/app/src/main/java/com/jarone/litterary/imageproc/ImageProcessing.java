@@ -288,7 +288,6 @@ public class ImageProcessing {
         g.release();
         b.release();
         processingMat.release();
-        System.gc();
         return blobCentres;
     }
 
