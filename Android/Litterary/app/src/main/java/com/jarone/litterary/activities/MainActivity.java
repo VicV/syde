@@ -371,7 +371,7 @@ public class MainActivity extends DJIBaseActivity {
         } catch (NumberFormatException e) {
             return -1;
         }
-        return 20;
+        return 40;
     }
 
     /**
