@@ -120,6 +120,7 @@ public class ImageProcessing {
     public static Bitmap processImage(Mat mat) {
         identifyLitterMatFromMat(mat);
         convertFrame(mat);
+        mat.release();
         return CVPreview;
     }
 
@@ -129,8 +130,11 @@ public class ImageProcessing {
      * @param frame
      */
     public static void setOriginalImage(Bitmap frame) {
-        originalMat = new Mat();
+        if (originalMat == null) {
+            originalMat = new Mat();
+        }
         Utils.bitmapToMat(frame, originalMat);
+        originalMat.release();
     }
 
     /**
@@ -142,6 +146,9 @@ public class ImageProcessing {
         Utils.bitmapToMat(image, currentMat);
     }
 
+
+    private static Mat bitmapToMat;
+
     /***
      * Identify blobs on the given Mat and return the identified litter points
      *
@@ -149,18 +156,22 @@ public class ImageProcessing {
      * @return
      */
     public static ArrayList<Point> identifyLitter(Bitmap photo) {
-        Mat mat = new Mat();
-        Utils.bitmapToMat(photo, mat);
+        if (bitmapToMat == null) {
+            bitmapToMat = new Mat();
+        }
+        Utils.bitmapToMat(photo, bitmapToMat);
         //correctDistortion();
-        ArrayList<Point> points = detectBlobs(mat);
+        ArrayList<Point> points = detectBlobs(bitmapToMat);
         return points;
     }
 
     public static Mat identifyLitterMat(Bitmap photo) {
-        Mat mat = new Mat();
-        Utils.bitmapToMat(photo, mat);
-        ArrayList<Point> points = detectBlobs(mat);
-        return mat;
+        if (bitmapToMat == null) {
+            bitmapToMat = new Mat();
+        }
+        Utils.bitmapToMat(photo, bitmapToMat);
+        ArrayList<Point> points = detectBlobs(bitmapToMat);
+        return bitmapToMat;
     }
 
     public static Mat identifyLitterMatFromMat(Mat mat) {
@@ -210,7 +221,6 @@ public class ImageProcessing {
             processingMat = new Mat();
         }
 
-
         if (r == null) {
             r = new Mat();
         }
@@ -246,13 +256,13 @@ public class ImageProcessing {
 //        Imgproc.threshold(processing, processing, mean.val[0] - 10, 255, Imgproc.THRESH_BINARY_INV);
 //        determineCannyThreshold(processing);
 //        Imgproc.Canny(processing, processing, lowThreshold, highThreshold);
-//        closeImage(processing);
+        closeImage(processingMat);
 //        Imgproc.threshold(processing, processing, 0, 255, Imgproc.THRESH_BINARY);
 //        fillImage(processing);
 //
 //        //TODO determine below threshold parameter from the drone's altitude and FOV
 //        eliminateSmallBlobs(processing, Math.pow(metresToPixels(0.05, DroneState.getAltitude()), 2));
-//        Imgproc.threshold(processing, processing, 0, 255, Imgproc.THRESH_BINARY);
+        Imgproc.threshold(processingMat, processingMat, 0, 255, Imgproc.THRESH_BINARY);
 //        clearBorders(processing);
 //
         blobCentres = findBlobCentres(processingMat);
@@ -262,8 +272,12 @@ public class ImageProcessing {
         processingMat.copyTo(mat);
 
         //MEDIANBLUR NOT NECESSARY AND MAKES THINGS VERY SLOW --vic&adam
-//        Imgproc.medianBlur(processing, processing, 31);
-
+        //Imgproc.medianBlur(processing, processing, 31);
+        r.release();
+        g.release();
+        b.release();
+        processingMat.release();
+        System.gc();
         return blobCentres;
     }
 
@@ -366,7 +380,7 @@ public class ImageProcessing {
     public static ArrayList<Point> findBlobCentres(Mat mat) {
         Mat temp = mat.clone();
         ArrayList<MatOfPoint> contours = new ArrayList<>();
-        Imgproc.findContours(temp, contours, new Mat(), Imgproc.RETR_CCOMP, Imgproc.CHAIN_APPROX_SIMPLE);
+        Imgproc.findContours(temp, contours, temp, Imgproc.RETR_CCOMP, Imgproc.CHAIN_APPROX_SIMPLE);
         temp.release();
         currentBlobs = contours;
         ArrayList<Point> centres = new ArrayList<>();
@@ -461,7 +475,6 @@ public class ImageProcessing {
         double degrees = Math.atan(metres / altitude);
         return degrees / CAMERA_FOVX * imageX;
     }
-
 
     public static ArrayList<Point> getBlobCentres() {
         return blobCentres;
