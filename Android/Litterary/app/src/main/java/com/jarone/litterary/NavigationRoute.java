@@ -151,4 +151,11 @@ public class NavigationRoute {
         return new File(file, timestamp + "-survey");
     }
 
+    /**
+     * FOR TESTING PURPOSES ONLY
+     */
+    public void setStartTime(long ms) {
+        startTime = ms;
+    }
+
 }
