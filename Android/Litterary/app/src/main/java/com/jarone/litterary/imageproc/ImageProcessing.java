@@ -134,7 +134,6 @@ public class ImageProcessing {
             originalMat = new Mat();
         }
         Utils.bitmapToMat(frame, originalMat);
-        originalMat.release();
     }
 
     public static void setOriginalImage(Mat mat) {
@@ -260,14 +259,14 @@ public class ImageProcessing {
 //        Imgproc.threshold(processing, processing, mean.val[0] - 10, 255, Imgproc.THRESH_BINARY_INV);
 //        determineCannyThreshold(processing);
 //        Imgproc.Canny(processing, processing, lowThreshold, highThreshold);
-        dilateImage(processingMat);
+        erodeImage(processingMat);
         Imgproc.threshold(processingMat, processingMat, 0, 255, Imgproc.THRESH_BINARY);
   //      fillImage(processingMat);
 ////
 ////        //TODO determine below threshold parameter from the drone's altitude and FOV
 //        eliminateSmallBlobs(processingMat, Math.pow(metresToPixels(0.05, DroneState.getAltitude()), 2));
 ////        Imgproc.threshold(processing, processing, 0, 255, Imgproc.THRESH_BINARY);
-//        clearBorders(processingMat);
+        clearBorders(processingMat);
 ////
 //        Imgproc.threshold(processing, processing, 0, 255, Imgproc.THRESH_BINARY);
 //        fillImage(processing);
@@ -296,7 +295,7 @@ public class ImageProcessing {
     /**
      * Perform closing operation on the image, first downscaling to speed up processing
      */
-    public static void dilateImage(Mat mat) {
+    public static void erodeImage(Mat mat) {
         int scaleFactor = 10;
         Mat element = Imgproc.getStructuringElement(Imgproc.MORPH_ELLIPSE, new Size(100 / scaleFactor, 100 / scaleFactor));
         //Rescale to smaller size to perform closing much faster

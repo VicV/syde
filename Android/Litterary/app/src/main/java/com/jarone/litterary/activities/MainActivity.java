@@ -185,7 +185,7 @@ public class MainActivity extends DJIBaseActivity {
                         break;
                     case R.id.button_imgproc_2:
                         SurveyRoute route = new SurveyRoute(new LatLng[20], 0, (short)0);
-                        route.setStartTime(Camera.parseDate("2016-03-01 12:00:00").getTime());
+                        route.setStartTime(Camera.parseDate("2016-Mar-01 12:00:00").getTime());
                         route.downloadAndAnalyzeSurveyPhotos();
                         break;
                     case R.id.button_imgproc_3:
@@ -792,5 +792,9 @@ public class MainActivity extends DJIBaseActivity {
             findViewById(R.id.button_imgproc_2).setOnClickListener(getDevButtonListener());
             findViewById(R.id.button_imgproc_3).setOnClickListener(getDevButtonListener());
         }
+    }
+
+    public void setCPreview() {
+        CPreview.setImageBitmap(ImageProcessing.getCVPreview());
     }
 }

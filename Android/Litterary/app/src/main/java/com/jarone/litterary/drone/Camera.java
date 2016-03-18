@@ -30,7 +30,7 @@ import dji.sdk.util.DjiLocationCoordinate2D;
  */
 public class Camera {
 
-    public static final DateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd kk:mm:ss", Locale.ENGLISH);
+    public static final DateFormat dateFormat = new SimpleDateFormat("yyyy-MMM-dd kk:mm:ss", Locale.ENGLISH);
     public static int requestedGimbalAngle = DJIDrone.getDjiGimbal().getGimbalPitchMaxAngle();
     /**
      * The callback which is executed when a photo is successfully taken. This will be changed
@@ -127,6 +127,12 @@ public class Camera {
     }
 
     public static void downloadPhotoList(final ArrayList<DJIMedia> list, final int index, final Runnable callback) {
+        if (list.size() == 0) {
+            MessageHandler.d("No Photos to Download!");
+            callback.run();
+            engageCameraMode();
+            return;
+        }
         Date date = parseDate(list.get(index).createTime);
         if (date != null) {
             MessageHandler.d("Downloading photo from " + date.toString());

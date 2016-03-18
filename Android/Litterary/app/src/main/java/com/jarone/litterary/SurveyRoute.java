@@ -6,6 +6,7 @@ import android.os.Environment;
 import com.google.android.gms.maps.model.LatLng;
 import com.jarone.litterary.drone.Camera;
 import com.jarone.litterary.drone.GroundStation;
+import com.jarone.litterary.helpers.ContextManager;
 import com.jarone.litterary.helpers.FileAccess;
 import com.jarone.litterary.helpers.LocationHelper;
 import com.jarone.litterary.imageproc.ImageProcessing;
@@ -93,6 +94,10 @@ public class SurveyRoute extends NavigationRoute{
         File f = new File(path);
         File files[] = f.listFiles();
 
+        if (files == null) {
+            return;
+        }
+
         ArrayList<File> surveyPhotos = new ArrayList<>();
 
         //We only care about photos with timestamps that fall within the survey time
@@ -107,6 +112,7 @@ public class SurveyRoute extends NavigationRoute{
         ArrayList<LatLng> litter = new ArrayList<>();
         for (File photo : surveyPhotos) {
             ArrayList<Point> points = ImageProcessing.identifyLitter(BitmapFactory.decodeFile(photo.getAbsolutePath()));
+            ContextManager.getMainActivityInstance().setCPreview();
             litter.addAll(
                     ImageProcessing.calculateGPSCoords(
                             points,
