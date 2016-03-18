@@ -25,10 +25,12 @@ import android.widget.TextView;
 import com.google.android.gms.maps.model.LatLng;
 import com.jarone.litterary.LitterApplication;
 import com.jarone.litterary.R;
+import com.jarone.litterary.SurveyRoute;
 import com.jarone.litterary.adapters.DebugMessageRecyclerAdapter;
 import com.jarone.litterary.adapters.ViewPagerAdapter;
 import com.jarone.litterary.control.AngularController;
 import com.jarone.litterary.datatypes.DebugItem;
+import com.jarone.litterary.drone.Camera;
 import com.jarone.litterary.drone.DroneState;
 import com.jarone.litterary.drone.Grabber;
 import com.jarone.litterary.drone.GroundStation;
@@ -182,10 +184,9 @@ public class MainActivity extends DJIBaseActivity {
                         GroundStation.setAngles(0, 0, 0, 1);
                         break;
                     case R.id.button_imgproc_2:
-                        if (grabber == null) {
-                            grabber = new Grabber();
-                        }
-                        grabber.sendCommand(Grabber.Commands.LOWER);
+                        SurveyRoute route = new SurveyRoute(new LatLng[20], 0, (short)0);
+                        route.setStartTime(Camera.parseDate("2016-03-01 12:00:00").getTime());
+                        route.downloadAndAnalyzeSurveyPhotos();
                         break;
                     case R.id.button_imgproc_3:
                         if (ImageProcessing.isTracking()) {
@@ -250,11 +251,16 @@ public class MainActivity extends DJIBaseActivity {
                                         //if (runningTasks.offer(newTask)) {
                                           //  newTask.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, mat);
                                         //}
-                                        final Bitmap result = ImageProcessing.processImage(mat);
+                                        ImageProcessing.setOriginalImage(mat);
+                                        if (ImageProcessing.isTracking()) {
+                                            ImageProcessing.trackObject();
+                                        } else {
+                                            ImageProcessing.processImage(mat);
+                                        }
                                         runOnUiThread(new Runnable() {
                                             @Override
                                             public void run() {
-                                                CPreview.setImageBitmap(result);
+                                                CPreview.setImageBitmap(ImageProcessing.getCVPreview());
                                             }
                                         });
                                         processing = false;

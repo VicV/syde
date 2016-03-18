@@ -133,6 +133,10 @@ public class ImageProcessing {
         Utils.bitmapToMat(frame, originalMat);
     }
 
+    public static void setOriginalImage(Mat mat) {
+        originalMat = mat;
+    }
+
     /**
      * Reads a bitmap image and stores it on currentMat
      *
@@ -246,19 +250,19 @@ public class ImageProcessing {
 //        Imgproc.threshold(processing, processing, mean.val[0] - 10, 255, Imgproc.THRESH_BINARY_INV);
 //        determineCannyThreshold(processing);
 //        Imgproc.Canny(processing, processing, lowThreshold, highThreshold);
-//        closeImage(processing);
-//        Imgproc.threshold(processing, processing, 0, 255, Imgproc.THRESH_BINARY);
-//        fillImage(processing);
-//
-//        //TODO determine below threshold parameter from the drone's altitude and FOV
-//        eliminateSmallBlobs(processing, Math.pow(metresToPixels(0.05, DroneState.getAltitude()), 2));
-//        Imgproc.threshold(processing, processing, 0, 255, Imgproc.THRESH_BINARY);
-//        clearBorders(processing);
-//
+        dilateImage(processingMat);
+        Imgproc.threshold(processingMat, processingMat, 0, 255, Imgproc.THRESH_BINARY);
+  //      fillImage(processingMat);
+////
+////        //TODO determine below threshold parameter from the drone's altitude and FOV
+//        eliminateSmallBlobs(processingMat, Math.pow(metresToPixels(0.05, DroneState.getAltitude()), 2));
+////        Imgproc.threshold(processing, processing, 0, 255, Imgproc.THRESH_BINARY);
+//        clearBorders(processingMat);
+////
         blobCentres = findBlobCentres(processingMat);
-//        for (Point p : blobCentres) {
-//            Imgproc.ellipse(processing, p, new Size(50, 50), 0, 0, 360, new Scalar(0, 0 ,255));
-//        }
+        for (Point p : blobCentres) {
+            Imgproc.ellipse(processingMat, p, new Size(50, 50), 0, 0, 360, new Scalar(0, 0 ,255));
+        }
         processingMat.copyTo(mat);
 
         //MEDIANBLUR NOT NECESSARY AND MAKES THINGS VERY SLOW --vic&adam
@@ -270,14 +274,14 @@ public class ImageProcessing {
     /**
      * Perform closing operation on the image, first downscaling to speed up processing
      */
-    public static void closeImage(Mat mat) {
+    public static void dilateImage(Mat mat) {
         int scaleFactor = 10;
         Mat element = Imgproc.getStructuringElement(Imgproc.MORPH_ELLIPSE, new Size(100 / scaleFactor, 100 / scaleFactor));
         //Rescale to smaller size to perform closing much faster
         int width = mat.width();
         int height = mat.height();
         Imgproc.resize(mat, mat, new Size(width / scaleFactor, height / scaleFactor));
-        Imgproc.morphologyEx(mat, mat, Imgproc.MORPH_CLOSE, element);
+        Imgproc.morphologyEx(mat, mat, Imgproc.MORPH_ERODE, element);
         Imgproc.resize(mat, mat, new Size(width, height));
     }
 
@@ -415,6 +419,9 @@ public class ImageProcessing {
     public static Point closestToCentre(ArrayList<Point> points) {
         double minDistance = 99999;
         Point minPoint = null;
+        if (points == null) {
+            return null;
+        }
         for (Point p : points) {
             double distance = pixelDistance(p, new Point(currentMat.width() / 2, currentMat.height() / 2));
             if (distance < minDistance) {

@@ -30,7 +30,7 @@ import dji.sdk.util.DjiLocationCoordinate2D;
  */
 public class Camera {
 
-    public static final DateFormat dateFormat = new SimpleDateFormat("yyyy-MMM-dd kk:mm:ss", Locale.ENGLISH);
+    public static final DateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd kk:mm:ss", Locale.ENGLISH);
     public static int requestedGimbalAngle = DJIDrone.getDjiGimbal().getGimbalPitchMaxAngle();
     /**
      * The callback which is executed when a photo is successfully taken. This will be changed
