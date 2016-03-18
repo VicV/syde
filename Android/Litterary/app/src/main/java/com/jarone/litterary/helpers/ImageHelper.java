@@ -1,11 +1,11 @@
 package com.jarone.litterary.helpers;
 
 import android.graphics.Bitmap;
-import android.opengl.GLES30;
 import android.opengl.GLSurfaceView;
 
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
+import java.nio.ShortBuffer;
 
 import javax.microedition.khronos.egl.EGL10;
 import javax.microedition.khronos.egl.EGLContext;
@@ -49,31 +49,35 @@ public class ImageHelper {
 
     public static Bitmap getBitmapFromGLSurface(int w, int h, GL10 gl) {
 
-        if (w == 0 || h == 0) {
-            return null;
-        }
-        if (runningBitmap == null) {
-            runningBitmap = Bitmap.createBitmap(w, h, Bitmap.Config.RGB_565);
+        if (gl != null && w != 0 && h != 0) {
+            int screenshotSize = w * h;
+            ByteBuffer bb = ByteBuffer.allocateDirect(screenshotSize * 4);
+            bb.order(ByteOrder.nativeOrder());
+            gl.glReadPixels(0, 0, w, h, GL10.GL_RGBA, GL10.GL_UNSIGNED_BYTE, bb);
+            int pixelsBuffer[] = new int[screenshotSize];
+            bb.asIntBuffer().get(pixelsBuffer);
+            Bitmap bitmap = Bitmap.createBitmap(w, h,
+                    Bitmap.Config.RGB_565);
 
-        }
+            bitmap.setPixels(pixelsBuffer, screenshotSize - w, -w, 0,
+                    0, w, h);
 
-        if (runningByteBuffer == null) {
-            runningByteBuffer = ByteBuffer.allocateDirect(w * h * 4);
-            runningByteBuffer = runningByteBuffer.order(ByteOrder.nativeOrder());
-        }
+            short sBuffer[] = new short[screenshotSize];
+            ShortBuffer sb = ShortBuffer.wrap(sBuffer);
+            bitmap.copyPixelsToBuffer(sb);
 
-        if (pixelsBuffer == null) {
-            pixelsBuffer = new int[w * h];
-        }
-
-        if (w != 0 && h != 0) {
-            gl.glReadPixels(0, 0, w, h, GLES30.GL_RGBA, GLES30.GL_UNSIGNED_BYTE, runningByteBuffer);
-            runningByteBuffer.asIntBuffer().get(pixelsBuffer);
-            runningBitmap.setPixels(pixelsBuffer, (w * h) - w, -w, 0, 0, w, h);
-            runningByteBuffer.clear();
-            return runningBitmap;
+            // Making created bitmap (from OpenGL points) compatible with
+            // Android bitmap
+            for (int i = 0; i < screenshotSize; ++i) {
+                short v = sBuffer[i];
+                sBuffer[i] = (short) (((v & 0x1f) << 11) | (v & 0x7e0) | ((v & 0xf800) >> 11));
+            }
+            sb.rewind();
+            bitmap.copyPixelsFromBuffer(sb);
+            return bitmap.copy(Bitmap.Config.ARGB_8888, false);
         }
         return null;
     }
-
 }
+
+

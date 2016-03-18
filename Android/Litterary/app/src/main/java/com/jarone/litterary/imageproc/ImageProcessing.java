@@ -73,7 +73,6 @@ public class ImageProcessing {
     private static final double imageX = 4384;
     private static final double imageY = 2466;
 
-
     private static ArrayList<Point> blobCentres;
 
     public static BaseLoaderCallback loaderCallback = new BaseLoaderCallback(ContextManager.getContext()) {
