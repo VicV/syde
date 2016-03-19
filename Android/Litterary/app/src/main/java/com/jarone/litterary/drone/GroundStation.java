@@ -211,7 +211,6 @@ public class GroundStation {
      * Set a new altitude for the drone. Simply calls {@link #addPoint(double, double, float, float)} with old values and the new altitude.
      */
     public static void setAltitude(float altitude) {
-        DroneState.updateDroneState();
         if (!DroneState.hasValidLocation()) {
             MessageHandler.d("Invalid GPS Coordinates");
             return;

@@ -69,12 +69,15 @@ public class DroneState {
     private static ScheduledFuture connectedTimer;
 
     public static void registerConnectedTimer() {
+        if (connectedTimer != null) {
+            connectedTimer.cancel(true);
+        }
         connectedTimer = LitterApplication.getInstance().getScheduler().scheduleAtFixedRate(new Runnable() {
             @Override
             public void run() {
                 droneConnected = false;
-                registerBatteryUpdate();
-                GroundStation.registerPhantom2Callback();
+                //registerBatteryUpdate();
+                //GroundStation.registerPhantom2Callback();
                 Camera.setGimbalDown();
             }
         }, 5000, 5000, TimeUnit.MILLISECONDS);
