@@ -14,6 +14,7 @@ import org.opencv.android.Utils;
 import org.opencv.core.Core;
 import org.opencv.core.CvType;
 import org.opencv.core.Mat;
+import org.opencv.core.MatOfDouble;
 import org.opencv.core.MatOfFloat;
 import org.opencv.core.MatOfInt;
 import org.opencv.core.MatOfPoint;
@@ -238,49 +239,89 @@ public class ImageProcessing {
         mat.copyTo(processingMat);
 //
         ArrayList<Mat> channels = new ArrayList<>();
+        //Imgproc.blur(processingMat, processingMat, new Size(50, 50));
+        //Imgproc.GaussianBlur(processingMat, processingMat, new Size(15, 15), 0);
         Core.split(processingMat, channels);
         if (channels.size() < 3) {
             return blobCentres;
         }
-        Scalar rMean = Core.mean(channels.get(0));
-        Scalar gMean = Core.mean(channels.get(1));
-        Scalar bMean = Core.mean(channels.get(2));
 
-        Imgproc.threshold(channels.get(0), r, rMean.val[0] - 30, 255, Imgproc.THRESH_BINARY_INV);
-        Imgproc.threshold(channels.get(1), b, gMean.val[0] - 30, 255, Imgproc.THRESH_BINARY_INV);
-        Imgproc.threshold(channels.get(2), g, bMean.val[0] - 30, 255, Imgproc.THRESH_BINARY_INV);
+        MatOfDouble means = new MatOfDouble();
+        MatOfDouble stds = new MatOfDouble();
+        Core.meanStdDev(processingMat, means, stds);
 
-        Core.add(r, b, processingMat);
-        Core.add(processingMat, g, processingMat);
+        double minStd = 999999;
+        int mindex = 0;
+        for (int i = 0; i < 3; i++) {
+            if (stds.get(i, 0)[0] < minStd) {
+                mindex = i;
+            }
+        }
+        Imgproc.threshold(channels.get(0), r, means.get(0, 0)[0] + 30, 255, Imgproc.THRESH_BINARY);
+        Imgproc.threshold(channels.get(1), b, means.get(1, 0)[0] + 30, 255, Imgproc.THRESH_BINARY);
+        Imgproc.threshold(channels.get(2), g, means.get(2, 0)[0] + 30, 255, Imgproc.THRESH_BINARY);
+
+        ArrayList<Double> cMeans = new ArrayList<>();
+        cMeans.add(Core.mean(r).val[0]);
+        cMeans.add(Core.mean(g).val[0]);
+        cMeans.add(Core.mean(b).val[0]);
+
+        morphImage(r, Imgproc.MORPH_ERODE, 40);
+        morphImage(g, Imgproc.MORPH_ERODE, 40);
+        morphImage(b, Imgproc.MORPH_ERODE, 40);
+
+        double minMean = 0;
+        mindex = 0;
+        for (int i = 0; i < 3; i++) {
+            if (cMeans.get(i) > minMean) {
+                minMean = cMeans.get(i);
+                mindex = i;
+            }
+        }
+
+        if (mindex == 0) {
+            r.copyTo(processingMat);
+        } else if (mindex == 1) {
+            g.copyTo(processingMat);
+        } else if (mindex == 2) {
+            b.copyTo(processingMat);
+        }
 
 
-//        Imgproc.cvtColor(processing, processing, Imgproc.COLOR_BGR2GRAY);
+//        Imgproc.adaptiveThreshold(channels.get(0), r, 255, Imgproc.ADAPTIVE_THRESH_MEAN_C, Imgproc.THRESH_BINARY, 151, -30);
+//        Imgproc.adaptiveThreshold(channels.get(1), b, 255, Imgproc.ADAPTIVE_THRESH_MEAN_C, Imgproc.THRESH_BINARY, 151, -30);
+//        Imgproc.adaptiveThreshold(channels.get(2), g, 255, Imgproc.ADAPTIVE_THRESH_MEAN_C, Imgproc.THRESH_BINARY, 151, -30);
+
+//        double total = 1 / stds.get(0,0)[0] + 1 / stds.get(1,0)[0] + 1 / stds.get(2,0)[0];
+
+        //  Core.add(r, b, processingMat);
+        // Core.add(processingMat, g, processingMat);
+        //Core.addWeighted(r, 1/stds.get(0,0)[0], b, 1/stds.get(1,0)[0], 1, processingMat);
+        //Core.addWeighted(processingMat, 1, g,, 1/stds.get(2,0)[0], 1,  processingMat);
+
+
+        //Imgproc.cvtColor(processingMat, processingMat, Imgproc.COLOR_BGR2GRAY);
 //        Scalar mean = Core.mean(processing);
 //        Imgproc.threshold(processing, processing, mean.val[0] - 10, 255, Imgproc.THRESH_BINARY_INV);
-//        determineCannyThreshold(processing);
-//        Imgproc.Canny(processing, processing, lowThreshold, highThreshold);
-        erodeImage(processingMat);
-        Imgproc.threshold(processingMat, processingMat, 0, 255, Imgproc.THRESH_BINARY);
-        //      fillImage(processingMat);
+        //determineCannyThreshold(processingMat);
+        //   Imgproc.Canny(processingMat, processingMat, lowThreshold, highThreshold);
+        //  morphImage(processingMat, Imgproc.MORPH_CLOSE, 30);
+        //Imgproc.threshold(processingMat, processingMat, 0, 255, Imgproc.THRESH_BINARY);
+        // clearBorders(processingMat);
+        //fillImage(processingMat);
+        //   morphImage(processingMat, Imgproc.MORPH_CLOSE, 60);
+
+
 ////
 ////        //TODO determine below threshold parameter from the drone's altitude and FOV
-//        eliminateSmallBlobs(processingMat, Math.pow(metresToPixels(0.05, DroneState.getAltitude()), 2));
-////        Imgproc.threshold(processing, processing, 0, 255, Imgproc.THRESH_BINARY);
-        clearBorders(processingMat);
-////
-//        Imgproc.threshold(processing, processing, 0, 255, Imgproc.THRESH_BINARY);
-//        fillImage(processing);
-//
-//        //TODO determine below threshold parameter from the drone's altitude and FOV
-//        eliminateSmallBlobs(processing, Math.pow(metresToPixels(0.05, DroneState.getAltitude()), 2));
-        Imgproc.threshold(processingMat, processingMat, 0, 255, Imgproc.THRESH_BINARY);
-//        clearBorders(processing);
-//
+        //  eliminateSmallBlobs(processingMat, Math.pow(metresToPixels(0.05, DroneState.getAltitude()), 2));
+
         blobCentres = findBlobCentres(processingMat);
 
-        for (Point p : blobCentres) {
-            Imgproc.ellipse(processingMat, p, new Size(50, 50), 0, 0, 360, new Scalar(0, 0, 255));
-        }
+//        for (Point p : blobCentres) {
+//            Imgproc.ellipse(processingMat, p, new Size(50, 50), 0, 0, 360, new Scalar(0, 0 ,255));
+//        }
+
         processingMat.copyTo(mat);
 
         //MEDIANBLUR NOT NECESSARY AND MAKES THINGS VERY SLOW --vic&adam
@@ -295,14 +336,18 @@ public class ImageProcessing {
     /**
      * Perform closing operation on the image, first downscaling to speed up processing
      */
-    public static void erodeImage(Mat mat) {
-        int scaleFactor = 10;
-        Mat element = Imgproc.getStructuringElement(Imgproc.MORPH_ELLIPSE, new Size(100 / scaleFactor, 100 / scaleFactor));
+    public static void morphImage(Mat mat, int operation, int size) {
+        int scaleFactor = 5;
+        Mat element = Imgproc.getStructuringElement(Imgproc.MORPH_ELLIPSE, new Size(size / scaleFactor, size / scaleFactor));
+        // Mat element2 = Imgproc.getStructuringElement(Imgproc.MORPH_ELLIPSE, new Size(3, 3));
+
         //Rescale to smaller size to perform closing much faster
         int width = mat.width();
         int height = mat.height();
         Imgproc.resize(mat, mat, new Size(width / scaleFactor, height / scaleFactor));
-        Imgproc.morphologyEx(mat, mat, Imgproc.MORPH_ERODE, element);
+        //Imgproc.morphologyEx(mat, mat, Imgproc.MORPH_DILATE, element);
+        Imgproc.morphologyEx(mat, mat, operation, element);
+
         Imgproc.resize(mat, mat, new Size(width, height));
     }
 

@@ -18,12 +18,12 @@ public class DJIBaseActivity extends FragmentActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        DroneState.updateDroneState();
     }
 
     @Override
     protected void onResume() {
         super.onResume();
+        DroneState.updateDroneState();
         DJIDrone.getDjiMC().startUpdateTimer(1000);
         DJIDrone.getDjiBattery().startUpdateTimer(2000);
         if (!OpenCVLoader.initDebug()) {
