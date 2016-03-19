@@ -25,10 +25,12 @@ import android.widget.TextView;
 import com.google.android.gms.maps.model.LatLng;
 import com.jarone.litterary.LitterApplication;
 import com.jarone.litterary.R;
+import com.jarone.litterary.SurveyRoute;
 import com.jarone.litterary.adapters.DebugMessageRecyclerAdapter;
 import com.jarone.litterary.adapters.ViewPagerAdapter;
 import com.jarone.litterary.control.AngularController;
 import com.jarone.litterary.datatypes.DebugItem;
+import com.jarone.litterary.drone.Camera;
 import com.jarone.litterary.drone.DroneState;
 import com.jarone.litterary.drone.Grabber;
 import com.jarone.litterary.drone.GroundStation;
@@ -40,7 +42,8 @@ import com.jarone.litterary.helpers.WifiHelper;
 import com.jarone.litterary.imageproc.ImageProcessing;
 import com.jarone.litterary.views.AndroidCameraSurfaceView;
 
-import org.opencv.android.CameraGLSurfaceView;
+import org.opencv.android.CameraBridgeViewBase;
+import org.opencv.core.Mat;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -67,7 +70,7 @@ public class MainActivity extends DJIBaseActivity {
     public static ArrayList<DebugItem> messageList;
 
     private DjiGLSurfaceView mDjiGLSurfaceView;
-    private CameraGLSurfaceView mAndroidCameraSurfaceView;
+    private CameraBridgeViewBase mAndroidCameraSurfaceView;
     private AndroidCameraSurfaceView mAndroidCameraSurfaceViewOld;
 
     private ImageView CPreview;
@@ -83,6 +86,9 @@ public class MainActivity extends DJIBaseActivity {
     private boolean canStartProcessing = false;
 
     Grabber grabber;
+
+    private CameraBridgeViewBase mOpenCvCameraView;
+
 
     //Activity is starting.
     @Override
@@ -178,10 +184,9 @@ public class MainActivity extends DJIBaseActivity {
                         GroundStation.setAngles(0, 0, 0, 1);
                         break;
                     case R.id.button_imgproc_2:
-                        if (grabber == null) {
-                            grabber = new Grabber();
-                        }
-                        grabber.sendCommand(Grabber.Commands.LOWER);
+                        SurveyRoute route = new SurveyRoute(new LatLng[20], 0, (short)0);
+                        route.setStartTime(Camera.parseDate("2016-Mar-01 12:00:00").getTime());
+                        route.downloadAndAnalyzeSurveyPhotos();
                         break;
                     case R.id.button_imgproc_3:
                         if (ImageProcessing.isTracking()) {
@@ -218,16 +223,6 @@ public class MainActivity extends DJIBaseActivity {
                         break;
                     case R.id.button_special_3:
                         canStartProcessing = true;
-//                        ImageProcessing.loadCalibration();
-//                        try {
-//                            InputStream i = ContextManager.getActivity().getAssets().open("c2.jpg");
-//                            Bitmap decoded = BitmapFactory.decodeStream(i);
-//                            int nh = (int) (decoded.getHeight() * (2000.0 / decoded.getWidth()));
-//                            Bitmap scaled = Bitmap.createScaledBitmap(decoded, 2000, nh, true);
-//                            ImageProcessing.readFrame(scaled);
-//                            ImageProcessing.correctDistortion();
-//                        } catch (IOException e) {
-//                        }
                         break;
                     case R.id.button_special_camera:
                         if (mDjiGLSurfaceView.getVisibility() != View.GONE) {
@@ -235,7 +230,8 @@ public class MainActivity extends DJIBaseActivity {
                             mDjiGLSurfaceView.pause();
                             mDjiGLSurfaceView.destroy();
                             mAndroidCameraSurfaceView.setVisibility(View.VISIBLE);
-                            mAndroidCameraSurfaceView.setCameraTextureListener(new CameraGLSurfaceView.CameraTextureListener() {
+                            mAndroidCameraSurfaceView.enableView();
+                            mAndroidCameraSurfaceView.setCvCameraViewListener(new CameraBridgeViewBase.CvCameraViewListener2() {
                                 @Override
                                 public void onCameraViewStarted(int i, int i1) {
 
@@ -247,9 +243,30 @@ public class MainActivity extends DJIBaseActivity {
                                 }
 
                                 @Override
-                                public boolean onCameraTexture(int i, int i1, int i2, int i3) {
-                                    processFrame();
-                                    return false;
+                                public Mat onCameraFrame(CameraBridgeViewBase.CvCameraViewFrame cvCameraViewFrame) {
+                                    Mat mat = cvCameraViewFrame.rgba();
+                                    if (!processing) {
+                                        processing = true;
+                                        //ImageDirectFromCameraAsyncTask newTask = new ImageDirectFromCameraAsyncTask();
+                                        //if (runningTasks.offer(newTask)) {
+                                          //  newTask.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, mat);
+                                        //}
+                                        ImageProcessing.setOriginalImage(mat);
+                                        if (ImageProcessing.isTracking()) {
+                                            ImageProcessing.trackObject();
+                                        } else {
+                                            ImageProcessing.processImage(mat);
+                                        }
+                                        runOnUiThread(new Runnable() {
+                                            @Override
+                                            public void run() {
+                                                CPreview.setImageBitmap(ImageProcessing.getCVPreview());
+                                            }
+                                        });
+                                        processing = false;
+                                    }
+
+                                    return cvCameraViewFrame.rgba();
                                 }
                             });
                         }
@@ -268,6 +285,8 @@ public class MainActivity extends DJIBaseActivity {
         };
     }
 
+    boolean processing = false;
+
     public View.OnClickListener getCameraViewListener() {
         return new View.OnClickListener() {
             @Override
@@ -277,11 +296,9 @@ public class MainActivity extends DJIBaseActivity {
         };
     }
 
-    private boolean processing = false;
-
     private void registerCamera() {
         mAndroidCameraSurfaceViewOld = (AndroidCameraSurfaceView) findViewById(R.id.android_camera_surfaceview_jacinta);
-        mAndroidCameraSurfaceView = (CameraGLSurfaceView) findViewById(R.id.android_camera_surfaceview);
+        mAndroidCameraSurfaceView = (CameraBridgeViewBase) findViewById(R.id.android_camera_surfaceview);
         mDjiGLSurfaceView = (DjiGLSurfaceView) findViewById(R.id.DJI_camera_surfaceview);
         mDjiGLSurfaceView.start();
 
@@ -298,17 +315,13 @@ public class MainActivity extends DJIBaseActivity {
         DJIDrone.getDjiCamera().setReceivedVideoDataCallBack(mReceivedVideoDataCallBack);
     }
 
-    public ArrayBlockingQueue<ImageAsyncTask> runningTasks = new ArrayBlockingQueue<>(5);
+    public ArrayBlockingQueue<AsyncTask> runningTasks = new ArrayBlockingQueue<>(1);
 
     public void processFrame() {
         ImageAsyncTask newTask = new ImageAsyncTask();
         if (runningTasks.offer(newTask)) {
-            newTask.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, mDjiGLSurfaceView.getVisibility() == View.GONE ? (mAndroidCameraSurfaceView.getVisibility() == View.GONE ? mAndroidCameraSurfaceViewOld : mAndroidCameraSurfaceView) : mDjiGLSurfaceView);
+            newTask.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, mDjiGLSurfaceView.getVisibility() == View.GONE ? mAndroidCameraSurfaceViewOld : mDjiGLSurfaceView);
         }
-    }
-
-    public void setProcessing(boolean processing) {
-        this.processing = processing;
     }
 
     public class ImageAsyncTask extends AsyncTask<GLSurfaceView, Void, Void> {
@@ -349,6 +362,24 @@ public class MainActivity extends DJIBaseActivity {
         @Override
         protected void onPostExecute(Void aVoid) {
             super.onPostExecute(aVoid);
+        }
+    }
+
+    public class ImageDirectFromCameraAsyncTask extends AsyncTask<Mat, Bitmap, Bitmap> {
+
+        private ImageDirectFromCameraAsyncTask context = this;
+
+        @Override
+        protected Bitmap doInBackground(Mat... params) {
+            return ImageProcessing.processImage(params[0]);
+        }
+
+        @Override
+        protected void onPostExecute(Bitmap processedImage) {
+            CPreview.setImageBitmap(processedImage);
+            processing = false;
+            runningTasks.remove(context);
+            super.onPostExecute(processedImage);
         }
     }
 
@@ -509,8 +540,7 @@ public class MainActivity extends DJIBaseActivity {
             @TargetApi(Build.VERSION_CODES.LOLLIPOP)
             @Override
             public void run() {
-                String currentSSID = wifiManager.getConnectionInfo().getSSID();
-                if (!currentSSID.equals(lastWifi) && wifiManager.getConnectionInfo().getSSID().contains("Phantom")) {
+                if (!wifiManager.getConnectionInfo().getSSID().equals(lastWifi) && wifiManager.getConnectionInfo().getSSID().contains("Phantom")) {
                     lastWifi = wifiManager.getConnectionInfo().getSSID();
                     connectIcon.setImageDrawable(getDrawable(R.drawable.wifi_connected_small));
                     connectText.setText("connected");
@@ -762,5 +792,9 @@ public class MainActivity extends DJIBaseActivity {
             findViewById(R.id.button_imgproc_2).setOnClickListener(getDevButtonListener());
             findViewById(R.id.button_imgproc_3).setOnClickListener(getDevButtonListener());
         }
+    }
+
+    public void setCPreview() {
+        CPreview.setImageBitmap(ImageProcessing.getCVPreview());
     }
 }

@@ -127,6 +127,12 @@ public class Camera {
     }
 
     public static void downloadPhotoList(final ArrayList<DJIMedia> list, final int index, final Runnable callback) {
+        if (list.size() == 0) {
+            MessageHandler.d("No Photos to Download!");
+            callback.run();
+            engageCameraMode();
+            return;
+        }
         Date date = parseDate(list.get(index).createTime);
         if (date != null) {
             MessageHandler.d("Downloading photo from " + date.toString());

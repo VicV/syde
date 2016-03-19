@@ -5,7 +5,6 @@ import android.graphics.BitmapFactory;
 
 import com.google.android.gms.maps.model.LatLng;
 import com.jarone.litterary.control.AngularController;
-import com.jarone.litterary.drone.DroneState;
 import com.jarone.litterary.handlers.MessageHandler;
 import com.jarone.litterary.helpers.ContextManager;
 
@@ -45,6 +44,14 @@ public class ImageProcessing {
 
     //For the tracking algorithm (keep track of coloured image)
     private static Mat originalMat;
+
+    private static Mat processingMat;
+
+    private static Mat r;
+    private static Mat g;
+    private static Mat b;
+
+    private static Mat temp;
 
     //Stores the list of blobs detected from the current Mat
     private static ArrayList<MatOfPoint> currentBlobs;
@@ -106,13 +113,31 @@ public class ImageProcessing {
     }
 
     /**
+     * Identifies litter in a mat and returns the processed image as a bitmap
+     *
+     * @return
+     */
+    public static Bitmap processImage(Mat mat) {
+        identifyLitterMatFromMat(mat);
+        convertFrame(mat);
+        mat.release();
+        return CVPreview;
+    }
+
+    /**
      * Set the "original" unmodified image as a Mat
      *
      * @param frame
      */
     public static void setOriginalImage(Bitmap frame) {
-        originalMat = new Mat();
+        if (originalMat == null) {
+            originalMat = new Mat();
+        }
         Utils.bitmapToMat(frame, originalMat);
+    }
+
+    public static void setOriginalImage(Mat mat) {
+        originalMat = mat;
     }
 
     /**
@@ -124,6 +149,9 @@ public class ImageProcessing {
         Utils.bitmapToMat(image, currentMat);
     }
 
+
+    private static Mat bitmapToMat;
+
     /***
      * Identify blobs on the given Mat and return the identified litter points
      *
@@ -131,19 +159,27 @@ public class ImageProcessing {
      * @return
      */
     public static ArrayList<Point> identifyLitter(Bitmap photo) {
-        Mat mat = new Mat();
-        Utils.bitmapToMat(photo, mat);
+        if (bitmapToMat == null) {
+            bitmapToMat = new Mat();
+        }
+        Utils.bitmapToMat(photo, bitmapToMat);
         //correctDistortion();
-        ArrayList<Point> points = detectBlobs(mat);
-        ContextManager.getMainActivityInstance().setProcessing(false);
+        ArrayList<Point> points = detectBlobs(bitmapToMat);
         return points;
     }
 
     public static Mat identifyLitterMat(Bitmap photo) {
-        Mat mat = new Mat();
-        Utils.bitmapToMat(photo, mat);
-        ArrayList<Point> points = detectBlobs(mat);
-        ContextManager.getMainActivityInstance().setProcessing(false);
+        if (bitmapToMat == null) {
+            bitmapToMat = new Mat();
+        }
+        Utils.bitmapToMat(photo, bitmapToMat);
+        ArrayList<Point> points = detectBlobs(bitmapToMat);
+        return bitmapToMat;
+    }
+
+    public static Mat identifyLitterMatFromMat(Mat mat) {
+        //ArrayList<Point> points = detectBlobs(mat);
+        detectBlobs(mat);
         return mat;
     }
 
@@ -184,26 +220,38 @@ public class ImageProcessing {
             return null;
         }
 
-        Mat processing = new Mat();
-        mat.copyTo(processing);
+        if (processingMat == null) {
+            processingMat = new Mat();
+        }
+
+        if (r == null) {
+            r = new Mat();
+        }
+        if (g == null) {
+            g = new Mat();
+        }
+        if (b == null) {
+            b = new Mat();
+        }
+
+//        Mat processing = new Mat();
+        mat.copyTo(processingMat);
+//
         ArrayList<Mat> channels = new ArrayList<>();
-        Core.split(processing, channels);
+        Core.split(processingMat, channels);
+        if (channels.size() < 3) {
+            return blobCentres;
+        }
         Scalar rMean = Core.mean(channels.get(0));
         Scalar gMean = Core.mean(channels.get(1));
         Scalar bMean = Core.mean(channels.get(2));
-        Mat r = new Mat();
-        Mat b = new Mat();
-        Mat g = new Mat();
+
         Imgproc.threshold(channels.get(0), r, rMean.val[0] - 30, 255, Imgproc.THRESH_BINARY_INV);
         Imgproc.threshold(channels.get(1), b, gMean.val[0] - 30, 255, Imgproc.THRESH_BINARY_INV);
         Imgproc.threshold(channels.get(2), g, bMean.val[0] - 30, 255, Imgproc.THRESH_BINARY_INV);
 
-        Mat output = new Mat();
-
-        Core.add(r, b, output);
-        Core.add(output, g, output);
-        output.copyTo(processing);
-        closeImage(processing);
+        Core.add(r, b, processingMat);
+        Core.add(processingMat, g, processingMat);
 
 
 //        Imgproc.cvtColor(processing, processing, Imgproc.COLOR_BGR2GRAY);
@@ -211,38 +259,50 @@ public class ImageProcessing {
 //        Imgproc.threshold(processing, processing, mean.val[0] - 10, 255, Imgproc.THRESH_BINARY_INV);
 //        determineCannyThreshold(processing);
 //        Imgproc.Canny(processing, processing, lowThreshold, highThreshold);
-//        closeImage(processing);
+        erodeImage(processingMat);
+        Imgproc.threshold(processingMat, processingMat, 0, 255, Imgproc.THRESH_BINARY);
+  //      fillImage(processingMat);
+////
+////        //TODO determine below threshold parameter from the drone's altitude and FOV
+//        eliminateSmallBlobs(processingMat, Math.pow(metresToPixels(0.05, DroneState.getAltitude()), 2));
+////        Imgproc.threshold(processing, processing, 0, 255, Imgproc.THRESH_BINARY);
+        clearBorders(processingMat);
+////
 //        Imgproc.threshold(processing, processing, 0, 255, Imgproc.THRESH_BINARY);
 //        fillImage(processing);
 //
 //        //TODO determine below threshold parameter from the drone's altitude and FOV
-        eliminateSmallBlobs(processing, Math.pow(metresToPixels(0.05, DroneState.getAltitude()), 2));
-        Imgproc.threshold(processing, processing, 0, 255, Imgproc.THRESH_BINARY);
-        clearBorders(processing);
+//        eliminateSmallBlobs(processing, Math.pow(metresToPixels(0.05, DroneState.getAltitude()), 2));
+        Imgproc.threshold(processingMat, processingMat, 0, 255, Imgproc.THRESH_BINARY);
+//        clearBorders(processing);
+//
+        blobCentres = findBlobCentres(processingMat);
 
-        blobCentres = findBlobCentres(processing);
         for (Point p : blobCentres) {
-            Imgproc.ellipse(processing, p, new Size(50, 50), 0, 0, 360, new Scalar(0, 0 ,255));
+            Imgproc.ellipse(processingMat, p, new Size(50, 50), 0, 0, 360, new Scalar(0, 0 ,255));
         }
-        processing.copyTo(mat);
+        processingMat.copyTo(mat);
 
         //MEDIANBLUR NOT NECESSARY AND MAKES THINGS VERY SLOW --vic&adam
-//        Imgproc.medianBlur(processing, processing, 31);
-
+        //Imgproc.medianBlur(processing, processing, 31);
+        r.release();
+        g.release();
+        b.release();
+        processingMat.release();
         return blobCentres;
     }
 
     /**
      * Perform closing operation on the image, first downscaling to speed up processing
      */
-    public static void closeImage(Mat mat) {
+    public static void erodeImage(Mat mat) {
         int scaleFactor = 10;
         Mat element = Imgproc.getStructuringElement(Imgproc.MORPH_ELLIPSE, new Size(100 / scaleFactor, 100 / scaleFactor));
         //Rescale to smaller size to perform closing much faster
         int width = mat.width();
         int height = mat.height();
         Imgproc.resize(mat, mat, new Size(width / scaleFactor, height / scaleFactor));
-        Imgproc.morphologyEx(mat, mat, Imgproc.MORPH_CLOSE, element);
+        Imgproc.morphologyEx(mat, mat, Imgproc.MORPH_ERODE, element);
         Imgproc.resize(mat, mat, new Size(width, height));
     }
 
@@ -259,14 +319,13 @@ public class ImageProcessing {
      *
      * @return
      */
-    public static Bitmap convertFrame(Mat mat) {
+    public static void convertFrame(Mat mat) {
         if (CVPreview == null && mat != null && mat.width() > 0) {
             CVPreview = Bitmap.createBitmap(mat.width(), mat.height(), Bitmap.Config.RGB_565);
         } else if (mat == null || mat.width() <= 0) {
-            return null;
+            return;
         }
         Utils.matToBitmap(mat, CVPreview);
-        return CVPreview;
     }
 
     /**
@@ -332,7 +391,7 @@ public class ImageProcessing {
     public static ArrayList<Point> findBlobCentres(Mat mat) {
         Mat temp = mat.clone();
         ArrayList<MatOfPoint> contours = new ArrayList<>();
-        Imgproc.findContours(temp, contours, new Mat(), Imgproc.RETR_CCOMP, Imgproc.CHAIN_APPROX_SIMPLE);
+        Imgproc.findContours(temp, contours, temp, Imgproc.RETR_CCOMP, Imgproc.CHAIN_APPROX_SIMPLE);
         temp.release();
         currentBlobs = contours;
         ArrayList<Point> centres = new ArrayList<>();
@@ -381,6 +440,9 @@ public class ImageProcessing {
     public static Point closestToCentre(ArrayList<Point> points) {
         double minDistance = 99999;
         Point minPoint = null;
+        if (points == null) {
+            return null;
+        }
         for (Point p : points) {
             double distance = pixelDistance(p, new Point(currentMat.width() / 2, currentMat.height() / 2));
             if (distance < minDistance) {
@@ -427,7 +489,6 @@ public class ImageProcessing {
         double degrees = Math.atan(metres / altitude);
         return degrees / CAMERA_FOVX * imageX;
     }
-
 
     public static ArrayList<Point> getBlobCentres() {
         return blobCentres;

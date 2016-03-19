@@ -70,7 +70,6 @@ public class ImageHelper {
         runningBitmap.setPixels(pixelsBuffer, (w * h) - w, -w, 0, 0, w, h);
         runningByteBuffer.clear();
         return runningBitmap;
-
     }
 
 }
