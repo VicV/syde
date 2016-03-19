@@ -184,7 +184,7 @@ public class MainActivity extends DJIBaseActivity {
                         GroundStation.setAngles(0, 0, 0, 1);
                         break;
                     case R.id.button_imgproc_2:
-                        SurveyRoute route = new SurveyRoute(new LatLng[20], 0, (short)0);
+                        SurveyRoute route = new SurveyRoute(new LatLng[20], 0, (short) 0);
                         route.setStartTime(Camera.parseDate("2016-Mar-01 12:00:00").getTime());
                         route.downloadAndAnalyzeSurveyPhotos();
                         break;
@@ -249,7 +249,7 @@ public class MainActivity extends DJIBaseActivity {
                                         processing = true;
                                         //ImageDirectFromCameraAsyncTask newTask = new ImageDirectFromCameraAsyncTask();
                                         //if (runningTasks.offer(newTask)) {
-                                          //  newTask.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, mat);
+                                        //  newTask.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, mat);
                                         //}
                                         ImageProcessing.setOriginalImage(mat);
                                         if (ImageProcessing.isTracking()) {
@@ -530,6 +530,7 @@ public class MainActivity extends DJIBaseActivity {
         targetLocation = ((TextView) findViewById(R.id.targetLocation));
         droneConnectedText = ((TextView) findViewById(R.id.droneConnected));
         modeButton = (ImageView) findViewById(R.id.switch_mode_icon);
+        interfaceSetup = true;
     }
 
     private void updateInterface() {
@@ -659,6 +660,13 @@ public class MainActivity extends DJIBaseActivity {
         //This automatically sets up the tabs and everything for us.
         tabLayout.setupWithViewPager(viewPager);
     }
+
+
+    public void setCollection(long[][] collection) {
+        this.collection = collection;
+    }
+
+    public long[][] collection = null;
 
 
     public View.OnClickListener getHomeButtonListener() {

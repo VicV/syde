@@ -4,6 +4,7 @@ import com.google.android.gms.maps.model.LatLng;
 import com.jarone.litterary.drone.DroneState;
 import com.jarone.litterary.drone.GroundStation;
 import com.jarone.litterary.handlers.MessageHandler;
+import com.jarone.litterary.helpers.ContextManager;
 import com.jarone.litterary.helpers.LocationHelper;
 
 import java.util.ArrayList;
@@ -235,36 +236,50 @@ public class RouteOptimization {
 
         ArrayList<LatLng> bestRoute = new ArrayList();
 
+
+        ArrayList results = new ArrayList();
         RouteManager.removeAllPoints();
-
         RouteManager.addAllPhotoPoints(picturePoints);
+        Population pop = new Population(picturePoints.size(), true);
+        int startingEvolutions = 60;
+        int endingEvolutions = 1200;
+        int increments = 20;
 
-        // Initialize population
-        Population pop = new Population(50, true);
+        long[][] thislong = new long[3][(endingEvolutions - startingEvolutions) / increments];
 
-        MessageHandler.d("Initial distance: " + pop.getFittest().getDistance());
-        long startTime = System.currentTimeMillis();
+        for (int j = startingEvolutions; j < endingEvolutions; j += increments) {
+            long startTime = System.currentTimeMillis();
+            // Initialize population
+            RouteManager.removeAllPoints();
+            //TODO: Modify this too
+            RouteManager.addAllPhotoPoints(picturePoints);
+            MessageHandler.log("Initial distance: " + pop.getFittest().getDistance());
+            Population clone = pop;
+            MessageHandler.log("Iterations: " + j);
 
-        // Evolve population for 300 generations
-        pop = GeneticAlgorithm.evolvePopulation(pop);
+            for (int i = 0; i < j; i++) {
+                clone = GeneticAlgorithm.evolvePopulation(clone);
+            }
 
-        int iterations = 300;
-        MessageHandler.d("Iterations: " + iterations);
+            long endTime = System.currentTimeMillis();
 
-        for (int i = 0; i < iterations; i++) {
-            pop = GeneticAlgorithm.evolvePopulation(pop);
+            Route route = clone.getFittest();
+
+            MessageHandler.log("Final distance: " + route.getDistance() + ". Time: " + (endTime - startTime));
+
+            thislong[0][((j - startingEvolutions) / increments)] = j;
+            thislong[1][((j - startingEvolutions) / increments)] = (long) route.getDistance();
+            thislong[2][((j - startingEvolutions) / increments)] = (endTime - startTime);
+
         }
 
-        long endTime = System.currentTimeMillis();
-
-        Route route = pop.getFittest();
-
-        MessageHandler.d("Final distance: " + pop.getFittest().getDistance() + ". Time: " + (endTime - startTime));
+        ContextManager.getMainActivityInstance().setCollection(thislong);
 
 
-        for (PhotoPoint pt : route.getRoute()) {
-            bestRoute.add(new LatLng(pt.getLatitude(), pt.getLongitude()));
-        }
+//        for (PhotoPoint pt : route.getRoute()) {
+//            bestRoute.add(new LatLng(pt.getLatitude(), pt.getLongitude()));
+//        }
+
 
         return bestRoute;
 
