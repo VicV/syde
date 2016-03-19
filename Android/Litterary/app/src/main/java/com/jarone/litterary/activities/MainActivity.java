@@ -663,10 +663,25 @@ public class MainActivity extends DJIBaseActivity {
 
 
     public void setCollection(long[][] collection) {
-        this.collection = collection;
+        this.collection = new String[3];
+        String iterations = "";
+        String distance = "";
+        String time = "";
+
+        for (int i = 0; i < collection.length; i++) {
+            iterations = iterations + "\n" + String.valueOf(collection[0][i]);
+            distance = distance + "\n" + String.valueOf(collection[1][i]);
+            time = time + "\n" + String.valueOf(collection[2][i]);
+        }
+
+        this.collection[0] = iterations;
+        this.collection[1] = distance;
+        this.collection[2] = time;
+
+        MessageHandler.d("done");
     }
 
-    public long[][] collection = null;
+    public String[] collection = null;
 
 
     public View.OnClickListener getHomeButtonListener() {
