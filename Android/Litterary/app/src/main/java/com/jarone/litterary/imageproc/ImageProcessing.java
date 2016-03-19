@@ -61,6 +61,11 @@ public class ImageProcessing {
     private static double highThreshold;
     private static double lowThreshold;
 
+    //counter and threshold value for determining whether to retry object tracking
+    private static int counter = 0;
+    private static int counterThreshold = 10;
+
+
     //The Bitmap representation of the current result image
     private static Bitmap CVPreview = null;
     private static TrackingObject trackingObject;
@@ -602,6 +607,19 @@ public class ImageProcessing {
         trackedObject.currBox.angle = -trackedObject.currBox.angle;
         Imgproc.ellipse(originalMat, trackedObject.currBox, RECT_COLOR, 6);
         Utils.matToBitmap(originalMat, CVPreview);
+
+        if (trackedObject.currBox.size.height == 0)
+        {
+            counter++;
+            if (counter > counterThreshold) {
+                counter = 0;
+                Mat temp = originalMat.clone();
+                isTracking = false;
+                detectBlobs(temp);
+                startTrackingObject();
+                temp.release();
+            }
+        }
     }
 
     /**
@@ -619,7 +637,6 @@ public class ImageProcessing {
                 trackObject();
             } else {
                 MessageHandler.d("Couldn't find object to track!");
-                stopTrackingObject();
             }
         } else {
             MessageHandler.d("Already Tracking...");
