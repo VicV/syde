@@ -261,7 +261,7 @@ public class ImageProcessing {
 //        Imgproc.Canny(processing, processing, lowThreshold, highThreshold);
         erodeImage(processingMat);
         Imgproc.threshold(processingMat, processingMat, 0, 255, Imgproc.THRESH_BINARY);
-  //      fillImage(processingMat);
+        //      fillImage(processingMat);
 ////
 ////        //TODO determine below threshold parameter from the drone's altitude and FOV
 //        eliminateSmallBlobs(processingMat, Math.pow(metresToPixels(0.05, DroneState.getAltitude()), 2));
@@ -279,7 +279,7 @@ public class ImageProcessing {
         blobCentres = findBlobCentres(processingMat);
 
         for (Point p : blobCentres) {
-            Imgproc.ellipse(processingMat, p, new Size(50, 50), 0, 0, 360, new Scalar(0, 0 ,255));
+            Imgproc.ellipse(processingMat, p, new Size(50, 50), 0, 0, 360, new Scalar(0, 0, 255));
         }
         processingMat.copyTo(mat);
 
@@ -495,6 +495,8 @@ public class ImageProcessing {
     }
 
     public static void createTrackedObject(Mat mRgba, Rect region) {
+        if (!isTracking)
+            return;
         trackedObject.hsv = new Mat(mRgba.size(), CvType.CV_8UC3);
         trackedObject.mask = new Mat(mRgba.size(), CvType.CV_8UC1);
         trackedObject.hue = new Mat(mRgba.size(), CvType.CV_8UC1);
@@ -516,7 +518,11 @@ public class ImageProcessing {
 
     public static void updateHueImage() {
 
+        if (!isTracking)
+            return;
+
         int vmin = 65, vmax = 256, smin = 55;
+
         //Mat is already a bgr image: convert to HSV color model
         Imgproc.cvtColor(originalMat, trackedObject.hsv, Imgproc.COLOR_BGR2HSV);
 
@@ -542,6 +548,7 @@ public class ImageProcessing {
         MatOfFloat ranges = new MatOfFloat(0f, 256f);
 
         updateHueImage();
+
         Imgproc.calcBackProject(trackedObject.hueArray, new MatOfInt(0), trackedObject.hist, trackedObject.prob, ranges, 255);
         Core.bitwise_and(trackedObject.prob, trackedObject.mask, trackedObject.prob, new Mat());
 
@@ -567,6 +574,7 @@ public class ImageProcessing {
                 trackObject();
             } else {
                 MessageHandler.d("Couldn't find object to track!");
+                stopTrackingObject();
             }
         } else {
             MessageHandler.d("Already Tracking...");
@@ -579,6 +587,6 @@ public class ImageProcessing {
     public static void stopTrackingObject() {
         MessageHandler.d("Stopped Tracking...");
         isTracking = false;
-        trackedObject = null;
+//        trackedObject = null;
     }
 }
