@@ -242,7 +242,7 @@ public class RouteOptimization {
         RouteManager.addAllPhotoPoints(picturePoints);
         Population pop = new Population(picturePoints.size(), true);
         int startingEvolutions = 60;
-        int endingEvolutions = 1020;
+        int endingEvolutions = 1060;
         int increments = 20;
 
         long[][] thislong = new long[3][(endingEvolutions - startingEvolutions) / increments];
