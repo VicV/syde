@@ -15,13 +15,10 @@ import dji.sdk.api.DJIDrone;
 
 public class DJIBaseActivity extends FragmentActivity {
 
-
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
     }
-
 
     @Override
     protected void onResume() {
@@ -30,10 +27,10 @@ public class DJIBaseActivity extends FragmentActivity {
         DJIDrone.getDjiMC().startUpdateTimer(1000);
         DJIDrone.getDjiBattery().startUpdateTimer(2000);
         if (!OpenCVLoader.initDebug()) {
-            MessageHandler.d("Internal OpenCV library not found. Using OpenCV Manager for initialization");
+            MessageHandler.log("Internal OpenCV library not found. Using OpenCV Manager for initialization");
             OpenCVLoader.initAsync(OpenCVLoader.OPENCV_VERSION_3_1_0, this, ImageProcessing.loaderCallback);
         } else {
-            MessageHandler.d("OpenCV library found inside package. Using it!");
+            MessageHandler.log("OpenCV library found inside package. Using it!");
             ImageProcessing.loaderCallback.onManagerConnected(LoaderCallbackInterface.SUCCESS);
         }
         DJIDrone.getDjiGroundStation().startUpdateTimer(1000);

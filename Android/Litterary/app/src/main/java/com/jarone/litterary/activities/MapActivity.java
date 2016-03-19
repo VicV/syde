@@ -118,7 +118,6 @@ public class MapActivity extends FragmentActivity implements OnMapReadyCallback 
             }
         }
 
-
         // Undo -- removes the last point and marker.
         // TODO: Undo drags
 

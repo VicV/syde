@@ -54,7 +54,6 @@ public class ImageHelper {
         }
         if (runningBitmap == null) {
             runningBitmap = Bitmap.createBitmap(w, h, Bitmap.Config.RGB_565);
-
         }
 
         if (runningByteBuffer == null) {

@@ -81,13 +81,13 @@ public class LitterApplication extends Application {
                         public void onGetPermissionResult(int result) {
                             if (result == 0) {
                                 // show success
-                                MessageHandler.d("onGetPermissionResult =" + result);
-                                MessageHandler.d(
+                                MessageHandler.log("onGetPermissionResult =" + result);
+                                MessageHandler.log(
                                         "onGetPermissionResultDescription=" + DJIError.getCheckPermissionErrorDescription(result));
                             } else {
                                 // show errors
-                                MessageHandler.d("onGetPermissionResult =" + result);
-                                MessageHandler.d("onGetPermissionResultDescription="
+                                MessageHandler.log("onGetPermissionResult =" + result);
+                                MessageHandler.log("onGetPermissionResultDescription="
                                         + DJIError.getCheckPermissionErrorDescription(result)
                                 );
                             }
