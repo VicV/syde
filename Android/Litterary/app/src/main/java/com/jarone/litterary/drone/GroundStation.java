@@ -136,6 +136,28 @@ public class GroundStation {
         });
     }
 
+    public static void withConnection(final Runnable run) {
+        DJIDrone.getDjiGroundStation().openGroundStation(new DJIGroundStationExecuteCallBack() {
+            @Override
+            public void onResult(DJIGroundStationTypeDef.GroundStationResult result) {
+                if (resultSuccess(result)) {
+                    DroneState.groundStationConnected = true;
+                    try {
+                        run.run();
+                        //handler.post(run);
+                    } catch (Exception e) {
+                        MessageHandler.d("Open Ground Station: " + e.toString());
+                    }
+                   // MessageHandler.d("Open Ground Station: SUCCESS");
+                } else {
+                    DroneState.groundStationConnected = false;
+                    MessageHandler.d("Open Ground Station: FAILURE");
+                }
+            }
+        });
+    }
+
+
     /**
      * Gives the queued task to the Drone and then executes it.
      */
@@ -342,7 +364,7 @@ public class GroundStation {
                 DJIDrone.getDjiGroundStation().setAircraftJoystick((int) yaw, (int) pitch, (int) roll, altitude, new DJIGroundStationExecuteCallBack() {
                     @Override
                     public void onResult(DJIGroundStationTypeDef.GroundStationResult groundStationResult) {
-                        //MessageHandler.log("Engage Joystick: " + groundStationResult.toString());
+                        MessageHandler.log("Engage Joystick: " + groundStationResult.toString());
                         if (resultSuccess(groundStationResult)) {
                             DroneState.setMode(DroneState.DIRECT_MODE);
                         }

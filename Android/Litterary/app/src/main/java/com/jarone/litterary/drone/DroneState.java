@@ -79,6 +79,13 @@ public class DroneState {
                 //registerBatteryUpdate();
                 //GroundStation.registerPhantom2Callback();
                 Camera.setGimbalDown();
+                if (!groundStationConnected) {
+                    GroundStation.openGroundStation(new Runnable() {
+                        @Override
+                        public void run() {
+                        }
+                    });
+                }
             }
         }, 5000, 5000, TimeUnit.MILLISECONDS);
     }
