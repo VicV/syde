@@ -119,7 +119,7 @@ public class AndroidCameraSurfaceView extends GLSurfaceView {
             GLES30.glEnableVertexAttribArray(tch);
 
             GLES30.glDrawArrays(GLES30.GL_TRIANGLE_STRIP, 0, 4);
-            ContextManager.getMainActivityInstance().processFrame();
+            ContextManager.getMainActivityInstance().setUpscalePreviewImage();
             GLES30.glFlush();
         }
 

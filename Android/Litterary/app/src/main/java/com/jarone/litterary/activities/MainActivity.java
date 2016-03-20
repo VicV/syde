@@ -20,6 +20,7 @@ import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.view.View;
 import android.widget.ImageView;
+import android.widget.RelativeLayout;
 import android.widget.TextView;
 
 import com.google.android.gms.maps.model.LatLng;
@@ -80,6 +81,7 @@ public class MainActivity extends DJIBaseActivity {
     private Context mainActivity;
     private ScheduledFuture trackFuture;
     private AngularController angularController;
+    private ImageView upscalePreview;
 
     private LatLng[] currentPolygon = null;
     private ArrayList<LatLng> currentPhotoPoints = null;
@@ -103,9 +105,10 @@ public class MainActivity extends DJIBaseActivity {
         ContextManager.setContext(this);
         DroneState.registerConnectedTimer();
         GroundStation.registerPhantom2Callback();
-
+        RelativeLayout.LayoutParams lp = new RelativeLayout.LayoutParams(RelativeLayout.LayoutParams.MATCH_PARENT, (int) ImageHelper.getDP(this, 212));
+        addContentView(getLayoutInflater().inflate(R.layout.upscaled, null), lp);
+        upscalePreview = (ImageView) findViewById(R.id.upscaled_preview);
 //        mDjiGLSurfaceView.setZOrderMediaOverlay(true);
-//        RelativeLayout.LayoutParams lp = new RelativeLayout.LayoutParams(RelativeLayout.LayoutParams.FILL_PARENT, RelativeLayout.LayoutParams.WRAP_CONTENT);
 //        addContentView(getLayoutInflater().inflate(R.layout.surface_overlay_layout, null), lp);
 
         wifiManager = (WifiManager) getSystemService(Context.WIFI_SERVICE);
@@ -297,16 +300,43 @@ public class MainActivity extends DJIBaseActivity {
         };
     }
 
+    private class UpscaleImageTask extends AsyncTask<Void, Void, Void> {
+        @Override
+        protected Void doInBackground(Void... params) {
+            if (upscalePreview != null) {
+                ImageHelper.createBitmapFromFrame(new ImageHelper.BitmapCreatedCallback() {
+                    @Override
+                    public void onBitmapCreated(final Bitmap bitmap) {
+                        upscalePreview.post(new Runnable() {
+                            @Override
+                            public void run() {
+                                upscalePreview.setImageBitmap(bitmap);
+                            }
+                        });
+                    }
+                }, mDjiGLSurfaceView);
+            }
+            return null;
+        }
+    }
+
+
+    public void setUpscalePreviewImage() {
+        new UpscaleImageTask().execute();
+    }
+
     private void registerCamera() {
         mAndroidCameraSurfaceViewOld = (AndroidCameraSurfaceView) findViewById(R.id.android_camera_surfaceview_jacinta);
         mAndroidCameraSurfaceView = (CameraBridgeViewBase) findViewById(R.id.android_camera_surfaceview);
         mDjiGLSurfaceView = (DjiGLSurfaceView) findViewById(R.id.DJI_camera_surfaceview);
         mDjiGLSurfaceView.start();
 
+
         DJIReceivedVideoDataCallBack mReceivedVideoDataCallBack = new DJIReceivedVideoDataCallBack() {
             @Override
             public void onResult(byte[] videoBuffer, int size) {
                 mDjiGLSurfaceView.setDataToDecoder(videoBuffer, size);
+                setUpscalePreviewImage();
                 if (canStartProcessing) {
                     processFrame();
                 }
