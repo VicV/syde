@@ -115,7 +115,7 @@ public class GroundStation {
      * Used to call methods that require a connection to ground station by first calling
      * openGroundStation and executing the callable in case of success
      */
-    public static void withConnection(final Runnable run) {
+    public static void openGroundStation(final Runnable run) {
         DJIDrone.getDjiGroundStation().openGroundStation(new DJIGroundStationExecuteCallBack() {
             @Override
             public void onResult(DJIGroundStationTypeDef.GroundStationResult result) {
@@ -125,12 +125,12 @@ public class GroundStation {
                         run.run();
                         //handler.post(run);
                     } catch (Exception e) {
-                        MessageHandler.d("withConnection: " + e.toString());
+                        MessageHandler.d("Open Ground Station: " + e.toString());
                     }
-                    // MessageHandler.d("withConnection: SUCCESS");
+                    MessageHandler.d("Open Ground Station: SUCCESS");
                 } else {
                     DroneState.groundStationConnected = false;
-                    MessageHandler.d("withConnection: FAILURE");
+                    MessageHandler.d("Open Ground Station: FAILURE");
                 }
             }
         });
@@ -194,17 +194,17 @@ public class GroundStation {
      * Cancels the currently executing ground station task
      */
     public static void stopTask() {
-        withConnection(new Runnable() {
-            @Override
-            public void run() {
+       // withConnection(new Runnable() {
+          //  @Override
+           // public void run() {
                 DJIDrone.getDjiGroundStation().cancelGroundStationTask(new DJIGroundStationExecuteCallBack() {
                     @Override
                     public void onResult(DJIGroundStationTypeDef.GroundStationResult groundStationResult) {
                         MessageHandler.d(groundStationResult.toString());
                     }
                 });
-            }
-        });
+        //    }
+       // });
     }
 
     /**
@@ -232,9 +232,9 @@ public class GroundStation {
             MessageHandler.d("Invalid GPS Coordinates");
             return;
         }
-        withConnection(new Runnable() {
-            @Override
-            public void run() {
+//        withConnection(new Runnable() {
+//            @Override
+//            public void run() {
                 DJIDrone.getDjiMainController().setAircraftHomeGpsLocation(DroneState.getLatitude(), DroneState.getLongitude(), new DJIExecuteResultCallback() {
                     @Override
                     public void onResult(DJIError djiError) {
@@ -242,17 +242,17 @@ public class GroundStation {
                         MessageHandler.d("Home Point Set To: " + String.valueOf(DroneState.getLatitude()) + " " + String.valueOf(DroneState.getLongitude()));
                     }
                 });
-            }
-        });
+//            }
+//        });
     }
 
     /**
      * Command the drone to return to its registered home point
      */
     public static void goHome() {
-        withConnection(new Runnable() {
-            @Override
-            public void run() {
+//        withConnection(new Runnable() {
+//            @Override
+//            public void run() {
                 DJIDrone.getDjiGroundStation().goHome(new DJIGroundStationExecuteCallBack() {
                     @Override
                     public void onResult(DJIGroundStationTypeDef.GroundStationResult groundStationResult) {
@@ -262,8 +262,8 @@ public class GroundStation {
                         MessageHandler.d("Go Home: " + groundStationResult.toString());
                     }
                 });
-            }
-        });
+//            }
+//        });
     }
 
     /**
@@ -281,9 +281,9 @@ public class GroundStation {
     }
 
     public static void engageJoystick(final Runnable onSuccess) {
-        withConnection(new Runnable() {
-            @Override
-            public void run() {
+//        withConnection(new Runnable() {
+//            @Override
+//            public void run() {
                 DJIDrone.getDjiGroundStation().pauseGroundStationTask(new DJIGroundStationExecuteCallBack() {
                     @Override
                     public void onResult(DJIGroundStationTypeDef.GroundStationResult groundStationResult) {
@@ -301,8 +301,8 @@ public class GroundStation {
                         });
                     }
                 });
-            }
-        });
+//            }
+//        });
     }
 
     /**
@@ -310,14 +310,14 @@ public class GroundStation {
      * to ground station GPS nav mode
      */
     public static void engageGroundStation() {
-        withConnection(new Runnable() {
-            @Override
-            public void run() {
+       // withConnection(new Runnable() {
+        //    @Override
+         //   public void run() {
                 newTask();
                 addPoint(DroneState.getLatitude(), DroneState.getLongitude());
                 uploadAndExecuteTask();
-            }
-        });
+         //   }
+       // });
     }
 
     /**
@@ -336,9 +336,9 @@ public class GroundStation {
             // MessageHandler.d("Not in Direct Mode!");
             return;
         }
-        withConnection(new Runnable() {
-            @Override
-            public void run() {
+//        withConnection(new Runnable() {
+//            @Override
+//            public void run() {
                 DJIDrone.getDjiGroundStation().setAircraftJoystick((int) yaw, (int) pitch, (int) roll, altitude, new DJIGroundStationExecuteCallBack() {
                     @Override
                     public void onResult(DJIGroundStationTypeDef.GroundStationResult groundStationResult) {
@@ -348,8 +348,8 @@ public class GroundStation {
                         }
                     }
                 });
-            }
-        });
+//            }
+//        });
     }
 
     /**

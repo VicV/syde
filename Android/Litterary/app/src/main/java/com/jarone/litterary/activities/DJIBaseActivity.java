@@ -4,6 +4,7 @@ import android.os.Bundle;
 import android.support.v4.app.FragmentActivity;
 
 import com.jarone.litterary.drone.DroneState;
+import com.jarone.litterary.drone.GroundStation;
 import com.jarone.litterary.handlers.MessageHandler;
 import com.jarone.litterary.imageproc.ImageProcessing;
 
@@ -35,6 +36,12 @@ public class DJIBaseActivity extends FragmentActivity {
         }
         DJIDrone.getDjiGroundStation().startUpdateTimer(1000);
         ServiceManager.getInstance().pauseService(false); // Resume the service
+        GroundStation.openGroundStation(new Runnable() {
+            @Override
+            public void run() {
+
+            }
+        });
     }
 
     @Override

@@ -65,6 +65,13 @@
                 android:fontFeatureSettings="smcp"
                 android:text="Img Proc 3"
                 android:textColor="#999" />
+            <EditText
+                android:layout_width="wrap_content"
+                android:layout_height="match_parent"
+                android:id="@+id/data_input"
+                android:text="10"
+                android:layout_gravity="center"
+                />
         </LinearLayout>
 
 

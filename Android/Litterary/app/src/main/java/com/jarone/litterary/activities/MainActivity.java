@@ -685,7 +685,7 @@ public class MainActivity extends DJIBaseActivity {
                 //This is done as a post on the viewpager because we must wait for it to
                 //Be initialized before interacting with the views.
                 setOnClickListeners();
-                //registerUpdateInterface();
+                registerUpdateInterface();
                 if (LitterApplication.devMode) {
                     CPreview = ((ImageView) findViewById(R.id.CVPreview));
                 }

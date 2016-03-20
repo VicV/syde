@@ -5,6 +5,7 @@ import android.graphics.BitmapFactory;
 
 import com.google.android.gms.maps.model.LatLng;
 import com.jarone.litterary.control.AngularController;
+import com.jarone.litterary.drone.DroneState;
 import com.jarone.litterary.handlers.MessageHandler;
 import com.jarone.litterary.helpers.ContextManager;
 
@@ -271,9 +272,9 @@ public class ImageProcessing {
         cMeans.add(Core.mean(g).val[0]);
         cMeans.add(Core.mean(b).val[0]);
 
-        morphImage(r, Imgproc.MORPH_ERODE, 10);
-        morphImage(g, Imgproc.MORPH_ERODE, 10);
-        morphImage(b, Imgproc.MORPH_ERODE, 10);
+        morphImage(r, Imgproc.MORPH_ERODE, 20);
+        morphImage(g, Imgproc.MORPH_ERODE, 20);
+        morphImage(b, Imgproc.MORPH_ERODE, 20);
 
         double minMean = 0;
         mindex = 0;
@@ -312,14 +313,14 @@ public class ImageProcessing {
         //   Imgproc.Canny(processingMat, processingMat, lowThreshold, highThreshold);
         //  morphImage(processingMat, Imgproc.MORPH_CLOSE, 30);
         //Imgproc.threshold(processingMat, processingMat, 0, 255, Imgproc.THRESH_BINARY);
-        // clearBorders(processingMat);
+        clearBorders(processingMat);
         fillImage(processingMat);
         //   morphImage(processingMat, Imgproc.MORPH_CLOSE, 60);
 
 
 ////
 ////        //TODO determine below threshold parameter from the drone's altitude and FOV
-        //  eliminateSmallBlobs(processingMat, Math.pow(metresToPixels(0.05, DroneState.getAltitude()), 2));
+        eliminateSmallBlobs(processingMat, Math.pow(metresToPixels(0.05, DroneState.getAltitude()), 2));
 
         blobCentres = findBlobCentres(processingMat);
 
@@ -495,9 +496,9 @@ public class ImageProcessing {
             return null;
         }
         for (Point p : points) {
-            if (p.x < 5 || p.y < 5 || p.x > processingMat.width() - 5 || p.y > processingMat.height() - 5) {
-                continue;
-            }
+//            if (p.x < 5 || p.y < 5 || p.x > processingMat.width() - 5 || p.y > processingMat.height() - 5) {
+//                continue;
+//            }
             double distance = pixelDistance(p, new Point(processingMat.width() / 2, processingMat.height() / 2));
             if (distance < minDistance) {
                 minDistance = distance;
@@ -525,9 +526,11 @@ public class ImageProcessing {
      */
     public static double distanceFromTarget(AngularController.ActiveAngle angle) {
         if (angle == AngularController.ActiveAngle.PITCH) {
+            //Forward is positive, backward is negative
             return originalMat.height() / 2 - trackedObject.getPosition().y;
         } else {
-            return originalMat.width() / 2 - trackedObject.getPosition().x;
+            //To the left is negative, right is positive
+            return trackedObject.getPosition().x - originalMat.width() / 2;
         }
     }
 
@@ -541,7 +544,12 @@ public class ImageProcessing {
 
     public static double metresToPixels(double metres, double altitude) {
         double degrees = Math.atan(metres / altitude);
-        return degrees / CAMERA_FOVX * imageX;
+        return degrees / CAMERA_FOVX * processingMat.width();
+    }
+
+    public static double pixelsToMetres(double pixels, double altitude) {
+        double degrees = CAMERA_FOVX * pixels / processingMat.width();
+        return Math.tan(degrees) * altitude;
     }
 
     public static ArrayList<Point> getBlobCentres() {

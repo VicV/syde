@@ -1,10 +1,14 @@
 package com.jarone.litterary.control;
 
+import android.widget.EditText;
+
 import com.google.android.gms.maps.model.LatLng;
 import com.jarone.litterary.LitterApplication;
+import com.jarone.litterary.R;
 import com.jarone.litterary.drone.DroneState;
 import com.jarone.litterary.drone.GroundStation;
 import com.jarone.litterary.handlers.MessageHandler;
+import com.jarone.litterary.helpers.ContextManager;
 import com.jarone.litterary.helpers.LocationHelper;
 import com.jarone.litterary.imageproc.ImageProcessing;
 
@@ -22,10 +26,10 @@ public class AngularController {
     private ScheduledFuture controlsLoopFuture;
     private ArrayList<ScheduledFuture> generateTasks = new ArrayList<>();
 
-    float MAX_ANGLE = 500;
-    private long SAMPLING_TIME = 1000;
+    float MAX_ANGLE = 250;
+    private long SAMPLING_TIME = 150;
 
-    float P = 250;
+    float P = 100;
     float I = 0;
     float D = 10;
 
@@ -51,10 +55,12 @@ public class AngularController {
 
     private ActiveAngle activeAngle = ActiveAngle.PITCH;
 
-
+    private EditText inputField;
 
     public AngularController() {
+
         taskScheduler = LitterApplication.getInstance().getScheduler();
+        inputField = (EditText) ContextManager.getMainActivityInstance().findViewById(R.id.data_input);
     }
 
     /**
@@ -75,13 +81,17 @@ public class AngularController {
         });
     }
 
+    public float getInputParameter() {
+        return Float.parseFloat(inputField.getText().toString());
+    }
     /**
      * The control loop governing the PID control strategy. Loop is executed on a timer with
      * a rate of SAMPLING_TIME
      */
     public void controlsLoop() {
 
-        float error = (float)ImageProcessing.distanceFromTarget(activeAngle);
+        float error = (float)ImageProcessing.pixelsToMetres(ImageProcessing.distanceFromTarget(activeAngle), DroneState.getAltitude());
+        P = getInputParameter();
         float action = PID(error);
 
         if (Math.abs(action) > MAX_ANGLE) {
@@ -102,26 +112,26 @@ public class AngularController {
             }
         }
 
-       // MessageHandler.log("" + action + " " + error + activeAngle);
+        MessageHandler.log("" + action + " " + error + activeAngle);
 
         //Switch active controlled angle every second
         loopIterations++;
         //TODO switch more often if error is increasing past some threshold
-        if (loopIterations > 5000 / SAMPLING_TIME) {
+        if (loopIterations > 1000 / SAMPLING_TIME) {
             if (activeAngle == ActiveAngle.ROLL && !descend) {
                 if (doDescend) {
                     descend = true;
+                    MessageHandler.log("Descending");
                 } else {
                     activeAngle = ActiveAngle.PITCH;
                 }
-                MessageHandler.d("Descending");
             } else if (activeAngle == ActiveAngle.PITCH) {
                 activeAngle = ActiveAngle.ROLL;
-                MessageHandler.d("Switching angle to " + activeAngle);
+                MessageHandler.log("Switching angle to " + activeAngle);
             } else if (descend) {
                 descend = false;
                 activeAngle = ActiveAngle.PITCH;
-                MessageHandler.d("Switching angle to " + activeAngle);
+                MessageHandler.log("Switching angle to " + activeAngle);
             }
             loopIterations = 0;
         }
