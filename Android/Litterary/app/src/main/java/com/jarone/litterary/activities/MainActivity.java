@@ -51,6 +51,7 @@ import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 
+import dji.sdk.api.Camera.DJICameraSettingsTypeDef;
 import dji.sdk.api.DJIDrone;
 import dji.sdk.interfaces.DJIReceivedVideoDataCallBack;
 import dji.sdk.widget.DjiGLSurfaceView;
@@ -312,6 +313,7 @@ public class MainActivity extends DJIBaseActivity {
             }
 
         };
+        DJIDrone.getDjiCamera().setStreamType(DJICameraSettingsTypeDef.CameraPreviewResolutionType.Resolution_Type_320x240_30fps);
         DJIDrone.getDjiCamera().setReceivedVideoDataCallBack(mReceivedVideoDataCallBack);
     }
 

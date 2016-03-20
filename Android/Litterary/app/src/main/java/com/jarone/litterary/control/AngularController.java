@@ -41,6 +41,8 @@ public class AngularController {
 
     private boolean isRetrieving = false;
 
+    private boolean doDescend = false;
+
 
     private boolean generatorFlip = false;
 
@@ -107,7 +109,11 @@ public class AngularController {
         //TODO switch more often if error is increasing past some threshold
         if (loopIterations > 5000 / SAMPLING_TIME) {
             if (activeAngle == ActiveAngle.ROLL && !descend) {
-                descend = true;
+                if (doDescend) {
+                    descend = true;
+                } else {
+                    activeAngle = ActiveAngle.PITCH;
+                }
                 MessageHandler.d("Descending");
             } else if (activeAngle == ActiveAngle.PITCH) {
                 activeAngle = ActiveAngle.ROLL;
