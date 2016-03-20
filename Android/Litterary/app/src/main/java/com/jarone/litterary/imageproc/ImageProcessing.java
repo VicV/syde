@@ -12,6 +12,7 @@ import org.opencv.android.BaseLoaderCallback;
 import org.opencv.android.LoaderCallbackInterface;
 import org.opencv.android.Utils;
 import org.opencv.core.Core;
+import org.opencv.core.CvException;
 import org.opencv.core.CvType;
 import org.opencv.core.Mat;
 import org.opencv.core.MatOfDouble;
@@ -83,6 +84,9 @@ public class ImageProcessing {
 
     private static final double imageX = 4384;
     private static final double imageY = 2466;
+
+    //keeps track of submat error
+    private static boolean createdTrackingObject = false;
 
 
 
@@ -515,19 +519,7 @@ public class ImageProcessing {
         if (object != null) {
             int x = (int) object.x;
             int y = (int) object.y;
-            int width = 20;
-            int height = 20;
-/*            if (x + width > originalMat.cols()){
-                width = originalMat.cols() - x;
-                if (width == 0)
-                {
-                    width = 1;
-                }
-            }
-            if (y + height > originalMat.rows()) {
-                height = originalMat.rows() - y;
-            }*/
-            return new Rect(x, y, width, height);
+            return new Rect(x, y, 20, 20);
         }
         return null;
     }
@@ -580,17 +572,22 @@ public class ImageProcessing {
         trackedObject.prob = new Mat(mRgba.size(), CvType.CV_8UC1);
         updateHueImage();
 
-        //create a histogram representation of the object
-        Mat tempmask = trackedObject.mask.submat(region);
+        try {
+            //create a histogram representation of the object
+            Mat tempmask = trackedObject.mask.submat(region);
+            
+            MatOfFloat ranges = new MatOfFloat(0f, 256f);
+            MatOfInt histSize = new MatOfInt(25);
 
-        MatOfFloat ranges = new MatOfFloat(0f, 256f);
-        MatOfInt histSize = new MatOfInt(25);
+            List<Mat> images = Arrays.asList(trackedObject.hueArray.get(0).submat(region));
+            Imgproc.calcHist(images, new MatOfInt(0), tempmask, trackedObject.hist, histSize, ranges);
 
-        List<Mat> images = Arrays.asList(trackedObject.hueArray.get(0).submat(region));
-        Imgproc.calcHist(images, new MatOfInt(0), tempmask, trackedObject.hist, histSize, ranges);
-
-        Core.normalize(trackedObject.hist, trackedObject.hist);
-        trackedObject.prevRect = region;
+            Core.normalize(trackedObject.hist, trackedObject.hist);
+            trackedObject.prevRect = region;
+            createdTrackingObject = true;
+        } catch (CvException e) {
+            createdTrackingObject = false;
+        }
     }
 
     public static void updateHueImage() {
@@ -665,7 +662,12 @@ public class ImageProcessing {
             if (trackedObject.prevRect != null) {
                 isTracking = true;
                 createTrackedObject(originalMat, trackedObject.prevRect);
-                trackObject();
+                if (createdTrackingObject) {
+                    trackObject();
+                } else {
+                    MessageHandler.d("Failed to create tracking object!");
+                    isTracking = false;
+                }
             } else {
                 MessageHandler.d("Couldn't find object to track!");
             }
