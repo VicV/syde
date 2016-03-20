@@ -63,8 +63,8 @@ public class ImageProcessing {
     private static double lowThreshold;
 
     //counter and threshold value for determining whether to retry object tracking
-    private static int counter = 0;
-    private static int counterThreshold = 10;
+    private static int retryCounter = 0;
+    private static int retryThreshold = 10;
 
 
     //The Bitmap representation of the current result image
@@ -76,9 +76,16 @@ public class ImageProcessing {
 
     //measured result 114.8 degrees
     private static final double CAMERA_FOVX = 110;
+    private static final double CAMERA_FOVY = 0.75*CAMERA_FOVX;
+
+    //pixel density: metres per pixel
+    private static double px; //horizontal pixel density
+    private static double py; //vertical pixel density
 
     private static final double imageX = 4384;
     private static final double imageY = 2466;
+
+
 
 
     private static ArrayList<Point> blobCentres;
@@ -513,7 +520,19 @@ public class ImageProcessing {
         if (object != null) {
             int x = (int) object.x;
             int y = (int) object.y;
-            return new Rect(x, y, 20, 20);
+            int width = 20;
+            int height = 20;
+/*            if (x + width > originalMat.cols()){
+                width = originalMat.cols() - x;
+                if (width == 0)
+                {
+                    width = 1;
+                }
+            }
+            if (y + height > originalMat.rows()) {
+                height = originalMat.rows() - y;
+            }*/
+            return new Rect(x, y, width, height);
         }
         return null;
     }
@@ -540,6 +559,14 @@ public class ImageProcessing {
 
     public static boolean isTracking() {
         return isTracking;
+    }
+
+    //Calculates the density of each pixel in the vertical, py, and horizontal, px, directions in m per pixel
+    public static void calculatePixelDensity(double altitude) {
+        double W = 2*altitude*Math.tan(Math.toRadians(CAMERA_FOVX)); //width of image area in m
+        double H = 2*altitude*Math.tan(Math.toRadians(CAMERA_FOVY)); //height of image area in m
+        px = W/processingMat.width(); //m per pixel
+        py = H/processingMat.height(); //m per pixel
     }
 
     public static double metresToPixels(double metres, double altitude) {
@@ -622,18 +649,22 @@ public class ImageProcessing {
 
         if (trackedObject.currBox.size.height == 0)
         {
-            counter++;
-            if (counter > counterThreshold) {
-                counter = 0;
-                Mat temp = originalMat.clone();
-                isTracking = false;
-                detectBlobs(temp);
-                startTrackingObject();
-                temp.release();
+            retryCounter++;
+            if (retryCounter > retryThreshold) {
+                retryCounter = 0;
+                retryTracking();
             }
         }
     }
 
+    //reattempts tracking if something goes wrong
+    public static void retryTracking() {
+        Mat temp = originalMat.clone();
+        isTracking = false;
+        detectBlobs(temp);
+        startTrackingObject();
+        temp.release();
+    }
     /**
      * Begin tracking the object closest to the centre of the camera
      */
