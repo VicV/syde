@@ -341,7 +341,6 @@ public class MainActivity extends DJIBaseActivity {
         }
     }
 
-
     private void registerCamera() {
         mAndroidCameraSurfaceViewOld = (AndroidCameraSurfaceView) findViewById(R.id.android_camera_surfaceview_jacinta);
         mAndroidCameraSurfaceView = (CameraBridgeViewBase) findViewById(R.id.android_camera_surfaceview);
