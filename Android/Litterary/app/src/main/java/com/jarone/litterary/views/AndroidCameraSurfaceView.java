@@ -10,8 +10,6 @@ import android.util.AttributeSet;
 import android.util.Log;
 import android.view.SurfaceHolder;
 
-import com.jarone.litterary.helpers.ContextManager;
-
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
@@ -119,7 +117,7 @@ public class AndroidCameraSurfaceView extends GLSurfaceView {
             GLES30.glEnableVertexAttribArray(tch);
 
             GLES30.glDrawArrays(GLES30.GL_TRIANGLE_STRIP, 0, 4);
-            ContextManager.getMainActivityInstance().setUpscalePreviewImage();
+//            ContextManager.getMainActivityInstance().setUpscalePreviewImage();
             GLES30.glFlush();
         }
 

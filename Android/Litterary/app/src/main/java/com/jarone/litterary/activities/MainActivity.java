@@ -52,10 +52,6 @@ import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 
-import javax.microedition.khronos.egl.EGL10;
-import javax.microedition.khronos.egl.EGLContext;
-import javax.microedition.khronos.opengles.GL10;
-
 import dji.sdk.api.DJIDrone;
 import dji.sdk.interfaces.DJIReceivedVideoDataCallBack;
 import dji.sdk.widget.DjiGLSurfaceView;
@@ -303,29 +299,45 @@ public class MainActivity extends DJIBaseActivity {
         };
     }
 
-    int w = -1;
-    int h = -1;
+    public ArrayBlockingQueue<AsyncTask> runningUpscaleTasks = new ArrayBlockingQueue<>(1);
 
-    public void setUpscalePreviewImage() {
-        if (upscalePreview != null) {
-            GL10 gl;
-            EGL10 egl = (EGL10) EGLContext.getEGL();
-            gl = (GL10) egl.eglGetCurrentContext().getGL();
-            if (w <= 0 || h <= 0) {
-                w = mDjiGLSurfaceView.getWidth();
-                h = mDjiGLSurfaceView.getHeight();
-            }
+    private void setUpscaleImage() {
+        UpscaleImageTask newTask = new UpscaleImageTask();
+        if (runningUpscaleTasks.offer(newTask)) {
+            newTask.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, mDjiGLSurfaceView.getVisibility() == View.GONE ? mAndroidCameraSurfaceViewOld : mDjiGLSurfaceView);
+        }
+    }
 
-            if (w > 0 && h > 0) {
-                final Bitmap frame = ImageHelper.getBitmapFromGLSurface(w, h, gl);
-                runOnUiThread(new Runnable() {
-                    @Override
-                    public void run() {
-                        upscalePreview.setImageBitmap(frame);
+    public class UpscaleImageTask extends AsyncTask<GLSurfaceView, Void, Void> {
+
+        private UpscaleImageTask context = this;
+
+        @Override
+        protected Void doInBackground(GLSurfaceView... params) {
+            ImageHelper.createBitmapFromFrame(new ImageHelper.BitmapCreatedCallback() {
+                @Override
+                public void onBitmapCreated(final Bitmap bitmap) {
+                    if (upscalePreview != null) {
+                        upscalePreview.post(new Runnable() {
+                            @Override
+                            public void run() {
+                                if (bitmap != null) {
+                                    upscalePreview.setImageBitmap(bitmap);
+                                }
+                                runningUpscaleTasks.remove(context);
+                            }
+                        });
                     }
-                });
-            }
 
+                }
+
+            }, params[0]);
+            return null;
+        }
+
+        @Override
+        protected void onPostExecute(Void aVoid) {
+            super.onPostExecute(aVoid);
         }
     }
 
@@ -341,9 +353,10 @@ public class MainActivity extends DJIBaseActivity {
             @Override
             public void onResult(byte[] videoBuffer, int size) {
                 mDjiGLSurfaceView.setDataToDecoder(videoBuffer, size);
-                setUpscalePreviewImage();
                 if (canStartProcessing) {
                     processFrame();
+                } else {
+                    setUpscaleImage();
                 }
             }
 
@@ -374,6 +387,7 @@ public class MainActivity extends DJIBaseActivity {
                             @Override
                             public void run() {
                                 if (bitmap != null) {
+                                    upscalePreview.setImageBitmap(bitmap);
                                     ImageProcessing.setOriginalImage(bitmap);
                                     if (ImageProcessing.isTracking()) {
                                         ImageProcessing.trackObject();
