@@ -22,7 +22,7 @@
             android:layout_marginBottom="2dp"
             android:layout_marginTop="5dp"
             android:fontFeatureSettings="smcp"
-            android:text="Image Processing"
+            android:text="Sliders"
             android:textColor="#888" />
 
         <View
@@ -46,7 +46,7 @@
                 android:id="@+id/button_imgproc_1"
                 android:layout_width="wrap_content"
                 android:layout_height="40dp"
-                android:text="Img Proc 1"
+                android:text="Open"
                 android:textColor="#999" />
 
             <Button
@@ -54,16 +54,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="40dp"
                 android:fontFeatureSettings="smcp"
-                android:text="Img Proc 2"
-
-                android:textColor="#999" />
-
-            <Button
-                android:id="@+id/button_imgproc_3"
-                android:layout_width="wrap_content"
-                android:layout_height="40dp"
-                android:fontFeatureSettings="smcp"
-                android:text="Img Proc 3"
+                android:text="Close"
                 android:textColor="#999" />
         </LinearLayout>
 
@@ -72,11 +63,10 @@
             android:id="@+id/misc_title"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-
             android:layout_marginBottom="5dp"
             android:layout_marginTop="10dp"
             android:fontFeatureSettings="smcp"
-            android:text="Miscellaneous"
+            android:text="Raising and Lowering"
             android:textColor="#999" />
 
         <View
@@ -97,42 +87,34 @@
 
             <Button
                 android:id="@+id/button_special_1"
-                android:layout_width="70dp"
-                android:layout_height="35dp"
+                android:layout_width="wrap_content"
+                android:layout_height="40dp"
                 android:fontFeatureSettings="smcp"
-                android:text="Spec1"
+                android:text="raise"
                 android:textColor="#999" />
 
             <Button
                 android:id="@+id/button_special_2"
-                android:layout_width="70dp"
-                android:layout_height="35dp"
+                android:layout_width="wrap_content"
+                android:layout_height="40dp"
                 android:fontFeatureSettings="smcp"
-                android:text="Spec2"
+                android:text="lower"
                 android:textColor="#999" />
 
             <Button
                 android:id="@+id/button_special_3"
-                android:layout_width="70dp"
-                android:layout_height="35dp"
+                android:layout_width="wrap_content"
+                android:layout_height="40dp"
                 android:fontFeatureSettings="smcp"
-                android:text="Spec3"
+                android:text="hold"
                 android:textColor="#999" />
 
             <Button
                 android:id="@+id/button_special_camera"
-                android:layout_width="70dp"
-                android:layout_height="35dp"
+                android:layout_width="wrap_content"
+                android:layout_height="40dp"
                 android:fontFeatureSettings="smcp"
-                android:text="Cam"
-                android:textColor="#999" />
-
-            <Button
-                android:id="@+id/button_special_camera_2"
-                android:layout_width="70dp"
-                android:layout_height="35dp"
-                android:fontFeatureSettings="smcp"
-                android:text="Cam2"
+                android:text="height"
                 android:textColor="#999" />
 
         </LinearLayout>

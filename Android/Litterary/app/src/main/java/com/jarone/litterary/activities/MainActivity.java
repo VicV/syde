@@ -26,12 +26,10 @@ import android.widget.TextView;
 import com.google.android.gms.maps.model.LatLng;
 import com.jarone.litterary.LitterApplication;
 import com.jarone.litterary.R;
-import com.jarone.litterary.SurveyRoute;
 import com.jarone.litterary.adapters.DebugMessageRecyclerAdapter;
 import com.jarone.litterary.adapters.ViewPagerAdapter;
 import com.jarone.litterary.control.AngularController;
 import com.jarone.litterary.datatypes.DebugItem;
-import com.jarone.litterary.drone.Camera;
 import com.jarone.litterary.drone.DroneState;
 import com.jarone.litterary.drone.Grabber;
 import com.jarone.litterary.drone.GroundStation;
@@ -98,15 +96,16 @@ public class MainActivity extends DJIBaseActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         mainActivity = this;
+        RelativeLayout.LayoutParams lp = new RelativeLayout.LayoutParams(RelativeLayout.LayoutParams.MATCH_PARENT, (int) ImageHelper.getDP(this, 212));
+        addContentView(getLayoutInflater().inflate(R.layout.upscaled, null), lp);
+        upscalePreview = (ImageView) findViewById(R.id.upscaled_preview);
         setupViewPager();
         verifyStoragePermissions(this);
         registerCamera();
         ContextManager.setContext(this);
         DroneState.registerConnectedTimer();
         GroundStation.registerPhantom2Callback();
-        RelativeLayout.LayoutParams lp = new RelativeLayout.LayoutParams(RelativeLayout.LayoutParams.MATCH_PARENT, (int) ImageHelper.getDP(this, 212));
-        addContentView(getLayoutInflater().inflate(R.layout.upscaled, null), lp);
-        upscalePreview = (ImageView) findViewById(R.id.upscaled_preview);
+
 //        mDjiGLSurfaceView.setZOrderMediaOverlay(true);
 //        addContentView(getLayoutInflater().inflate(R.layout.surface_overlay_layout, null), lp);
 
@@ -178,110 +177,41 @@ public class MainActivity extends DJIBaseActivity {
             public void onClick(View view) {
                 switch (view.getId()) {
                     case R.id.button_imgproc_1:
-//                        Camera.downloadPhotosSince(Camera.parseDate("2016-Mar-01 12:00:00").getTime(), new Runnable() {
-//                            @Override
-//                            public void run() {
-//                                MessageHandler.d("DONE DOWNLOADING!!");
-//                            }
-//                        });
-                        GroundStation.setAngles(0, 0, 0, 1);
-                        break;
-                    case R.id.button_imgproc_2:
-                        SurveyRoute route = new SurveyRoute(new LatLng[20], 0, (short) 0);
-                        route.setStartTime(Camera.parseDate("2016-Mar-01 12:00:00").getTime());
-                        route.downloadAndAnalyzeSurveyPhotos();
-                        break;
-                    case R.id.button_imgproc_3:
-                        if (ImageProcessing.isTracking()) {
-                            ImageProcessing.stopTrackingObject();
-                            if (trackFuture != null) {
-                                trackFuture.cancel(true);
-                                trackFuture = null;
-                            }
-
-                        } else {
-                            ImageProcessing.startTrackingObject();
-                            trackFuture = LitterApplication.getInstance().getScheduler().scheduleAtFixedRate(new Runnable() {
-                                @Override
-                                public void run() {
-                                    ImageProcessing.trackObject();
-                                }
-                            }, 0, 300, TimeUnit.MILLISECONDS);
-                        }
-
-                        break;
-                    case R.id.button_special_1:
                         if (grabber == null) {
                             grabber = new Grabber();
                         }
                         grabber.sendCommand(Grabber.Commands.OPEN);
                         break;
-
-                    case R.id.button_special_2:
+                    case R.id.button_imgproc_2:
                         if (grabber == null) {
                             grabber = new Grabber();
                         }
                         grabber.sendCommand(Grabber.Commands.CLOSE);
+                        break;
 
+                    case R.id.button_special_1:
+                        if (grabber == null) {
+                            grabber = new Grabber();
+                        }
+                        grabber.sendCommand(Grabber.Commands.RAISE);
+                        break;
+                    case R.id.button_special_2:
+                        if (grabber == null) {
+                            grabber = new Grabber();
+                        }
+                        grabber.sendCommand(Grabber.Commands.LOWER);
                         break;
                     case R.id.button_special_3:
-                        canStartProcessing = true;
+                        if (grabber == null) {
+                            grabber = new Grabber();
+                        }
+                        grabber.sendCommand(Grabber.Commands.HOLD);
                         break;
                     case R.id.button_special_camera:
-                        if (mDjiGLSurfaceView.getVisibility() != View.GONE) {
-                            mDjiGLSurfaceView.setVisibility(View.GONE);
-                            mDjiGLSurfaceView.pause();
-                            mDjiGLSurfaceView.destroy();
-                            mAndroidCameraSurfaceView.setVisibility(View.VISIBLE);
-                            mAndroidCameraSurfaceView.enableView();
-                            mAndroidCameraSurfaceView.setCvCameraViewListener(new CameraBridgeViewBase.CvCameraViewListener2() {
-                                @Override
-                                public void onCameraViewStarted(int i, int i1) {
-
-                                }
-
-                                @Override
-                                public void onCameraViewStopped() {
-
-                                }
-
-                                @Override
-                                public Mat onCameraFrame(CameraBridgeViewBase.CvCameraViewFrame cvCameraViewFrame) {
-                                    Mat mat = cvCameraViewFrame.rgba();
-                                    if (!processing) {
-                                        processing = true;
-                                        //ImageDirectFromCameraAsyncTask newTask = new ImageDirectFromCameraAsyncTask();
-                                        //if (runningTasks.offer(newTask)) {
-                                        //  newTask.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, mat);
-                                        //}
-                                        ImageProcessing.setOriginalImage(mat);
-                                        if (ImageProcessing.isTracking()) {
-                                            ImageProcessing.trackObject();
-                                        } else {
-                                            ImageProcessing.processImage(mat);
-                                        }
-                                        runOnUiThread(new Runnable() {
-                                            @Override
-                                            public void run() {
-                                                CPreview.setImageBitmap(ImageProcessing.getCVPreview());
-                                            }
-                                        });
-                                        processing = false;
-                                    }
-
-                                    return cvCameraViewFrame.rgba();
-                                }
-                            });
+                        if (grabber == null) {
+                            grabber = new Grabber();
                         }
-                        break;
-                    case R.id.button_special_camera_2:
-                        if (mDjiGLSurfaceView.getVisibility() != View.GONE) {
-                            mDjiGLSurfaceView.setVisibility(View.GONE);
-                            mDjiGLSurfaceView.pause();
-                            mDjiGLSurfaceView.destroy();
-                            mAndroidCameraSurfaceViewOld.setVisibility(View.VISIBLE);
-                            mAndroidCameraSurfaceViewOld.setupSurfaceView();
-                        }
+                        grabber.sendCommand(Grabber.Commands.HEIGHT);
                         break;
                 }
             }
@@ -302,10 +232,10 @@ public class MainActivity extends DJIBaseActivity {
     public ArrayBlockingQueue<AsyncTask> runningUpscaleTasks = new ArrayBlockingQueue<>(1);
 
     private void setUpscaleImage() {
-        UpscaleImageTask newTask = new UpscaleImageTask();
-        if (runningUpscaleTasks.offer(newTask)) {
-            newTask.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, mDjiGLSurfaceView.getVisibility() == View.GONE ? mAndroidCameraSurfaceViewOld : mDjiGLSurfaceView);
-        }
+//        UpscaleImageTask newTask = new UpscaleImageTask();
+//        if (runningUpscaleTasks.offer(newTask)) {
+//            newTask.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, mDjiGLSurfaceView.getVisibility() == View.GONE ? mAndroidCameraSurfaceViewOld : mDjiGLSurfaceView);
+//        }
     }
 
     public class UpscaleImageTask extends AsyncTask<GLSurfaceView, Void, Void> {
@@ -356,7 +286,7 @@ public class MainActivity extends DJIBaseActivity {
                     processFrame();
                 } else {
                     if (videoBuffer != null && videoBuffer.length >= 5) {
-                        setUpscaleImage();
+//                        setUpscaleImage();
                     }
                 }
             }
@@ -676,7 +606,8 @@ public class MainActivity extends DJIBaseActivity {
         //Forces all views to be loaded.
         viewPager.setOffscreenPageLimit(10);
         viewPager.setAdapter(new ViewPagerAdapter(this));
-        viewPager.setCurrentItem(1);
+        viewPager.setCurrentItem(3);
+        upscalePreview.setImageDrawable(getResources().getDrawable(R.drawable.jordab));
         viewPager.post(new Runnable() {
             @Override
             public void run() {
@@ -711,7 +642,6 @@ public class MainActivity extends DJIBaseActivity {
         //This automatically sets up the tabs and everything for us.
         tabLayout.setupWithViewPager(viewPager);
     }
-
 
     public View.OnClickListener getHomeButtonListener() {
         return new View.OnClickListener() {
@@ -758,7 +688,6 @@ public class MainActivity extends DJIBaseActivity {
         };
     }
 
-
     public void connectWithSSID(String SSID) {
         MessageHandler.d("Attempting to connect");
         WifiHelper.enableNetwork(SSID, wifiManager);
@@ -790,7 +719,6 @@ public class MainActivity extends DJIBaseActivity {
                 setupWifi();
             }
         };
-
     }
 
     public View.OnClickListener getStartTrackListener() {
@@ -819,8 +747,8 @@ public class MainActivity extends DJIBaseActivity {
         };
     }
 
-
     private void setOnClickListeners() {
+
         //Main page
         findViewById(R.id.go_home_button).setOnClickListener(getHomeButtonListener());
         findViewById(R.id.home_button).setOnClickListener(getHomeButtonListener());
@@ -834,15 +762,13 @@ public class MainActivity extends DJIBaseActivity {
         if (LitterApplication.devMode) {
             findViewById(R.id.CVPreview).setOnClickListener(getCameraViewListener());
             findViewById(R.id.button_special_camera).setOnClickListener(getDevButtonListener());
-            findViewById(R.id.button_special_camera_2).setOnClickListener(getDevButtonListener());
 
             //Dev stuff
-            findViewById(R.id.button_special_1).setOnClickListener(getStartTrackListener());
-            findViewById(R.id.button_special_2).setOnClickListener(getStopTrackListener());
+            findViewById(R.id.button_special_1).setOnClickListener(getDevButtonListener());
+            findViewById(R.id.button_special_2).setOnClickListener(getDevButtonListener());
             findViewById(R.id.button_special_3).setOnClickListener(getDevButtonListener());
             findViewById(R.id.button_imgproc_1).setOnClickListener(getDevButtonListener());
             findViewById(R.id.button_imgproc_2).setOnClickListener(getDevButtonListener());
-            findViewById(R.id.button_imgproc_3).setOnClickListener(getDevButtonListener());
         }
     }
 
