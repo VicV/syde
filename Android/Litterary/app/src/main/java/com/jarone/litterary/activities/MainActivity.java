@@ -53,6 +53,10 @@ import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 
 import dji.sdk.api.Camera.DJICameraSettingsTypeDef;
+import javax.microedition.khronos.egl.EGL10;
+import javax.microedition.khronos.egl.EGLContext;
+import javax.microedition.khronos.opengles.GL10;
+
 import dji.sdk.api.DJIDrone;
 import dji.sdk.interfaces.DJIReceivedVideoDataCallBack;
 import dji.sdk.widget.DjiGLSurfaceView;
@@ -300,30 +304,32 @@ public class MainActivity extends DJIBaseActivity {
         };
     }
 
-    private class UpscaleImageTask extends AsyncTask<Void, Void, Void> {
-        @Override
-        protected Void doInBackground(Void... params) {
-            if (upscalePreview != null) {
-                ImageHelper.createBitmapFromFrame(new ImageHelper.BitmapCreatedCallback() {
-                    @Override
-                    public void onBitmapCreated(final Bitmap bitmap) {
-                        upscalePreview.post(new Runnable() {
-                            @Override
-                            public void run() {
-                                upscalePreview.setImageBitmap(bitmap);
-                            }
-                        });
-                    }
-                }, mDjiGLSurfaceView);
+    int w = -1;
+    int h = -1;
+
+    public void setUpscalePreviewImage() {
+        if (upscalePreview != null) {
+            GL10 gl;
+            EGL10 egl = (EGL10) EGLContext.getEGL();
+            gl = (GL10) egl.eglGetCurrentContext().getGL();
+            if (w <= 0 || h <= 0) {
+                w = mDjiGLSurfaceView.getWidth();
+                h = mDjiGLSurfaceView.getHeight();
             }
-            return null;
+
+            if (w > 0 && h > 0) {
+                final Bitmap frame = ImageHelper.getBitmapFromGLSurface(w, h, gl);
+                runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        upscalePreview.setImageBitmap(frame);
+                    }
+                });
+            }
+
         }
     }
 
-
-    public void setUpscalePreviewImage() {
-        new UpscaleImageTask().execute();
-    }
 
     private void registerCamera() {
         mAndroidCameraSurfaceViewOld = (AndroidCameraSurfaceView) findViewById(R.id.android_camera_surfaceview_jacinta);
