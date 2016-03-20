@@ -356,7 +356,9 @@ public class MainActivity extends DJIBaseActivity {
                 if (canStartProcessing) {
                     processFrame();
                 } else {
-                    setUpscaleImage();
+                    if (videoBuffer != null && videoBuffer.length >= 5) {
+                        setUpscaleImage();
+                    }
                 }
             }
 
