@@ -1,8 +1,10 @@
 package com.jarone.litterary.helpers;
 
+import android.content.Context;
 import android.graphics.Bitmap;
 import android.opengl.GLES30;
 import android.opengl.GLSurfaceView;
+import android.util.TypedValue;
 
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
@@ -22,6 +24,9 @@ public class ImageHelper {
     private static int height = -1;
     private static int width = -1;
 
+    public static float getDP(Context c, int dp) {
+        return TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, dp, c.getResources().getDisplayMetrics());
+    }
 
     public interface BitmapCreatedCallback {
         void onBitmapCreated(Bitmap bitmap);
