@@ -262,18 +262,18 @@ public class ImageProcessing {
                 mindex = i;
             }
         }
-        Imgproc.threshold(channels.get(0), r, means.get(0, 0)[0] + 30, 255, Imgproc.THRESH_BINARY);
-        Imgproc.threshold(channels.get(1), b, means.get(1, 0)[0] + 30, 255, Imgproc.THRESH_BINARY);
-        Imgproc.threshold(channels.get(2), g, means.get(2, 0)[0] + 30, 255, Imgproc.THRESH_BINARY);
+        Imgproc.threshold(channels.get(0), r, means.get(0, 0)[0] + 50, 255, Imgproc.THRESH_BINARY);
+        Imgproc.threshold(channels.get(1), b, means.get(1, 0)[0] + 50, 255, Imgproc.THRESH_BINARY);
+        Imgproc.threshold(channels.get(2), g, means.get(2, 0)[0] + 50, 255, Imgproc.THRESH_BINARY);
 
         ArrayList<Double> cMeans = new ArrayList<>();
         cMeans.add(Core.mean(r).val[0]);
         cMeans.add(Core.mean(g).val[0]);
         cMeans.add(Core.mean(b).val[0]);
 
-        morphImage(r, Imgproc.MORPH_ERODE, 40);
-        morphImage(g, Imgproc.MORPH_ERODE, 40);
-        morphImage(b, Imgproc.MORPH_ERODE, 40);
+        morphImage(r, Imgproc.MORPH_ERODE, 10);
+        morphImage(g, Imgproc.MORPH_ERODE, 10);
+        morphImage(b, Imgproc.MORPH_ERODE, 10);
 
         double minMean = 0;
         mindex = 0;
@@ -284,13 +284,13 @@ public class ImageProcessing {
             }
         }
 
-        if (mindex == 0) {
+       // if (mindex == 0) {
             r.copyTo(processingMat);
-        } else if (mindex == 1) {
-            g.copyTo(processingMat);
-        } else if (mindex == 2) {
-            b.copyTo(processingMat);
-        }
+        //} else if (mindex == 1) {
+        //    g.copyTo(processingMat);
+        //} else if (mindex == 2) {
+        //    b.copyTo(processingMat);
+        //}
 
 
 //        Imgproc.adaptiveThreshold(channels.get(0), r, 255, Imgproc.ADAPTIVE_THRESH_MEAN_C, Imgproc.THRESH_BINARY, 151, -30);
@@ -313,7 +313,7 @@ public class ImageProcessing {
         //  morphImage(processingMat, Imgproc.MORPH_CLOSE, 30);
         //Imgproc.threshold(processingMat, processingMat, 0, 255, Imgproc.THRESH_BINARY);
         // clearBorders(processingMat);
-        //fillImage(processingMat);
+        fillImage(processingMat);
         //   morphImage(processingMat, Imgproc.MORPH_CLOSE, 60);
 
 
@@ -323,9 +323,9 @@ public class ImageProcessing {
 
         blobCentres = findBlobCentres(processingMat);
 
-//        for (Point p : blobCentres) {
-//            Imgproc.ellipse(processingMat, p, new Size(50, 50), 0, 0, 360, new Scalar(0, 0 ,255));
-//        }
+        for (Point p : blobCentres) {
+            Imgproc.ellipse(processingMat, p, new Size(50, 50), 0, 0, 360, new Scalar(127, 56 ,255));
+        }
 
         processingMat.copyTo(mat);
 
@@ -334,7 +334,7 @@ public class ImageProcessing {
         r.release();
         g.release();
         b.release();
-        processingMat.release();
+        //processingMat.release();
         return blobCentres;
     }
 
@@ -342,7 +342,7 @@ public class ImageProcessing {
      * Perform closing operation on the image, first downscaling to speed up processing
      */
     public static void morphImage(Mat mat, int operation, int size) {
-        int scaleFactor = 5;
+        int scaleFactor = 2;
         Mat element = Imgproc.getStructuringElement(Imgproc.MORPH_ELLIPSE, new Size(size / scaleFactor, size / scaleFactor));
         // Mat element2 = Imgproc.getStructuringElement(Imgproc.MORPH_ELLIPSE, new Size(3, 3));
 
@@ -354,6 +354,7 @@ public class ImageProcessing {
         Imgproc.morphologyEx(mat, mat, operation, element);
 
         Imgproc.resize(mat, mat, new Size(width, height));
+        Imgproc.threshold(mat, mat, 0, 255, Imgproc.THRESH_BINARY);
     }
 
     public static void fillImage(Mat mat) {
@@ -494,7 +495,10 @@ public class ImageProcessing {
             return null;
         }
         for (Point p : points) {
-            double distance = pixelDistance(p, new Point(currentMat.width() / 2, currentMat.height() / 2));
+            if (p.x < 5 || p.y < 5 || p.x > processingMat.width() - 5 || p.y > processingMat.height() - 5) {
+                continue;
+            }
+            double distance = pixelDistance(p, new Point(processingMat.width() / 2, processingMat.height() / 2));
             if (distance < minDistance) {
                 minDistance = distance;
                 minPoint = p;
