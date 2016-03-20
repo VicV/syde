@@ -1,10 +1,10 @@
 <resources>
-    <string name="app_name">Litterary</string>
+    <string name="app_name">Falcn</string>
     <string name="hello_world">Hello world!</string>
-    <string name="action_settings">Litterary</string>
-    <string name="title_activity_djiaoa">Litterary</string>
-    <string name="title_activity_djiconnection_manager">Litterary</string>
+    <string name="action_settings">Falcn</string>
+    <string name="title_activity_djiaoa">Falcn</string>
+    <string name="title_activity_djiconnection_manager">Falcn</string>
 
     <!-- TODO: Remove or change this placeholder text -->
-    <string name="hello_blank_fragment">Litterary</string>
+    <string name="hello_blank_fragment">Falcn</string>
 </resources>
