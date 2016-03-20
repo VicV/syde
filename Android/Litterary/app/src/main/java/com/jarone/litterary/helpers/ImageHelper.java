@@ -6,6 +6,8 @@ import android.opengl.GLES30;
 import android.opengl.GLSurfaceView;
 import android.util.TypedValue;
 
+import com.jarone.litterary.R;
+
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.ShortBuffer;
@@ -56,12 +58,21 @@ public class ImageHelper {
         });
     }
 
+    private static int surfaceHeight = -1;
+    private static int surfaceWidth = -1;
 
     public static Bitmap getBitmapFromGLSurface(int w, int h, GL10 gl) {
 
         if (w == 0 || h == 0) {
             return null;
         }
+
+        if (surfaceHeight <= 0 || surfaceWidth <= 0) {
+            surfaceHeight = ContextManager.getMainActivityInstance().findViewById(R.id.surface_layout).getHeight();
+            surfaceWidth = ContextManager.getMainActivityInstance().findViewById(R.id.surface_layout).getWidth();
+        }
+
+
         if (runningBitmap == null) {
             runningBitmap = Bitmap.createBitmap(w, h, Bitmap.Config.RGB_565);
         }
@@ -81,7 +92,6 @@ public class ImageHelper {
             sb = ShortBuffer.wrap(sBuffer);
         }
 
-
         gl.glReadPixels(0, 0, w, h, GLES30.GL_RGBA, GLES30.GL_UNSIGNED_BYTE, runningByteBuffer);
         runningByteBuffer.asIntBuffer().get(pixelsBuffer);
         runningBitmap.setPixels(pixelsBuffer, (w * h) - w, -w, 0, 0, w, h);
@@ -94,7 +104,7 @@ public class ImageHelper {
         runningByteBuffer.clear();
         runningBitmap.copyPixelsFromBuffer(sb);
         sb.clear();
-        return runningBitmap;
+        return Bitmap.createScaledBitmap(runningBitmap, surfaceWidth, surfaceHeight, false);
     }
 
 }
