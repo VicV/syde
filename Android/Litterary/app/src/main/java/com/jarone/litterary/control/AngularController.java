@@ -27,7 +27,7 @@ public class AngularController {
     private ArrayList<ScheduledFuture> generateTasks = new ArrayList<>();
 
     float MAX_ANGLE = 250;
-    private long SAMPLING_TIME = 150;
+    private long SAMPLING_TIME = 400;
 
     float P = 100;
     float I = 0;
@@ -90,7 +90,7 @@ public class AngularController {
      */
     public void controlsLoop() {
 
-        float error = (float)ImageProcessing.pixelsToMetres(ImageProcessing.distanceFromTarget(activeAngle), DroneState.getAltitude());
+        float error = (float)ImageProcessing.distanceFromTarget(activeAngle, DroneState.getAltitude());
         P = getInputParameter();
         float action = PID(error);
 
@@ -102,17 +102,18 @@ public class AngularController {
         errorSum += error;
 
         lastAction = action;
-        if (descend) {
-            GroundStation.setAngles(0, 0, 0, 2);
-        } else {
-            if (activeAngle == ActiveAngle.PITCH) {
-                GroundStation.setAngles(action, 0, 0);
-            } else {
-                GroundStation.setAngles(0, 0, action);
-            }
-        }
+//        if (descend) {
+//            GroundStation.setAngles(0, 0, 0, 2);
+//        } else {
+//            if (activeAngle == ActiveAngle.PITCH) {
+//                GroundStation.setAngles(action, 0, 0);
+//            } else {
+//                GroundStation.setAngles(0, 0, action);
+//            }
+//        }
+        GroundStation.setAngles(0,0,0,0);
 
-        MessageHandler.log("" + action + " " + error + activeAngle);
+        MessageHandler.log(action + " " + error + " " + activeAngle);
 
         //Switch active controlled angle every second
         loopIterations++;
@@ -139,7 +140,9 @@ public class AngularController {
     }
 
     public void stopExecutionLoop() {
-        controlsLoopFuture.cancel(true);
+        if (controlsLoopFuture != null) {
+            controlsLoopFuture.cancel(true);
+        }
     }
 
 
@@ -192,7 +195,7 @@ public class AngularController {
                             @Override
                             public void run() {
                                 if (isRetrieving) {
-                                    performNextAction(ImageProcessing.distanceFromTarget(activeAngle), callback);
+                                    performNextAction(ImageProcessing.distanceFromTarget(activeAngle, DroneState.getAltitude()), callback);
                                 }
                             }
                         };
@@ -208,7 +211,7 @@ public class AngularController {
             ImageProcessing.startTrackingObject();
         }
         isRetrieving = true;
-        double dist = ImageProcessing.distanceFromTarget(activeAngle);
+        double dist = ImageProcessing.distanceFromTarget(activeAngle, DroneState.getAltitude());
         performNextAction(dist, callback);
         //determine tracking target
         //calulate error from target
