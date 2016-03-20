@@ -6,8 +6,11 @@ import android.opengl.GLES30;
 import android.opengl.GLSurfaceView;
 import android.util.TypedValue;
 
+import com.jarone.litterary.R;
+
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
+import java.nio.ShortBuffer;
 
 import javax.microedition.khronos.egl.EGL10;
 import javax.microedition.khronos.egl.EGLContext;
@@ -20,7 +23,11 @@ public class ImageHelper {
 
     public static Bitmap runningBitmap;
     private static ByteBuffer runningByteBuffer;
+    private static short[] sBuffer;
+    private static ShortBuffer sb;
+
     private static int[] pixelsBuffer;
+
     private static int height = -1;
     private static int width = -1;
 
@@ -51,12 +58,21 @@ public class ImageHelper {
         });
     }
 
+    private static int surfaceHeight = -1;
+    private static int surfaceWidth = -1;
 
     public static Bitmap getBitmapFromGLSurface(int w, int h, GL10 gl) {
 
         if (w == 0 || h == 0) {
             return null;
         }
+
+        if (surfaceHeight <= 0 || surfaceWidth <= 0) {
+            surfaceHeight = ContextManager.getMainActivityInstance().findViewById(R.id.surface_layout).getHeight();
+            surfaceWidth = ContextManager.getMainActivityInstance().findViewById(R.id.surface_layout).getWidth();
+        }
+
+
         if (runningBitmap == null) {
             runningBitmap = Bitmap.createBitmap(w, h, Bitmap.Config.RGB_565);
         }
@@ -69,12 +85,26 @@ public class ImageHelper {
         if (pixelsBuffer == null) {
             pixelsBuffer = new int[w * h];
         }
+        if (sBuffer == null) {
+            sBuffer = new short[w * h];
+        }
+        if (sb == null) {
+            sb = ShortBuffer.wrap(sBuffer);
+        }
 
         gl.glReadPixels(0, 0, w, h, GLES30.GL_RGBA, GLES30.GL_UNSIGNED_BYTE, runningByteBuffer);
         runningByteBuffer.asIntBuffer().get(pixelsBuffer);
         runningBitmap.setPixels(pixelsBuffer, (w * h) - w, -w, 0, 0, w, h);
+        runningBitmap.copyPixelsToBuffer(sb);
+        for (int i = 0; i < w * h; ++i) {
+            short v = sBuffer[i];
+            sBuffer[i] = (short) (((v & 0x1f) << 11) | (v & 0x7e0) | ((v & 0xf800) >> 11));
+        }
+        sb.rewind();
         runningByteBuffer.clear();
-        return runningBitmap;
+        runningBitmap.copyPixelsFromBuffer(sb);
+        sb.clear();
+        return Bitmap.createScaledBitmap(runningBitmap, surfaceWidth, surfaceHeight, false);
     }
 
 }

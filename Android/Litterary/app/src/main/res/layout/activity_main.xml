@@ -26,8 +26,8 @@
 
         <com.jarone.litterary.views.AndroidCameraSurfaceView
             android:id="@+id/android_camera_surfaceview_jacinta"
-            android:layout_width="fill_parent"
-            android:layout_height="212dp"
+            android:layout_width="320px"
+            android:layout_height="240px"
             android:elevation="5dp"
             android:visibility="gone" />
 
