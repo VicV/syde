@@ -123,7 +123,7 @@ public class DroneState {
         mBatteryUpdateInfoCallBack = new DJIBatteryUpdateInfoCallBack() {
             @Override
             public void onResult(DJIBatteryProperty djiBatteryProperty) {
-                battery = djiBatteryProperty.remainLifePercent;
+                battery = djiBatteryProperty.remainPowerPercent;
             }
         };
         DJIDrone.getDjiBattery().setBatteryUpdateInfoCallBack(mBatteryUpdateInfoCallBack);

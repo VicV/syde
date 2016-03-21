@@ -542,7 +542,7 @@ public class ImageProcessing {
             return (originalMat.height() / 2 - trackedObject.getPosition().y) * py;
         } else {
             //To the left is negative, right is positive
-            return (trackedObject.getPosition().x - originalMat.width() / 2) * px;
+            return (trackedObject.getPosition().x - originalMat.width() / 2) * py;
         }
     }
 
