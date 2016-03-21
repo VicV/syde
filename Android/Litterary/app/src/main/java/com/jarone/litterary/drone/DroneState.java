@@ -103,6 +103,9 @@ public class DroneState {
                 homeLatitude = state.homeLocationLatitude;
                 homeLongitude = state.homeLocationLongitude;
                 altitude = state.altitude;
+                if (altitude < 0) {
+                    altitude = 1;
+                }
                 speed = state.speed;
                 velocityX = state.velocityX;
                 velocityY = state.velocityY;

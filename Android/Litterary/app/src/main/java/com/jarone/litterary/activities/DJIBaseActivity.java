@@ -3,6 +3,7 @@ package com.jarone.litterary.activities;
 import android.os.Bundle;
 import android.support.v4.app.FragmentActivity;
 
+import com.jarone.litterary.drone.Camera;
 import com.jarone.litterary.drone.DroneState;
 import com.jarone.litterary.drone.GroundStation;
 import com.jarone.litterary.handlers.MessageHandler;
@@ -42,6 +43,9 @@ public class DJIBaseActivity extends FragmentActivity {
 
             }
         });
+        //Try to fix stuck gimbal state by setting it to face forward first
+        Camera.setGimbalPitch(0);
+        Camera.setGimbalDown();
     }
 
     @Override

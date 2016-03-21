@@ -571,6 +571,7 @@ public class MainActivity extends DJIBaseActivity {
     private TextView switchModeText;
     private TextView currentModeText;
     private TextView currentLocation;
+    private TextView altitudeText;
     private TextView targetLocation;
     private TextView droneConnectedText;
     private ImageView modeButton;
@@ -588,6 +589,7 @@ public class MainActivity extends DJIBaseActivity {
         switchModeText = ((TextView) findViewById(R.id.switch_mode_text));
         currentModeText = ((TextView) findViewById(R.id.currentMode));
         currentLocation = ((TextView) findViewById(R.id.currentLocation));
+        altitudeText = ((TextView) findViewById(R.id.altitude));
         targetLocation = ((TextView) findViewById(R.id.targetLocation));
         droneConnectedText = ((TextView) findViewById(R.id.droneConnected));
         modeButton = (ImageView) findViewById(R.id.switch_mode_icon);
@@ -622,6 +624,8 @@ public class MainActivity extends DJIBaseActivity {
                     currentModeText.setText(DroneState.flightMode.name());
                     lastMode = mode;
                 }
+
+                altitudeText.setText("" + DroneState.getAltitude());
 
                 double currentLat = DroneState.getLatitude();
                 double currentLong = DroneState.getLongitude();
