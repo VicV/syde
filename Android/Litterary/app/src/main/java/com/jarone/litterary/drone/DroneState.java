@@ -38,6 +38,10 @@ public class DroneState {
     private static double velocityY = 0;
     private static double velocityZ = 0;
 
+    public static double getBattery() {
+        return battery;
+    }
+
     private static double battery = 0;
     private static int mode;
 
@@ -165,5 +169,7 @@ public class DroneState {
         return roll;
     }
 
-    public static double getAltitude() { return altitude; }
+    public static double getAltitude() {
+        return altitude;
+    }
 }
