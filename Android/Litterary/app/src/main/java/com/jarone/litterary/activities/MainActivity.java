@@ -50,12 +50,12 @@ import org.opencv.core.Mat;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.NoSuchElementException;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 
 import dji.sdk.api.Camera.DJICameraSettingsTypeDef;
-
 import dji.sdk.api.DJIDrone;
 import dji.sdk.interfaces.DJIReceivedVideoDataCallBack;
 import dji.sdk.widget.DjiGLSurfaceView;
@@ -107,8 +107,8 @@ public class MainActivity extends DJIBaseActivity {
         registerCamera();
         ContextManager.setContext(this);
         DroneState.registerConnectedTimer();
-        DroneState.registerBatteryUpdate();
         GroundStation.registerPhantom2Callback();
+        DroneState.registerBatteryUpdate();
         RelativeLayout.LayoutParams lp = new RelativeLayout.LayoutParams(RelativeLayout.LayoutParams.MATCH_PARENT, (int) ImageHelper.getDP(this, 212));
         addContentView(getLayoutInflater().inflate(R.layout.upscaled, null), lp);
         upscalePreview = (ImageView) findViewById(R.id.upscaled_preview);
@@ -312,15 +312,44 @@ public class MainActivity extends DJIBaseActivity {
 
     public ArrayBlockingQueue<AsyncTask> runningUpscaleTasks = new ArrayBlockingQueue<>(1);
 
+    private long lastRunTime = 0;
+
     private void setUpscaleImage() {
         UpscaleImageTask newTask = new UpscaleImageTask();
         if (runningUpscaleTasks.offer(newTask)) {
+            lastRunTime = System.currentTimeMillis();
             newTask.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, mDjiGLSurfaceView.getVisibility() == View.GONE ? mAndroidCameraSurfaceViewOld : mDjiGLSurfaceView);
+        } else if ((System.currentTimeMillis() - lastRunTime) > 1000) {
+            try {
+                runningTasks.remove();
+            } catch (NoSuchElementException e) {
+                runningUpscaleTasks = new ArrayBlockingQueue<>(1);
+            }
         }
     }
 
-    public class UpscaleImageTask extends AsyncTask<GLSurfaceView, Void, Void> {
+    private class UpscaleRunnable implements Runnable {
 
+        private Bitmap nextBitmap;
+        private UpscaleImageTask context;
+
+        public void setNewValues(Bitmap b, UpscaleImageTask c) {
+            nextBitmap = b;
+            context = c;
+        }
+
+        @Override
+        public void run() {
+            if (nextBitmap != null) {
+                upscalePreview.setImageBitmap(nextBitmap);
+            }
+            runningUpscaleTasks.remove(context);
+        }
+    }
+
+    private UpscaleRunnable upscaleRunnable = new UpscaleRunnable();
+
+    public class UpscaleImageTask extends AsyncTask<GLSurfaceView, Void, Void> {
         private UpscaleImageTask context = this;
 
         @Override
@@ -328,22 +357,18 @@ public class MainActivity extends DJIBaseActivity {
             ImageHelper.createBitmapFromFrame(new ImageHelper.BitmapCreatedCallback() {
                 @Override
                 public void onBitmapCreated(final Bitmap bitmap) {
+                    upscaleRunnable.setNewValues(bitmap, context);
                     if (upscalePreview != null) {
-                        upscalePreview.post(new Runnable() {
-                            @Override
-                            public void run() {
-                                if (bitmap != null) {
-                                    upscalePreview.setImageBitmap(bitmap);
-                                }
-                                runningUpscaleTasks.remove(context);
-                            }
-                        });
+                        upscalePreview.post(upscaleRunnable);
                     }
-
                 }
-
             }, params[0]);
             return null;
+        }
+
+        @Override
+        protected void onProgressUpdate(Void... values) {
+            super.onProgressUpdate(values);
         }
 
         @Override
@@ -355,6 +380,7 @@ public class MainActivity extends DJIBaseActivity {
     private void registerCamera() {
         mAndroidCameraSurfaceViewOld = (AndroidCameraSurfaceView) findViewById(R.id.android_camera_surfaceview_jacinta);
         mAndroidCameraSurfaceView = (CameraBridgeViewBase) findViewById(R.id.android_camera_surfaceview);
+
         mDjiGLSurfaceView = (DjiGLSurfaceView) findViewById(R.id.DJI_camera_surfaceview);
         mDjiGLSurfaceView.start();
 
@@ -366,7 +392,7 @@ public class MainActivity extends DJIBaseActivity {
                 if (canStartProcessing) {
                     processFrame();
                 } else {
-                    if (videoBuffer != null && videoBuffer.length >= 5) {
+                    if (videoBuffer != null) {
                         setUpscaleImage();
                     }
                 }
@@ -689,16 +715,16 @@ public class MainActivity extends DJIBaseActivity {
                             batteryIcon.setImageDrawable(getResources().getDrawable(R.drawable.battery_1_small));
                             break;
                         case 2:
-                            batteryIcon.setImageDrawable(getResources().getDrawable(R.drawable.battery_1_small));
+                            batteryIcon.setImageDrawable(getResources().getDrawable(R.drawable.battery_2_small));
                             break;
                         case 3:
-                            batteryIcon.setImageDrawable(getResources().getDrawable(R.drawable.battery_1_small));
+                            batteryIcon.setImageDrawable(getResources().getDrawable(R.drawable.battery_3_small));
                             break;
                         case 4:
-                            batteryIcon.setImageDrawable(getResources().getDrawable(R.drawable.battery_1_small));
+                            batteryIcon.setImageDrawable(getResources().getDrawable(R.drawable.battery_4_small));
                             break;
                         case 5:
-                            batteryIcon.setImageDrawable(getResources().getDrawable(R.drawable.battery_1_small));
+                            batteryIcon.setImageDrawable(getResources().getDrawable(R.drawable.battery_like_dead_small));
                             break;
                     }
                 }

@@ -118,7 +118,6 @@ public class DroneState {
                 roll = state.roll;
                 yaw = state.yaw;
                 DroneState.state = state;
-
                 droneConnected = true;
             }
         };
