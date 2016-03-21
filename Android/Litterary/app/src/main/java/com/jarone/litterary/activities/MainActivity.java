@@ -19,7 +19,9 @@ import android.support.v4.view.ViewPager;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.view.View;
+import android.view.ViewGroup;
 import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 
@@ -110,9 +112,9 @@ public class MainActivity extends DJIBaseActivity {
         RelativeLayout.LayoutParams lp = new RelativeLayout.LayoutParams(RelativeLayout.LayoutParams.MATCH_PARENT, (int) ImageHelper.getDP(this, 212));
         addContentView(getLayoutInflater().inflate(R.layout.upscaled, null), lp);
         upscalePreview = (ImageView) findViewById(R.id.upscaled_preview);
-//        mDjiGLSurfaceView.setZOrderMediaOverlay(true);
-//        addContentView(getLayoutInflater().inflate(R.layout.surface_overlay_layout, null), lp);
-
+        mDjiGLSurfaceView.setZOrderMediaOverlay(true);
+        LinearLayout.LayoutParams blp = new LinearLayout.LayoutParams(RelativeLayout.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+        addContentView(getLayoutInflater().inflate(R.layout.surface_overlay_layout, null), blp);
         wifiManager = (WifiManager) getSystemService(Context.WIFI_SERVICE);
     }
 
@@ -191,7 +193,7 @@ public class MainActivity extends DJIBaseActivity {
 //                        GroundStation.engageJoystick(new Runnable() {
 //                            @Override
 //                            public void run() {
-                                GroundStation.setAngles(500, 0, 0);
+                        GroundStation.setAngles(500, 0, 0);
 //                            }
 //                        });
                         break;
@@ -569,11 +571,13 @@ public class MainActivity extends DJIBaseActivity {
     private ImageView connectIcon;
     private TextView connectText;
     private TextView switchModeText;
+    private TextView batteryText;
     private TextView currentModeText;
     private TextView currentLocation;
     private TextView altitudeText;
     private TextView targetLocation;
     private TextView droneConnectedText;
+    private ImageView batteryIcon;
     private ImageView modeButton;
     private String lastWifi = "";
     private int lastMode = -6;
@@ -582,6 +586,7 @@ public class MainActivity extends DJIBaseActivity {
     private double lastTargetLat = -9999999;
     private double lastTargetLong = -999999;
     private boolean lastConnected = false;
+    private int lastLevel = -1;
 
     private void setupInterfaceUpdate() {
         connectIcon = ((ImageView) findViewById(R.id.connect_icon));
@@ -593,7 +598,10 @@ public class MainActivity extends DJIBaseActivity {
         targetLocation = ((TextView) findViewById(R.id.targetLocation));
         droneConnectedText = ((TextView) findViewById(R.id.droneConnected));
         modeButton = (ImageView) findViewById(R.id.switch_mode_icon);
+        batteryIcon = (ImageView) findViewById(R.id.battery_icon);
+        batteryText = ((TextView) findViewById(R.id.battery_text));
         interfaceSetup = true;
+
     }
 
     private void updateInterface() {
@@ -604,11 +612,12 @@ public class MainActivity extends DJIBaseActivity {
             @TargetApi(Build.VERSION_CODES.LOLLIPOP)
             @Override
             public void run() {
-                if (!wifiManager.getConnectionInfo().getSSID().equals(lastWifi) && wifiManager.getConnectionInfo().getSSID().contains("Phantom")) {
+                String currentWifi = wifiManager.getConnectionInfo().getSSID();
+                if (currentWifi.equals(lastWifi) && currentWifi.contains("Phantom")) {
                     lastWifi = wifiManager.getConnectionInfo().getSSID();
                     connectIcon.setImageDrawable(getDrawable(R.drawable.wifi_connected_small));
                     connectText.setText("connected");
-                } else if (!wifiManager.getConnectionInfo().getSSID().contains("Phantom")) {
+                } else if (!currentWifi.contains("Phantom")) {
                     connectText.setText("connect");
                     connectIcon.setImageDrawable(getDrawable(R.drawable.wifi_not_connected_small));
                 }
@@ -668,9 +677,50 @@ public class MainActivity extends DJIBaseActivity {
 //                    findViewById(R.id.remaining_items).setVisibility(View.GONE);
 //                }
 
+                double currentBattery = DroneState.getBattery();
+                int currentLevel = checkBatteryLevels(currentBattery);
+
+                batteryText.setText(String.valueOf(currentBattery + "%"));
+
+                if (currentLevel != lastLevel) {
+                    lastLevel = currentLevel;
+                    switch (lastLevel) {
+                        case 1:
+                            batteryIcon.setImageDrawable(getResources().getDrawable(R.drawable.battery_1_small));
+                            break;
+                        case 2:
+                            batteryIcon.setImageDrawable(getResources().getDrawable(R.drawable.battery_1_small));
+                            break;
+                        case 3:
+                            batteryIcon.setImageDrawable(getResources().getDrawable(R.drawable.battery_1_small));
+                            break;
+                        case 4:
+                            batteryIcon.setImageDrawable(getResources().getDrawable(R.drawable.battery_1_small));
+                            break;
+                        case 5:
+                            batteryIcon.setImageDrawable(getResources().getDrawable(R.drawable.battery_1_small));
+                            break;
+                    }
+                }
+
+
                 //TODO: UPDATE BATTERY. NEED TO KNOW WTF REMAINPOWER IS FROM ADAM
             }
         });
+    }
+
+    private int checkBatteryLevels(double currentBattery) {
+        if (currentBattery >= 90) {
+            return 4;
+        } else if (currentBattery >= 60) {
+            return 3;
+        } else if (currentBattery >= 35) {
+            return 2;
+        } else if (currentBattery >= 20) {
+            return 1;
+        } else {
+            return 5;
+        }
     }
 
     @Override

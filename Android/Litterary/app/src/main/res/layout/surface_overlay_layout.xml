@@ -8,19 +8,17 @@
 
     <ImageView
         android:id="@+id/battery_icon"
-        android:layout_width="33dp"
-        android:layout_height="33dp"
-        android:layout_gravity="center"
+        android:layout_width="23dp"
+        android:layout_height="23dp"
         android:src="@drawable/battery_4_small" />
 
     <TextView
-        android:id="@+id/remaining_items"
+        android:id="@+id/battery_text"
         style="@style/MyText.Status"
-        android:layout_width="fill_parent"
+        android:layout_gravity="center"
+        android:layout_width="wrap_content"
+        android:textSize="11sp"
         android:layout_height="wrap_content"
-        android:layout_gravity="end|center_vertical"
-        android:layout_weight="1"
-        android:padding="1dip"
-        android:text="0/60"
-        android:textAlignment="gravity" />
+        android:paddingLeft="5dp"
+        android:text="93%" />
 </LinearLayout>
