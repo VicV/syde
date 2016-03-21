@@ -27,7 +27,7 @@ public class DJIBaseActivity extends FragmentActivity {
         super.onResume();
         DroneState.updateDroneState();
         DJIDrone.getDjiMC().startUpdateTimer(1000);
-        DJIDrone.getDjiBattery().startUpdateTimer(2000);
+        DJIDrone.getDjiBattery().startUpdateTimer(10000);
         if (!OpenCVLoader.initDebug()) {
             MessageHandler.log("Internal OpenCV library not found. Using OpenCV Manager for initialization");
             OpenCVLoader.initAsync(OpenCVLoader.OPENCV_VERSION_3_1_0, this, ImageProcessing.loaderCallback);
