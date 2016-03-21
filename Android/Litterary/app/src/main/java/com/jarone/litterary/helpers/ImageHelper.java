@@ -39,23 +39,40 @@ public class ImageHelper {
         void onBitmapCreated(Bitmap bitmap);
     }
 
+    private static class CreateBitmapRunnable implements Runnable {
+
+        private BitmapCreatedCallback bitmapCreatedCallback;
+
+        public void setNewBitmap(BitmapCreatedCallback bitmapCreatedCallback) {
+            this.bitmapCreatedCallback = bitmapCreatedCallback;
+        }
+
+        @Override
+        public void run() {
+            GL10 gl;
+            EGL10 egl = (EGL10) EGLContext.getEGL();
+            gl = (GL10) egl.eglGetCurrentContext().getGL();
+            Bitmap frame = ImageHelper.getBitmapFromGLSurface(width, height, gl);
+            bitmapCreatedCallback.onBitmapCreated(frame);
+        }
+
+    }
+
+    private static CreateBitmapRunnable createBitmapRunnable = new CreateBitmapRunnable();
+
+
     // Create a bitmap from the current surface frame.
     public static void createBitmapFromFrame(final BitmapCreatedCallback bitmapCreatedCallback, final GLSurfaceView surface) {
         if ((width == -1 || width == 0) || (height == 0 || height == -1)) {
             width = surface.getWidth();
             height = surface.getHeight();
         }
-
-        surface.queueEvent(new Runnable() {
-            @Override
-            public void run() {
-                GL10 gl;
-                EGL10 egl = (EGL10) EGLContext.getEGL();
-                gl = (GL10) egl.eglGetCurrentContext().getGL();
-                Bitmap frame = ImageHelper.getBitmapFromGLSurface(width, height, gl);
-                bitmapCreatedCallback.onBitmapCreated(frame);
-            }
-        });
+        createBitmapRunnable.setNewBitmap(bitmapCreatedCallback);
+        if (surface.isEnabled()) {
+            surface.queueEvent(createBitmapRunnable);
+        } else {
+            bitmapCreatedCallback.onBitmapCreated(null);
+        }
     }
 
     private static int surfaceHeight = -1;
@@ -85,9 +102,11 @@ public class ImageHelper {
         if (pixelsBuffer == null) {
             pixelsBuffer = new int[w * h];
         }
+
         if (sBuffer == null) {
             sBuffer = new short[w * h];
         }
+
         if (sb == null) {
             sb = ShortBuffer.wrap(sBuffer);
         }
