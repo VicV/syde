@@ -385,8 +385,6 @@ public class MainActivity extends DJIBaseActivity {
         mDjiGLSurfaceView.start();
 
 
-
-
         DJIReceivedVideoDataCallBack mReceivedVideoDataCallBack = new DJIReceivedVideoDataCallBack() {
             @Override
             public void onResult(byte[] videoBuffer, int size) {
@@ -713,16 +711,16 @@ public class MainActivity extends DJIBaseActivity {
                             batteryIcon.setImageDrawable(getResources().getDrawable(R.drawable.battery_1_small));
                             break;
                         case 2:
-                            batteryIcon.setImageDrawable(getResources().getDrawable(R.drawable.battery_1_small));
+                            batteryIcon.setImageDrawable(getResources().getDrawable(R.drawable.battery_2_small));
                             break;
                         case 3:
-                            batteryIcon.setImageDrawable(getResources().getDrawable(R.drawable.battery_1_small));
+                            batteryIcon.setImageDrawable(getResources().getDrawable(R.drawable.battery_3_small));
                             break;
                         case 4:
-                            batteryIcon.setImageDrawable(getResources().getDrawable(R.drawable.battery_1_small));
+                            batteryIcon.setImageDrawable(getResources().getDrawable(R.drawable.battery_4_small));
                             break;
                         case 5:
-                            batteryIcon.setImageDrawable(getResources().getDrawable(R.drawable.battery_1_small));
+                            batteryIcon.setImageDrawable(getResources().getDrawable(R.drawable.battery_like_dead_small));
                             break;
                     }
                 }
