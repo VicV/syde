@@ -76,7 +76,7 @@ public class DroneState {
             @Override
             public void run() {
                 droneConnected = false;
-                //registerBatteryUpdate();
+                registerBatteryUpdate();
                 //GroundStation.registerPhantom2Callback();
                 Camera.setGimbalDown();
                 if (!groundStationConnected) {

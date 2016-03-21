@@ -109,8 +109,8 @@ public class MainActivity extends DJIBaseActivity {
         RelativeLayout.LayoutParams lp = new RelativeLayout.LayoutParams(RelativeLayout.LayoutParams.MATCH_PARENT, (int) ImageHelper.getDP(this, 212));
         addContentView(getLayoutInflater().inflate(R.layout.upscaled, null), lp);
         upscalePreview = (ImageView) findViewById(R.id.upscaled_preview);
-//        mDjiGLSurfaceView.setZOrderMediaOverlay(true);
-//        addContentView(getLayoutInflater().inflate(R.layout.surface_overlay_layout, null), lp);
+        mDjiGLSurfaceView.setZOrderMediaOverlay(true);
+        addContentView(getLayoutInflater().inflate(R.layout.surface_overlay_layout, null), lp);
 
         wifiManager = (WifiManager) getSystemService(Context.WIFI_SERVICE);
     }
