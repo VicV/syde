@@ -105,6 +105,7 @@ public class MainActivity extends DJIBaseActivity {
         registerCamera();
         ContextManager.setContext(this);
         DroneState.registerConnectedTimer();
+        DroneState.registerBatteryUpdate();
         GroundStation.registerPhantom2Callback();
         RelativeLayout.LayoutParams lp = new RelativeLayout.LayoutParams(RelativeLayout.LayoutParams.MATCH_PARENT, (int) ImageHelper.getDP(this, 212));
         addContentView(getLayoutInflater().inflate(R.layout.upscaled, null), lp);
@@ -186,7 +187,13 @@ public class MainActivity extends DJIBaseActivity {
 //                                MessageHandler.d("DONE DOWNLOADING!!");
 //                            }
 //                        });
-                        GroundStation.setAngles(0, 0, 0, 1);
+                        //GroundStation.setAngles(0, 0, 0, 1);
+//                        GroundStation.engageJoystick(new Runnable() {
+//                            @Override
+//                            public void run() {
+                                GroundStation.setAngles(500, 0, 0);
+//                            }
+//                        });
                         break;
                     case R.id.button_imgproc_2:
                         SurveyRoute route = new SurveyRoute(new LatLng[20], 0, (short) 0);

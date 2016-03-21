@@ -26,14 +26,15 @@ public class AngularController {
     private ScheduledFuture controlsLoopFuture;
     private ArrayList<ScheduledFuture> generateTasks = new ArrayList<>();
 
-    float MAX_ANGLE = 250;
-    private long SAMPLING_TIME = 400;
+    float MAX_ANGLE = 600;
+    private long SAMPLING_TIME = 50;
 
-    float P = 100;
-    float I = 0;
+    float P = 18;
+    float I = 1;
     float D = 10;
 
     int loopIterations = 0;
+    int descendIterations = 0;
     float errorSum = 0;
     private float lastError = 0;
     private float lastAction = 0;
@@ -102,25 +103,26 @@ public class AngularController {
         errorSum += error;
 
         lastAction = action;
-//        if (descend) {
-//            GroundStation.setAngles(0, 0, 0, 2);
-//        } else {
-//            if (activeAngle == ActiveAngle.PITCH) {
-//                GroundStation.setAngles(action, 0, 0);
-//            } else {
-//                GroundStation.setAngles(0, 0, action);
-//            }
-//        }
-        GroundStation.setAngles(0,0,0,0);
+        if (descend) {
+            GroundStation.setAngles(0, 0, 0, 2);
+            descendTimer++;
+        } else {
+            if (activeAngle == ActiveAngle.PITCH) {
+                GroundStation.setAngles(action, 0, 0);
+            } else {
+                GroundStation.setAngles(0, 0, action);
+            }
+            loopIterations++;
+        }
+        //GroundStation.setAngles(0,0,0,0);
 
         MessageHandler.log(action + " " + error + " " + activeAngle);
 
         //Switch active controlled angle every second
-        loopIterations++;
         //TODO switch more often if error is increasing past some threshold
-        if (loopIterations > 1000 / SAMPLING_TIME) {
+        if (loopIterations > 500 / SAMPLING_TIME || descendTimer > 200 / SAMPLING_TIME) {
             if (activeAngle == ActiveAngle.ROLL && !descend) {
-                if (doDescend) {
+                if (doDescend && ImageProcessing.distanceFromTarget(ActiveAngle.PITCH, DroneState.getAltitude()) < 0.2 && ImageProcessing.distanceFromTarget(ActiveAngle.PITCH, DroneState.getAltitude()) < 0.2) {
                     descend = true;
                     MessageHandler.log("Descending");
                 } else {
@@ -135,6 +137,7 @@ public class AngularController {
                 MessageHandler.log("Switching angle to " + activeAngle);
             }
             loopIterations = 0;
+            descendTimer = 0;
         }
 
     }
