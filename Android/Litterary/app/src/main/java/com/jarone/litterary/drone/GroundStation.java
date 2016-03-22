@@ -122,7 +122,7 @@ public class GroundStation {
                 } else {
                     DroneState.groundStationConnected = false;
                     ContextManager.getMainActivityInstance().setupWifi();
-                    MessageHandler.d("Open Ground Station: FAILURE");
+                    MessageHandler.log("Open Ground Station: FAILURE");
                 }
             }
         });
