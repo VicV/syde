@@ -184,7 +184,7 @@ public class MainActivity extends DJIBaseActivity {
             public void onClick(View view) {
                 switch (view.getId()) {
                     case R.id.button_imgproc_1:
-                        canStartProcessing = true;
+                        canStartProcessing = !canStartProcessing;
                         break;
                     case R.id.button_imgproc_2:
                         if (ImageProcessing.isTracking()) {
@@ -193,6 +193,7 @@ public class MainActivity extends DJIBaseActivity {
                                 angularController.stopExecutionLoop();
                             }
                         } else {
+                            canStartProcessing = true;
                             ImageProcessing.startTrackingObject();
                         }
                         break;
@@ -211,6 +212,8 @@ public class MainActivity extends DJIBaseActivity {
                         if (mDjiGLSurfaceView.getVisibility() != View.GONE) {
                             mDjiGLSurfaceView.setVisibility(View.GONE);
                             upscalePreview.setVisibility(View.INVISIBLE);
+                            batteryIcon.setVisibility(View.INVISIBLE);
+                            batteryText.setVisibility(View.INVISIBLE);
                             mDjiGLSurfaceView.pause();
                             mDjiGLSurfaceView.destroy();
                             mAndroidCameraSurfaceView.setVisibility(View.VISIBLE);
@@ -229,7 +232,7 @@ public class MainActivity extends DJIBaseActivity {
                                 @Override
                                 public Mat onCameraFrame(CameraBridgeViewBase.CvCameraViewFrame cvCameraViewFrame) {
                                     Mat mat = cvCameraViewFrame.rgba();
-                                    if (!processing) {
+                                    if (!processing && canStartProcessing) {
                                         processing = true;
                                         //ImageDirectFromCameraAsyncTask newTask = new ImageDirectFromCameraAsyncTask();
                                         //if (runningTasks.offer(newTask)) {
@@ -253,6 +256,14 @@ public class MainActivity extends DJIBaseActivity {
                                     return cvCameraViewFrame.rgba();
                                 }
                             });
+                        } else {
+                            mDjiGLSurfaceView.setVisibility(View.VISIBLE);
+                            upscalePreview.setVisibility(View.VISIBLE);
+                            batteryIcon.setVisibility(View.VISIBLE);
+                            batteryText.setVisibility(View.VISIBLE);
+                            mAndroidCameraSurfaceView.disableView();
+                            canStartProcessing = false;
+                            mAndroidCameraSurfaceView.setVisibility(View.INVISIBLE);
                         }
                         break;
 //                    case R.id.button_special_camera_2:
@@ -263,7 +274,7 @@ public class MainActivity extends DJIBaseActivity {
 //                            mAndroidCameraSurfaceViewOld.setVisibility(View.VISIBLE);
 //                            mAndroidCameraSurfaceViewOld.setupSurfaceView();
 //                        }
-//                        break;
+//                    break;
                 }
             }
         };
@@ -296,6 +307,44 @@ public class MainActivity extends DJIBaseActivity {
                 runningUpscaleTasks = new ArrayBlockingQueue<>(1);
             }
         }
+    }
+
+    private Runnable controlRunnable;
+
+    public void updateControlInterface(final float action, final float error, final AngularController.ActiveAngle activeAngle) {
+        if (controlRunnable == null) {
+            controlRunnable = new Runnable() {
+                @Override
+                public void run() {
+                    if (activeAngle == AngularController.ActiveAngle.PITCH) {
+                        if (action < 0) {
+                            pitchBackward.setText(String.valueOf(action));
+                            pitchForward.setText("");
+                            rollRight.setText("");
+                            rollLeft.setText("");
+                        } else {
+                            pitchBackward.setText("");
+                            pitchForward.setText(String.valueOf(action));
+                            rollRight.setText("");
+                            rollLeft.setText("");
+                        }
+                    } else if (activeAngle == AngularController.ActiveAngle.ROLL) {
+                        if (action < 0) {
+                            pitchBackward.setText("");
+                            pitchForward.setText("");
+                            rollRight.setText("");
+                            rollLeft.setText(String.valueOf(action));
+                        } else {
+                            pitchBackward.setText("");
+                            pitchForward.setText("");
+                            rollRight.setText(String.valueOf(action));
+                            rollLeft.setText("");
+                        }
+                    }
+                }
+            };
+        }
+        runOnUiThread(controlRunnable);
     }
 
     private class UpscaleRunnable implements Runnable {
@@ -367,8 +416,8 @@ public class MainActivity extends DJIBaseActivity {
                     }
                 }
             }
-
         };
+
         DJIDrone.getDjiCamera().setStreamType(DJICameraSettingsTypeDef.CameraPreviewResolutionType.Resolution_Type_320x240_30fps);
         DJIDrone.getDjiCamera().setReceivedVideoDataCallBack(mReceivedVideoDataCallBack);
     }
@@ -510,7 +559,6 @@ public class MainActivity extends DJIBaseActivity {
                 currentPhotoPoints = new ArrayList<>(Arrays.asList(points));
                 currentPhotoPoints.size();
             }
-
             routeComplete();
 
             return null;
@@ -568,6 +616,10 @@ public class MainActivity extends DJIBaseActivity {
     private TextView currentLocation;
     private TextView targetLocation;
     private TextView droneConnectedText;
+    private TextView pitchForward;
+    private TextView pitchBackward;
+    private TextView rollLeft;
+    private TextView rollRight;
     private ImageView batteryIcon;
     private ImageView modeButton;
     private String lastWifi = "";
@@ -590,6 +642,10 @@ public class MainActivity extends DJIBaseActivity {
         modeButton = (ImageView) findViewById(R.id.switch_mode_icon);
         batteryIcon = (ImageView) findViewById(R.id.battery_icon);
         batteryText = ((TextView) findViewById(R.id.battery_text));
+        pitchForward = ((TextView) findViewById(R.id.pitch_forward));
+        pitchBackward = ((TextView) findViewById(R.id.pitch_back));
+        rollLeft = ((TextView) findViewById(R.id.roll_left));
+        rollRight = ((TextView) findViewById(R.id.roll_right));
         interfaceSetup = true;
     }
 
@@ -719,7 +775,6 @@ public class MainActivity extends DJIBaseActivity {
         viewPager = (ViewPager) findViewById(R.id.viewPager);
 
         //Forces all views to be loaded.
-        viewPager.setOffscreenPageLimit(10);
         viewPager.setAdapter(new ViewPagerAdapter(this));
         viewPager.setCurrentItem(1);
         viewPager.post(new Runnable() {
@@ -749,6 +804,8 @@ public class MainActivity extends DJIBaseActivity {
 
             }
         });
+
+        viewPager.setOffscreenPageLimit(10);
 
         //Tabs for viewpager
         TabLayout tabLayout = (TabLayout) findViewById(R.id.tab_layout);

@@ -77,7 +77,7 @@ public class ImageProcessing {
 
     //measured result 114.8 degrees
     private static final double CAMERA_FOVX = 110;
-    private static final double CAMERA_FOVY = 0.75*CAMERA_FOVX;
+    private static final double CAMERA_FOVY = 0.75 * CAMERA_FOVX;
 
     //pixel density: metres per pixel
     private static double px; //horizontal pixel density
@@ -88,9 +88,6 @@ public class ImageProcessing {
 
     //keeps track of submat error
     private static boolean createdTrackingObject = false;
-
-
-
 
     private static ArrayList<Point> blobCentres;
 
@@ -296,8 +293,8 @@ public class ImageProcessing {
             }
         }
 
-       // if (mindex == 0) {
-            r.copyTo(processingMat);
+        // if (mindex == 0) {
+        r.copyTo(processingMat);
         //} else if (mindex == 1) {
         //    g.copyTo(processingMat);
         //} else if (mindex == 2) {
@@ -336,7 +333,7 @@ public class ImageProcessing {
         blobCentres = findBlobCentres(processingMat);
 
         for (Point p : blobCentres) {
-            Imgproc.ellipse(processingMat, p, new Size(50, 50), 0, 0, 360, new Scalar(127, 56 ,255));
+            Imgproc.ellipse(processingMat, p, new Size(50, 50), 0, 0, 360, new Scalar(127, 56, 255));
         }
 
         processingMat.copyTo(mat);
@@ -556,10 +553,10 @@ public class ImageProcessing {
 
     //Calculates the density of each pixel in the vertical, py, and horizontal, px, directions in m per pixel
     public static void calculatePixelDensity(double altitude) {
-        double W = 2*altitude*Math.tan(Math.toRadians(CAMERA_FOVX)); //width of image area in m
-        double H = 2*altitude*Math.tan(Math.toRadians(CAMERA_FOVY)); //height of image area in m
-        px = W/processingMat.width(); //m per pixel
-        py = H/processingMat.height(); //m per pixel
+        double W = 2 * altitude * Math.tan(Math.toRadians(CAMERA_FOVX)); //width of image area in m
+        double H = 2 * altitude * Math.tan(Math.toRadians(CAMERA_FOVY)); //height of image area in m
+        px = W / processingMat.width(); //m per pixel
+        py = H / processingMat.height(); //m per pixel
     }
 
     public static double metresToPixels(double metres, double altitude) {
@@ -588,7 +585,7 @@ public class ImageProcessing {
         try {
             //create a histogram representation of the object
             Mat tempmask = trackedObject.mask.submat(region);
-            
+
             MatOfFloat ranges = new MatOfFloat(0f, 256f);
             MatOfInt histSize = new MatOfInt(25);
 
@@ -645,8 +642,7 @@ public class ImageProcessing {
         Imgproc.ellipse(originalMat, trackedObject.currBox, RECT_COLOR, 6);
         Utils.matToBitmap(originalMat, CVPreview);
 
-        if (trackedObject.currBox.size.height == 0)
-        {
+        if (trackedObject.currBox.size.height == 0) {
             retryCounter++;
             if (retryCounter > retryThreshold) {
                 retryCounter = 0;
@@ -663,6 +659,7 @@ public class ImageProcessing {
         startTrackingObject();
         temp.release();
     }
+
     /**
      * Begin tracking the object closest to the centre of the camera
      */

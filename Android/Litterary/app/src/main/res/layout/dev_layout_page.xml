@@ -97,9 +97,8 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:fontFeatureSettings="smcp"
-                android:text="start control loop"
+                android:text="control loop"
                 android:textColor="#999" />
-
 
             <TextView
                 android:id="@+id/control_title"

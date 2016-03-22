@@ -52,7 +52,9 @@ public class AngularController {
     private boolean generatorFlip = false;
 
     //Determine if the current control action is directing pitch or roll
-    public enum ActiveAngle { PITCH, ROLL}
+    public enum ActiveAngle {
+        PITCH, ROLL
+    }
 
     private ActiveAngle activeAngle = ActiveAngle.PITCH;
 
@@ -77,7 +79,7 @@ public class AngularController {
                     public void run() {
                         controlsLoop();
                     }
-                },0, SAMPLING_TIME, TimeUnit.MILLISECONDS);
+                }, 0, SAMPLING_TIME, TimeUnit.MILLISECONDS);
             }
         });
     }
@@ -85,13 +87,14 @@ public class AngularController {
     public float getInputParameter() {
         return Float.parseFloat(inputField.getText().toString());
     }
+
     /**
      * The control loop governing the PID control strategy. Loop is executed on a timer with
      * a rate of SAMPLING_TIME
      */
     public void controlsLoop() {
 
-        float error = (float)ImageProcessing.distanceFromTarget(activeAngle, DroneState.getAltitude());
+        float error = (float) ImageProcessing.distanceFromTarget(activeAngle, DroneState.getAltitude());
         P = getInputParameter();
         float action = PID(error);
 
@@ -117,6 +120,9 @@ public class AngularController {
         //GroundStation.setAngles(0,0,0,0);
 
         MessageHandler.log(action + " " + error + " " + activeAngle);
+        if (ContextManager.getMainActivityInstance() != null) {
+            ContextManager.getMainActivityInstance().updateControlInterface(action, error, activeAngle);
+        }
 
         //Switch active controlled angle every second
         //TODO switch more often if error is increasing past some threshold
@@ -151,11 +157,12 @@ public class AngularController {
 
     /**
      * Based on the given distance, determine the next action for the drone to undertake and perform it
+     *
      * @param distance
      */
     public void performNextAction(double distance, Runnable callback) {
         TableEntry action = ControlTable.findMatchForDistance(distance);
-        flyAtAngleForTime(action.angle, action.time,  activeAngle == ActiveAngle.PITCH, callback);
+        flyAtAngleForTime(action.angle, action.time, activeAngle == ActiveAngle.PITCH, callback);
         toggleActiveAngle();
     }
 
@@ -168,9 +175,10 @@ public class AngularController {
     }
 
     /**
-     *  Command the drone to fly at the specified angle for the given amount of time
-     * @param angle Angle to fly at
-     * @param time Time to fly at given angle
+     * Command the drone to fly at the specified angle for the given amount of time
+     *
+     * @param angle   Angle to fly at
+     * @param time    Time to fly at given angle
      * @param isPitch True if controlling pitch angle, false if controlling roll
      */
     public void flyAtAngleForTime(final double angle, final double time, final boolean isPitch, final Runnable callback) {
@@ -203,7 +211,7 @@ public class AngularController {
                             }
                         };
                     }
-                }, (int)time, TimeUnit.MILLISECONDS);
+                }, (int) time, TimeUnit.MILLISECONDS);
             }
         });
     }
@@ -233,6 +241,7 @@ public class AngularController {
     /**
      * Recursively generate table entries containing distances travelled for angles up to 45 degrees
      * and times from 1 second to 10 seconds
+     *
      * @param angle
      * @param timeIndex
      */
@@ -279,7 +288,7 @@ public class AngularController {
                     }
                 }, 3, TimeUnit.SECONDS));
             }
-        }, (int)time, TimeUnit.MILLISECONDS));
+        }, (int) time, TimeUnit.MILLISECONDS));
     }
 
     public void cancelTableGeneration() {
@@ -292,11 +301,12 @@ public class AngularController {
 
     /**
      * PID Control Equation, using constant parameters defined in class
+     *
      * @param error The error term used for control
      * @return The calculated action based on PID control math
      */
     private float PID(float error) {
-        return error * P + errorSum * SAMPLING_TIME * I + (error - lastError)/SAMPLING_TIME * D;
+        return error * P + errorSum * SAMPLING_TIME * I + (error - lastError) / SAMPLING_TIME * D;
     }
 
     public float getLastAction() {

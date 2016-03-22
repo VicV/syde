@@ -46,7 +46,8 @@
                 android:layout_height="40dp"
                 android:hint="P val"
                 android:inputType="numberDecimal"
-                android:padding="10dp"
+                android:paddingLeft="10dp"
+                android:paddingRight="10dp"
                 android:textColor="#999"
                 android:textColorHint="#bbb" />
 
@@ -57,7 +58,8 @@
                 android:fontFeatureSettings="smcp"
                 android:hint="I val"
                 android:inputType="numberDecimal"
-                android:padding="10dp"
+                android:paddingLeft="10dp"
+                android:paddingRight="10dp"
                 android:textColor="#999"
                 android:textColorHint="#bbb" />
 
@@ -68,7 +70,8 @@
                 android:fontFeatureSettings="smcp"
                 android:hint="D val"
                 android:inputType="numberDecimal"
-                android:padding="10dp"
+                android:paddingLeft="10dp"
+                android:paddingRight="10dp"
                 android:textColor="#999"
                 android:textColorHint="#bbb" />
 
@@ -79,7 +82,8 @@
                 android:layout_gravity="center"
                 android:hint="\? val"
                 android:inputType="numberDecimal"
-                android:padding="10dp"
+                android:paddingLeft="10dp"
+                android:paddingRight="10dp"
                 android:textColor="#999"
                 android:textColorHint="#bbb" />
         </LinearLayout>
@@ -91,7 +95,6 @@
             android:layout_marginBottom="5dp"
             android:layout_marginTop="10dp"
             android:fontFeatureSettings="smcp"
-            android:padding="10dp"
             android:text="control"
             android:textColor="#999" />
 
@@ -155,6 +158,59 @@
         android:orientation="vertical">
 
     </LinearLayout>
+
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+
+        <ImageView
+            android:id="@+id/drone"
+            android:layout_width="100dp"
+            android:layout_height="100dp"
+            android:layout_centerInParent="true"
+            android:src="@drawable/drone_grey"
+            android:visibility="visible" />
+
+        <TextView
+            android:id="@+id/pitch_forward"
+            style="@style/MyText"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_above="@+id/drone"
+            android:layout_centerHorizontal="true"
+            android:padding="15dp"
+            android:text="pitch forward" />
+
+        <TextView
+            android:id="@+id/roll_left"
+            style="@style/MyText"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_centerVertical="true"
+            android:layout_toStartOf="@+id/drone"
+            android:padding="15dp"
+            android:text="roll left" />
+
+        <TextView
+            android:id="@+id/roll_right"
+            style="@style/MyText"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_centerVertical="true"
+            android:layout_toEndOf="@+id/drone"
+            android:padding="15dp"
+            android:text="roll right" />
+
+        <TextView
+            android:id="@+id/pitch_back"
+            style="@style/MyText"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_below="@+id/drone"
+            android:layout_centerHorizontal="true"
+            android:padding="15dp"
+            android:text="pitch back" />
+    </RelativeLayout>
 
 
 </LinearLayout>
