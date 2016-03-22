@@ -993,6 +993,27 @@ public class MainActivity extends DJIBaseActivity {
         };
     }
 
+    private View.OnClickListener getControlSetListener() {
+        return new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                try {
+                    double P = Double.parseDouble(((EditText) findViewById(R.id.edit_control_p)).getText().toString());
+                    double I = Double.parseDouble(((EditText) findViewById(R.id.edit_control_i)).getText().toString());
+                    double D = Double.parseDouble(((EditText) findViewById(R.id.edit_control_d)).getText().toString());
+                    if (angularController != null) {
+                        angularController.P = P;
+                        angularController.I = I;
+                        angularController.D = D;
+                        MessageHandler.d("Parameters Saved Successfully");
+                    }
+                } catch (NumberFormatException e) {
+                    MessageHandler.e("Invalid Parameters!");
+                }
+            }
+        };
+    }
+
 
     private void setOnClickListeners() {
         //Main page
@@ -1018,10 +1039,11 @@ public class MainActivity extends DJIBaseActivity {
             findViewById(R.id.button_control_3).setOnClickListener(getControlButtonClickListener());
             findViewById(R.id.button_control_4).setOnClickListener(getControlButtonClickListener());
 
-            ((EditText) findViewById(R.id.edit_control_1)).addTextChangedListener(getControlTextWatcher1());
-            ((EditText) findViewById(R.id.edit_control_2)).addTextChangedListener(getControlTextWatcher2());
-            ((EditText) findViewById(R.id.edit_control_3)).addTextChangedListener(getControlTextWatcher3());
-            ((EditText) findViewById(R.id.edit_control_3)).addTextChangedListener(getControlTextWatcher4());
+            ((EditText) findViewById(R.id.edit_control_p)).addTextChangedListener(getControlTextWatcher1());
+            ((EditText) findViewById(R.id.edit_control_i)).addTextChangedListener(getControlTextWatcher2());
+            ((EditText) findViewById(R.id.edit_control_d)).addTextChangedListener(getControlTextWatcher3());
+            ((EditText) findViewById(R.id.edit_control_4)).addTextChangedListener(getControlTextWatcher4());
+            findViewById(R.id.button_control_set).setOnClickListener(getControlSetListener());
 
         }
 
