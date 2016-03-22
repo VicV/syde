@@ -22,8 +22,6 @@ import dji.sdk.interfaces.DJIGroundStationFlyingInfoCallBack;
  */
 public class GroundStation {
 
-    public static final String TAG = GroundStation.class.toString();
-
     /**
      * Current task to be executed by the drone
      */
@@ -61,14 +59,6 @@ public class GroundStation {
     private static LatLng currentTarget;
 
     private static AngularController angularController;
-
-    /**
-     * Enum of drone status codes sent by mission controller
-     */
-    public enum MissionStatusCodes {
-        INITIALIZING, MOVING, ROTATING, EXECUTING_ACTION, REACHED_WAYPOINT_PENDING_ACTION,
-        REACHED_WAYPOINT_FINISHED_ACTION
-    }
 
     /**
      * Callback to fire when drone reaches its target waypoint (ie. task completes)
@@ -125,38 +115,16 @@ public class GroundStation {
                         run.run();
                         //handler.post(run);
                     } catch (Exception e) {
-                        MessageHandler.d("Open Ground Station: " + e.toString());
+                        MessageHandler.log("Open Ground Station: " + e.toString());
                     }
                     MessageHandler.d("Open Ground Station: SUCCESS");
                 } else {
                     DroneState.groundStationConnected = false;
-                    MessageHandler.d("Open Ground Station: FAILURE");
+                    MessageHandler.log("Open Ground Station: FAILURE");
                 }
             }
         });
     }
-
-    public static void withConnection(final Runnable run) {
-        DJIDrone.getDjiGroundStation().openGroundStation(new DJIGroundStationExecuteCallBack() {
-            @Override
-            public void onResult(DJIGroundStationTypeDef.GroundStationResult result) {
-                if (resultSuccess(result)) {
-                    DroneState.groundStationConnected = true;
-                    try {
-                        run.run();
-                        //handler.post(run);
-                    } catch (Exception e) {
-                        MessageHandler.d("Open Ground Station: " + e.toString());
-                    }
-                   // MessageHandler.d("Open Ground Station: SUCCESS");
-                } else {
-                    DroneState.groundStationConnected = false;
-                    MessageHandler.d("Open Ground Station: FAILURE");
-                }
-            }
-        });
-    }
-
 
     /**
      * Gives the queued task to the Drone and then executes it.
@@ -216,17 +184,13 @@ public class GroundStation {
      * Cancels the currently executing ground station task
      */
     public static void stopTask() {
-       // withConnection(new Runnable() {
-          //  @Override
-           // public void run() {
-                DJIDrone.getDjiGroundStation().cancelGroundStationTask(new DJIGroundStationExecuteCallBack() {
-                    @Override
-                    public void onResult(DJIGroundStationTypeDef.GroundStationResult groundStationResult) {
-                        MessageHandler.d(groundStationResult.toString());
-                    }
-                });
-        //    }
-       // });
+        DJIDrone.getDjiGroundStation().cancelGroundStationTask(new DJIGroundStationExecuteCallBack() {
+            @Override
+            public void onResult(DJIGroundStationTypeDef.GroundStationResult groundStationResult) {
+                MessageHandler.d(groundStationResult.toString());
+            }
+        });
+
     }
 
     /**
@@ -254,38 +218,32 @@ public class GroundStation {
             MessageHandler.d("Invalid GPS Coordinates");
             return;
         }
-//        withConnection(new Runnable() {
-//            @Override
-//            public void run() {
-                DJIDrone.getDjiMainController().setAircraftHomeGpsLocation(DroneState.getLatitude(), DroneState.getLongitude(), new DJIExecuteResultCallback() {
-                    @Override
-                    public void onResult(DJIError djiError) {
-                        MessageHandler.d("Set Home: " + djiError.errorDescription);
-                        MessageHandler.d("Home Point Set To: " + String.valueOf(DroneState.getLatitude()) + " " + String.valueOf(DroneState.getLongitude()));
-                    }
-                });
-//            }
-//        });
+
+
+        DJIDrone.getDjiMainController().setAircraftHomeGpsLocation(DroneState.getLatitude(), DroneState.getLongitude(), new DJIExecuteResultCallback() {
+            @Override
+            public void onResult(DJIError djiError) {
+                MessageHandler.d("Set Home: " + djiError.errorDescription);
+                MessageHandler.d("Home Point Set To: " + String.valueOf(DroneState.getLatitude()) + " " + String.valueOf(DroneState.getLongitude()));
+            }
+        });
+
     }
 
     /**
      * Command the drone to return to its registered home point
      */
     public static void goHome() {
-//        withConnection(new Runnable() {
-//            @Override
-//            public void run() {
-                DJIDrone.getDjiGroundStation().goHome(new DJIGroundStationExecuteCallBack() {
-                    @Override
-                    public void onResult(DJIGroundStationTypeDef.GroundStationResult groundStationResult) {
-                        if (resultSuccess(groundStationResult)) {
-                            DroneState.setMode(DroneState.WAYPOINT_MODE);
-                        }
-                        MessageHandler.d("Go Home: " + groundStationResult.toString());
-                    }
-                });
-//            }
-//        });
+
+        DJIDrone.getDjiGroundStation().goHome(new DJIGroundStationExecuteCallBack() {
+            @Override
+            public void onResult(DJIGroundStationTypeDef.GroundStationResult groundStationResult) {
+                if (resultSuccess(groundStationResult)) {
+                    DroneState.setMode(DroneState.WAYPOINT_MODE);
+                }
+                MessageHandler.d("Go Home: " + groundStationResult.toString());
+            }
+        });
     }
 
     /**
@@ -303,28 +261,23 @@ public class GroundStation {
     }
 
     public static void engageJoystick(final Runnable onSuccess) {
-//        withConnection(new Runnable() {
-//            @Override
-//            public void run() {
-                DJIDrone.getDjiGroundStation().pauseGroundStationTask(new DJIGroundStationExecuteCallBack() {
+        DJIDrone.getDjiGroundStation().pauseGroundStationTask(new DJIGroundStationExecuteCallBack() {
+            @Override
+            public void onResult(DJIGroundStationTypeDef.GroundStationResult groundStationResult) {
+                DJIDrone.getDjiGroundStation().setYawControlMode(DJIGroundStationTypeDef.DJINavigationFlightControlYawControlMode.Navigation_Flight_Control_Yaw_Control_Angle);
+                DJIDrone.getDjiGroundStation().setVerticalControlMode(DJIGroundStationTypeDef.DJINavigationFlightControlVerticalControlMode.Navigation_Flight_Control_Vertical_Control_Position);
+                DJIDrone.getDjiGroundStation().setAircraftJoystick(0, 0, 0, 0, new DJIGroundStationExecuteCallBack() {
                     @Override
                     public void onResult(DJIGroundStationTypeDef.GroundStationResult groundStationResult) {
-                        DJIDrone.getDjiGroundStation().setYawControlMode(DJIGroundStationTypeDef.DJINavigationFlightControlYawControlMode.Navigation_Flight_Control_Yaw_Control_Angle);
-                        DJIDrone.getDjiGroundStation().setVerticalControlMode(DJIGroundStationTypeDef.DJINavigationFlightControlVerticalControlMode.Navigation_Flight_Control_Vertical_Control_Position);
-                        DJIDrone.getDjiGroundStation().setAircraftJoystick(0, 0, 0, 0, new DJIGroundStationExecuteCallBack() {
-                            @Override
-                            public void onResult(DJIGroundStationTypeDef.GroundStationResult groundStationResult) {
-                                MessageHandler.d("Engage Joystick: " + groundStationResult.toString());
-                                if (resultSuccess(groundStationResult)) {
-                                    DroneState.setMode(DroneState.DIRECT_MODE);
-                                    onSuccess.run();
-                                }
-                            }
-                        });
+                        MessageHandler.d("Engage Joystick: " + groundStationResult.toString());
+                        if (resultSuccess(groundStationResult)) {
+                            DroneState.setMode(DroneState.DIRECT_MODE);
+                            onSuccess.run();
+                        }
                     }
                 });
-//            }
-//        });
+            }
+        });
     }
 
     /**
@@ -332,14 +285,9 @@ public class GroundStation {
      * to ground station GPS nav mode
      */
     public static void engageGroundStation() {
-       // withConnection(new Runnable() {
-        //    @Override
-         //   public void run() {
-                newTask();
-                addPoint(DroneState.getLatitude(), DroneState.getLongitude());
-                uploadAndExecuteTask();
-         //   }
-       // });
+        newTask();
+        addPoint(DroneState.getLatitude(), DroneState.getLongitude());
+        uploadAndExecuteTask();
     }
 
     /**
@@ -350,28 +298,24 @@ public class GroundStation {
      * @param roll
      */
     public static void setAngles(final double pitch, final double yaw, final double roll) {
-       setAngles(pitch, yaw, roll, 0);
+        setAngles(pitch, yaw, roll, 0);
     }
 
     public static void setAngles(final double pitch, final double yaw, final double roll, final int altitude) {
         if (DroneState.getMode() != DroneState.DIRECT_MODE) {
-            // MessageHandler.d("Not in Direct Mode!");
+//             MessageHandler.log("Not in Direct Mode!");
             return;
         }
-//        withConnection(new Runnable() {
-//            @Override
-//            public void run() {
-                DJIDrone.getDjiGroundStation().setAircraftJoystick((int) yaw, (int) pitch, (int) roll, altitude, new DJIGroundStationExecuteCallBack() {
-                    @Override
-                    public void onResult(DJIGroundStationTypeDef.GroundStationResult groundStationResult) {
-                        MessageHandler.log("Engage Joystick: " + groundStationResult.toString());
-                        if (resultSuccess(groundStationResult)) {
-                            DroneState.setMode(DroneState.DIRECT_MODE);
-                        }
-                    }
-                });
-//            }
-//        });
+        DJIDrone.getDjiGroundStation().setAircraftJoystick((int) yaw, (int) pitch, (int) roll, altitude, new DJIGroundStationExecuteCallBack() {
+            @Override
+            public void onResult(DJIGroundStationTypeDef.GroundStationResult groundStationResult) {
+                MessageHandler.log("Engage Joystick: " + groundStationResult.toString());
+                if (resultSuccess(groundStationResult)) {
+                    DroneState.setMode(DroneState.DIRECT_MODE);
+                }
+            }
+        });
+
     }
 
     /**

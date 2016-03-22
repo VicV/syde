@@ -31,12 +31,10 @@ import android.widget.TextView;
 import com.google.android.gms.maps.model.LatLng;
 import com.jarone.litterary.LitterApplication;
 import com.jarone.litterary.R;
-import com.jarone.litterary.SurveyRoute;
 import com.jarone.litterary.adapters.DebugMessageRecyclerAdapter;
 import com.jarone.litterary.adapters.ViewPagerAdapter;
 import com.jarone.litterary.control.AngularController;
 import com.jarone.litterary.datatypes.DebugItem;
-import com.jarone.litterary.drone.Camera;
 import com.jarone.litterary.drone.DroneState;
 import com.jarone.litterary.drone.Grabber;
 import com.jarone.litterary.drone.GroundStation;
@@ -186,64 +184,33 @@ public class MainActivity extends DJIBaseActivity {
             public void onClick(View view) {
                 switch (view.getId()) {
                     case R.id.button_imgproc_1:
-//                        Camera.downloadPhotosSince(Camera.parseDate("2016-Mar-01 12:00:00").getTime(), new Runnable() {
-//                            @Override
-//                            public void run() {
-//                                MessageHandler.d("DONE DOWNLOADING!!");
-//                            }
-//                        });
-                        //GroundStation.setAngles(0, 0, 0, 1);
-//                        GroundStation.engageJoystick(new Runnable() {
-//                            @Override
-//                            public void run() {
-                        GroundStation.setAngles(500, 0, 0);
-//                            }
-//                        });
+                        canStartProcessing = true;
                         break;
                     case R.id.button_imgproc_2:
-                        SurveyRoute route = new SurveyRoute(new LatLng[20], 0, (short) 0);
-                        route.setStartTime(Camera.parseDate("2016-Mar-01 12:00:00").getTime());
-                        route.downloadAndAnalyzeSurveyPhotos();
-                        break;
-                    case R.id.button_imgproc_3:
                         if (ImageProcessing.isTracking()) {
                             ImageProcessing.stopTrackingObject();
-                            if (trackFuture != null) {
-                                trackFuture.cancel(true);
-                                trackFuture = null;
+                            if (angularController != null) {
+                                angularController.stopExecutionLoop();
                             }
-
                         } else {
                             ImageProcessing.startTrackingObject();
-                            trackFuture = LitterApplication.getInstance().getScheduler().scheduleAtFixedRate(new Runnable() {
-                                @Override
-                                public void run() {
-                                    ImageProcessing.trackObject();
-                                }
-                            }, 0, 300, TimeUnit.MILLISECONDS);
                         }
-
                         break;
                     case R.id.button_special_1:
-                        if (grabber == null) {
-                            grabber = new Grabber();
+                        if (ImageProcessing.isTracking()) {
+                            angularController = new AngularController();
+                            angularController.startExecutionLoop();
+                        } else {
+                            if (angularController != null) {
+                                angularController.stopExecutionLoop();
+                            }
+                            ImageProcessing.stopTrackingObject();
                         }
-                        grabber.sendCommand(Grabber.Commands.OPEN);
-                        break;
-
-                    case R.id.button_special_2:
-                        if (grabber == null) {
-                            grabber = new Grabber();
-                        }
-                        grabber.sendCommand(Grabber.Commands.CLOSE);
-
-                        break;
-                    case R.id.button_special_3:
-                        canStartProcessing = true;
                         break;
                     case R.id.button_special_camera:
                         if (mDjiGLSurfaceView.getVisibility() != View.GONE) {
                             mDjiGLSurfaceView.setVisibility(View.GONE);
+                            upscalePreview.setVisibility(View.INVISIBLE);
                             mDjiGLSurfaceView.pause();
                             mDjiGLSurfaceView.destroy();
                             mAndroidCameraSurfaceView.setVisibility(View.VISIBLE);
@@ -288,15 +255,15 @@ public class MainActivity extends DJIBaseActivity {
                             });
                         }
                         break;
-                    case R.id.button_special_camera_2:
-                        if (mDjiGLSurfaceView.getVisibility() != View.GONE) {
-                            mDjiGLSurfaceView.setVisibility(View.GONE);
-                            mDjiGLSurfaceView.pause();
-                            mDjiGLSurfaceView.destroy();
-                            mAndroidCameraSurfaceViewOld.setVisibility(View.VISIBLE);
-                            mAndroidCameraSurfaceViewOld.setupSurfaceView();
-                        }
-                        break;
+//                    case R.id.button_special_camera_2:
+//                        if (mDjiGLSurfaceView.getVisibility() != View.GONE) {
+//                            mDjiGLSurfaceView.setVisibility(View.GONE);
+//                            mDjiGLSurfaceView.pause();
+//                            mDjiGLSurfaceView.destroy();
+//                            mAndroidCameraSurfaceViewOld.setVisibility(View.VISIBLE);
+//                            mAndroidCameraSurfaceViewOld.setupSurfaceView();
+//                        }
+//                        break;
                 }
             }
         };
@@ -443,8 +410,6 @@ public class MainActivity extends DJIBaseActivity {
                             }
                         });
                     }
-
-                    // MessageHandler.d("Bitmap: " + count);
                 }
 
             }, params[0]);
@@ -637,10 +602,10 @@ public class MainActivity extends DJIBaseActivity {
             @Override
             public void run() {
                 String currentWifi = wifiManager.getConnectionInfo().getSSID();
-                if (currentWifi.equals(lastWifi) && currentWifi.contains("Phantom")) {
+                if (currentWifi.equals(lastWifi) && currentWifi.contains("60e8dc")) {
                     connectIcon.setImageDrawable(getDrawable(R.drawable.wifi_connected_small));
                     connectText.setText("connected");
-                } else if (!currentWifi.contains("Phantom")) {
+                } else if (!currentWifi.contains("60e8dc")) {
                     connectText.setText("connect");
                     connectIcon.setImageDrawable(getDrawable(R.drawable.wifi_not_connected_small));
                 }
@@ -672,10 +637,7 @@ public class MainActivity extends DJIBaseActivity {
                 if (currentTargetLat != lastTargetLat || currentTargetLong != lastTargetLong) {
                     lastTargetLat = currentTargetLat;
                     lastTargetLong = currentTargetLong;
-                    targetLocation.setText(
-                            LocationHelper.formatForDisplay(
-                                    currentTargetLat,
-                                    currentTargetLong));
+                    targetLocation.setText(LocationHelper.formatForDisplay(currentTargetLat, currentTargetLong));
                 }
 
                 boolean droneConnected = DroneState.droneConnected;
@@ -858,7 +820,7 @@ public class MainActivity extends DJIBaseActivity {
     private boolean wantResults = false;
 
     public void setupWifi() {
-        if (wifiManager.getConnectionInfo().getSSID().startsWith("Phantom")) {
+        if (wifiManager.getConnectionInfo().getSSID().contains("60e8dc")) {
             MessageHandler.d("Drone already connected");
         } else {
             wantResults = true;
@@ -874,32 +836,6 @@ public class MainActivity extends DJIBaseActivity {
             }
         };
 
-    }
-
-    public View.OnClickListener getStartTrackListener() {
-        return new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                if (ImageProcessing.isTracking()) {
-                    angularController = new AngularController();
-                    angularController.startExecutionLoop();
-                } else {
-                    ImageProcessing.startTrackingObject();
-                }
-            }
-        };
-    }
-
-    public View.OnClickListener getStopTrackListener() {
-        return new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                if (angularController != null) {
-                    angularController.stopExecutionLoop();
-                }
-                ImageProcessing.stopTrackingObject();
-            }
-        };
     }
 
     private View.OnClickListener getControlButtonClickListener() {
@@ -1011,20 +947,16 @@ public class MainActivity extends DJIBaseActivity {
         if (LitterApplication.devMode) {
             findViewById(R.id.CVPreview).setOnClickListener(getCameraViewListener());
             findViewById(R.id.button_special_camera).setOnClickListener(getDevButtonListener());
-            findViewById(R.id.button_special_camera_2).setOnClickListener(getDevButtonListener());
 
             //Dev stuff
-            findViewById(R.id.button_special_1).setOnClickListener(getStartTrackListener());
-            findViewById(R.id.button_special_2).setOnClickListener(getStopTrackListener());
-            findViewById(R.id.button_special_3).setOnClickListener(getDevButtonListener());
             findViewById(R.id.button_imgproc_1).setOnClickListener(getDevButtonListener());
             findViewById(R.id.button_imgproc_2).setOnClickListener(getDevButtonListener());
-            findViewById(R.id.button_imgproc_3).setOnClickListener(getDevButtonListener());
 
             findViewById(R.id.button_control_1).setOnClickListener(getControlButtonClickListener());
             findViewById(R.id.button_control_2).setOnClickListener(getControlButtonClickListener());
             findViewById(R.id.button_control_3).setOnClickListener(getControlButtonClickListener());
             findViewById(R.id.button_control_4).setOnClickListener(getControlButtonClickListener());
+
             ((EditText) findViewById(R.id.edit_control_1)).addTextChangedListener(getControlTextWatcher1());
             ((EditText) findViewById(R.id.edit_control_2)).addTextChangedListener(getControlTextWatcher2());
             ((EditText) findViewById(R.id.edit_control_3)).addTextChangedListener(getControlTextWatcher3());

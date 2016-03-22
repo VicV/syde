@@ -20,19 +20,19 @@ public class WifiScanReceiver extends BroadcastReceiver {
 
         if (ContextManager.getMainActivityInstance() != null && ContextManager.getMainActivityInstance().isWantResults()) {
 
-            MessageHandler.d("Received wifi list...");
+            MessageHandler.log("Received wifi list...");
 
             final WifiManager wifiManager = (WifiManager) context.getSystemService(Context.WIFI_SERVICE);
             ArrayList<ScanResult> results = (ArrayList<ScanResult>) wifiManager.getScanResults();
             String phantomWifi = "";
             for (ScanResult result : results) {
-                if (result.SSID.contains("Phantom")) {
+                if (result.SSID.contains("60e8dc")) {
                     phantomWifi = result.SSID;
                     break;
                 }
             }
             if (!phantomWifi.equals("")) {
-                MessageHandler.d("Found phantom wifi");
+                MessageHandler.log("Found phantom wifi");
                 ContextManager.getMainActivityInstance().connectWithSSID(phantomWifi);
             }
             ContextManager.getMainActivityInstance().setWantResults(false);
