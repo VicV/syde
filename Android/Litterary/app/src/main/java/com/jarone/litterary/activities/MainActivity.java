@@ -865,8 +865,8 @@ public class MainActivity extends DJIBaseActivity {
     private boolean wantResults = false;
 
     public void setupWifi() {
-        if (wifiManager.getConnectionInfo().getSSID().startsWith("Phantom")) {
-            MessageHandler.d("Drone already connected");
+        if (wifiManager.getConnectionInfo().getSSID().contains("Phantom")) {
+           // MessageHandler.d("Drone already connected");
         } else {
             wantResults = true;
             wifiManager.startScan();

@@ -5,6 +5,7 @@ import android.graphics.BitmapFactory;
 
 import com.google.android.gms.maps.model.LatLng;
 import com.jarone.litterary.control.AngularController;
+import com.jarone.litterary.drone.DroneState;
 import com.jarone.litterary.handlers.MessageHandler;
 import com.jarone.litterary.helpers.ContextManager;
 
@@ -282,9 +283,9 @@ public class ImageProcessing {
         cMeans.add(Core.mean(g).val[0]);
         cMeans.add(Core.mean(b).val[0]);
 
-        morphImage(r, Imgproc.MORPH_OPEN, 30);
-        morphImage(g, Imgproc.MORPH_OPEN, 30);
-        morphImage(b, Imgproc.MORPH_OPEN, 30);
+        morphImage(r, Imgproc.MORPH_OPEN, 60 / DroneState.getAltitude());
+        morphImage(g, Imgproc.MORPH_OPEN, 60 / DroneState.getAltitude());
+        morphImage(b, Imgproc.MORPH_OPEN, 60 / DroneState.getAltitude());
 
         clearBorders(r);
         clearBorders(g);
@@ -355,7 +356,7 @@ public class ImageProcessing {
     /**
      * Perform closing operation on the image, first downscaling to speed up processing
      */
-    public static void morphImage(Mat mat, int operation, int size) {
+    public static void morphImage(Mat mat, int operation, double size) {
         int scaleFactor = 2;
         Mat element = Imgproc.getStructuringElement(Imgproc.MORPH_ELLIPSE, new Size(size / scaleFactor, size / scaleFactor));
         // Mat element2 = Imgproc.getStructuringElement(Imgproc.MORPH_ELLIPSE, new Size(3, 3));
@@ -541,7 +542,7 @@ public class ImageProcessing {
         calculatePixelDensity(altitude);
         if (angle == AngularController.ActiveAngle.PITCH) {
             //Forward is positive, backward is negative
-            return (originalMat.height() / 2 - trackedObject.getPosition().y) * py;
+            return (originalMat.height() / 2 + originalMat.height() * 0.1 - trackedObject.getPosition().y ) * py;
         } else {
             //To the left is negative, right is positive
             return (trackedObject.getPosition().x - originalMat.width() / 2) * py;

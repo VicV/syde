@@ -37,12 +37,18 @@ public class DJIBaseActivity extends FragmentActivity {
         }
         DJIDrone.getDjiGroundStation().startUpdateTimer(1000);
         ServiceManager.getInstance().pauseService(false); // Resume the service
-        GroundStation.openGroundStation(new Runnable() {
+        GroundStation.closeGroundStation(new Runnable() {
             @Override
             public void run() {
+                GroundStation.openGroundStation(new Runnable() {
+                    @Override
+                    public void run() {
 
+                    }
+                });
             }
         });
+
         //Try to fix stuck gimbal state by setting it to face forward first
         Camera.setGimbalPitch(0);
         Camera.setGimbalDown();

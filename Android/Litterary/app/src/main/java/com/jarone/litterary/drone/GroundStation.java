@@ -2,6 +2,7 @@ package com.jarone.litterary.drone;
 
 import com.google.android.gms.maps.model.LatLng;
 import com.jarone.litterary.control.AngularController;
+import com.jarone.litterary.helpers.ContextManager;
 import com.jarone.litterary.optimization.RouteOptimization;
 import com.jarone.litterary.SurveyRoute;
 import com.jarone.litterary.handlers.MessageHandler;
@@ -130,29 +131,18 @@ public class GroundStation {
                     MessageHandler.d("Open Ground Station: SUCCESS");
                 } else {
                     DroneState.groundStationConnected = false;
+                    ContextManager.getMainActivityInstance().setupWifi();
                     MessageHandler.d("Open Ground Station: FAILURE");
                 }
             }
         });
     }
 
-    public static void withConnection(final Runnable run) {
-        DJIDrone.getDjiGroundStation().openGroundStation(new DJIGroundStationExecuteCallBack() {
+    public static void closeGroundStation(final Runnable run) {
+        DJIDrone.getDjiGroundStation().closeGroundStation(new DJIGroundStationExecuteCallBack() {
             @Override
-            public void onResult(DJIGroundStationTypeDef.GroundStationResult result) {
-                if (resultSuccess(result)) {
-                    DroneState.groundStationConnected = true;
-                    try {
-                        run.run();
-                        //handler.post(run);
-                    } catch (Exception e) {
-                        MessageHandler.d("Open Ground Station: " + e.toString());
-                    }
-                   // MessageHandler.d("Open Ground Station: SUCCESS");
-                } else {
-                    DroneState.groundStationConnected = false;
-                    MessageHandler.d("Open Ground Station: FAILURE");
-                }
+            public void onResult(DJIGroundStationTypeDef.GroundStationResult groundStationResult) {
+                run.run();
             }
         });
     }

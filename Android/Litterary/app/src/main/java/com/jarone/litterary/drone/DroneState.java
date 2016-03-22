@@ -84,11 +84,18 @@ public class DroneState {
                 //GroundStation.registerPhantom2Callback();
                 Camera.setGimbalDown();
                 if (!groundStationConnected) {
-                    GroundStation.openGroundStation(new Runnable() {
+                    GroundStation.closeGroundStation(new Runnable() {
                         @Override
                         public void run() {
+                            GroundStation.openGroundStation(new Runnable() {
+                                @Override
+                                public void run() {
+
+                                }
+                            });
                         }
                     });
+
                 }
             }
         }, 5000, 5000, TimeUnit.MILLISECONDS);

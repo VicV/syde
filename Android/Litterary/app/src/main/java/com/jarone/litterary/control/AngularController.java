@@ -26,18 +26,20 @@ public class AngularController {
     private ScheduledFuture controlsLoopFuture;
     private ArrayList<ScheduledFuture> generateTasks = new ArrayList<>();
 
-    float MAX_ANGLE = 600;
+    double MAX_ANGLE = 400;
     private long SAMPLING_TIME = 50;
 
-    float P = 18;
-    float I = 1;
-    float D = 10;
+    double P = 14;
+    double I = 0;
+    double D = 10;
 
     int loopIterations = 0;
     int descendIterations = 0;
-    float errorSum = 0;
-    private float lastError = 0;
-    private float lastAction = 0;
+    double pitchErrorSum = 0;
+    double rollErrorSum = 0;
+    private double lastPitchError = 0;
+    private double lastRollError = 0;
+    private double lastAction = 0;
     private boolean descend = false;
     private int descendTimer = 0;
 
@@ -91,16 +93,26 @@ public class AngularController {
      */
     public void controlsLoop() {
 
-        float error = (float)ImageProcessing.distanceFromTarget(activeAngle, DroneState.getAltitude());
-        P = getInputParameter();
-        float action = PID(error);
+        double pitchError = ImageProcessing.distanceFromTarget(ActiveAngle.PITCH, DroneState.getAltitude());
+        double rollError = ImageProcessing.distanceFromTarget(ActiveAngle.ROLL, DroneState.getAltitude());
+        //P = getInputParameter();
+        double action;
+        double error;
+        if (activeAngle == ActiveAngle.PITCH) {
+            action = PID(pitchError, lastPitchError, pitchErrorSum);
+            error = pitchError;
+            lastPitchError = pitchError;
+            pitchErrorSum += pitchError;
+        } else {
+            action = PID(rollError, lastRollError, rollErrorSum);
+            error = rollError;
+            lastRollError = rollError;
+            rollErrorSum += rollError;
+        }
 
         if (Math.abs(action) > MAX_ANGLE) {
             action = MAX_ANGLE * Math.signum(action);
         }
-
-        lastError = error;
-        errorSum += error;
 
         lastAction = action;
         if (descend) {
@@ -121,21 +133,29 @@ public class AngularController {
         //Switch active controlled angle every second
         //TODO switch more often if error is increasing past some threshold
         if (loopIterations > 500 / SAMPLING_TIME || descendTimer > 200 / SAMPLING_TIME) {
-            if (activeAngle == ActiveAngle.ROLL && !descend) {
-                if (doDescend && ImageProcessing.distanceFromTarget(ActiveAngle.PITCH, DroneState.getAltitude()) < 0.2 && ImageProcessing.distanceFromTarget(ActiveAngle.PITCH, DroneState.getAltitude()) < 0.2) {
-                    descend = true;
-                    MessageHandler.log("Descending");
-                } else {
-                    activeAngle = ActiveAngle.PITCH;
-                }
-            } else if (activeAngle == ActiveAngle.PITCH) {
-                activeAngle = ActiveAngle.ROLL;
-                MessageHandler.log("Switching angle to " + activeAngle);
-            } else if (descend) {
-                descend = false;
+//            if (activeAngle == ActiveAngle.ROLL  && !descend) {
+//                if (doDescend && ImageProcessing.distanceFromTarget(ActiveAngle.PITCH, DroneState.getAltitude()) < 0.2 && ImageProcessing.distanceFromTarget(ActiveAngle.PITCH, DroneState.getAltitude()) < 0.2) {
+//                    descend = true;
+//                    MessageHandler.log("Descending");
+//                } else {
+//                    activeAngle = ActiveAngle.PITCH;
+//                }
+//            } else if (activeAngle == ActiveAngle.PITCH) {
+//                activeAngle = ActiveAngle.ROLL;
+//                MessageHandler.log("Switching angle to " + activeAngle);
+//            } else if (descend) {
+//                descend = false;
+//                activeAngle = ActiveAngle.PITCH;
+//                MessageHandler.log("Switching angle to " + activeAngle);
+//            }
+            if (pitchError < 0.1 && rollError < 0.1 && doDescend) {
+                descend = true;
+            } else if (Math.abs(pitchError * 1.2) > Math.abs(rollError)) {
                 activeAngle = ActiveAngle.PITCH;
-                MessageHandler.log("Switching angle to " + activeAngle);
+            } else if (Math.abs(pitchError * 1.2) <= Math.abs(rollError)) {
+                activeAngle = ActiveAngle.ROLL;
             }
+
             loopIterations = 0;
             descendTimer = 0;
         }
@@ -295,16 +315,9 @@ public class AngularController {
      * @param error The error term used for control
      * @return The calculated action based on PID control math
      */
-    private float PID(float error) {
+    private double PID(double error, double lastError, double errorSum) {
         return error * P + errorSum * SAMPLING_TIME * I + (error - lastError)/SAMPLING_TIME * D;
     }
 
-    public float getLastAction() {
-        return lastAction;
-    }
-
-    public float getLastError() {
-        return lastError;
-    }
 
 }
