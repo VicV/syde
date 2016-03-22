@@ -1,11 +1,10 @@
 package com.jarone.litterary.drone;
 
 import com.google.android.gms.maps.model.LatLng;
-import com.jarone.litterary.control.AngularController;
-import com.jarone.litterary.helpers.ContextManager;
-import com.jarone.litterary.optimization.RouteOptimization;
 import com.jarone.litterary.SurveyRoute;
+import com.jarone.litterary.control.AngularController;
 import com.jarone.litterary.handlers.MessageHandler;
+import com.jarone.litterary.optimization.RouteOptimization;
 
 import dji.sdk.api.DJIDrone;
 import dji.sdk.api.DJIError;
@@ -121,7 +120,6 @@ public class GroundStation {
                     MessageHandler.d("Open Ground Station: SUCCESS");
                 } else {
                     DroneState.groundStationConnected = false;
-                    ContextManager.getMainActivityInstance().setupWifi();
                     MessageHandler.log("Open Ground Station: FAILURE");
                 }
             }
@@ -225,13 +223,16 @@ public class GroundStation {
      * Set the drone's home point which it will return to in emergencies or when commanded
      */
     public static void setHomePoint() {
+        double latitude = DroneState.getLatitude();
+        double longitude = DroneState.getLongitude();
         if (!DroneState.hasValidLocation()) {
             MessageHandler.d("Invalid GPS Coordinates");
-            return;
+            latitude = 43.4726657;
+            longitude = -80.5403147;
         }
 
 
-        DJIDrone.getDjiMainController().setAircraftHomeGpsLocation(DroneState.getLatitude(), DroneState.getLongitude(), new DJIExecuteResultCallback() {
+        DJIDrone.getDjiMainController().setAircraftHomeGpsLocation(latitude, longitude, new DJIExecuteResultCallback() {
             @Override
             public void onResult(DJIError djiError) {
                 MessageHandler.d("Set Home: " + djiError.errorDescription);

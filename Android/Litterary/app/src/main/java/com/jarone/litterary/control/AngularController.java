@@ -30,9 +30,9 @@ public class AngularController {
     double MAX_ANGLE = 400;
     private long SAMPLING_TIME = 50;
 
-    public double P = 14;
-    public double I = 0;
-    public double D = 10;
+    public static double P = 14;
+    public static double I = 0;
+    public static double D = 10;
 
     int loopIterations = 0;
     int descendIterations = 0;
@@ -48,11 +48,16 @@ public class AngularController {
     boolean canFlip = true;
 
     private boolean isRetrieving = false;
+    private boolean isExecuting = false;
 
     private boolean doDescend = false;
 
 
     private boolean generatorFlip = false;
+
+    public boolean isExecuting() {
+        return isExecuting;
+    }
 
     //Determine if the current control action is directing pitch or roll
     public enum ActiveAngle {
@@ -80,6 +85,7 @@ public class AngularController {
                 controlsLoopFuture = taskScheduler.scheduleAtFixedRate(new Runnable() {
                     @Override
                     public void run() {
+                        isExecuting = true;
                         controlsLoop();
                     }
                 }, 0, SAMPLING_TIME, TimeUnit.MILLISECONDS);
@@ -175,6 +181,7 @@ public class AngularController {
     public void stopExecutionLoop() {
         if (controlsLoopFuture != null) {
             controlsLoopFuture.cancel(true);
+            isExecuting = false;
         }
     }
 

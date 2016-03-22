@@ -183,10 +183,18 @@ public class MainActivity extends DJIBaseActivity {
             @Override
             public void onClick(View view) {
                 switch (view.getId()) {
-                    case R.id.button_imgproc_1:
-                        canStartProcessing = !canStartProcessing;
+                    case R.id.button_blob:
+                        if(canStartProcessing){
+                            canStartProcessing = false;
+                            if(ImageProcessing.isTracking()){
+                                ImageProcessing.stopTrackingObject();
+                            }
+                        } else {
+                            canStartProcessing = true;
+                            runningUpscaleTasks = new ArrayBlockingQueue<>(1);
+                        }
                         break;
-                    case R.id.button_imgproc_2:
+                    case R.id.button_track:
                         if (ImageProcessing.isTracking()) {
                             ImageProcessing.stopTrackingObject();
                             if (angularController != null) {
@@ -197,15 +205,13 @@ public class MainActivity extends DJIBaseActivity {
                             ImageProcessing.startTrackingObject();
                         }
                         break;
-                    case R.id.button_special_1:
+                    case R.id.button_control_loop:
+                        if (angularController != null) {
+                            angularController.stopExecutionLoop();
+                        }
                         if (ImageProcessing.isTracking()) {
                             angularController = new AngularController();
                             angularController.startExecutionLoop();
-                        } else {
-                            if (angularController != null) {
-                                angularController.stopExecutionLoop();
-                            }
-                            ImageProcessing.stopTrackingObject();
                         }
                         break;
                     case R.id.button_special_camera:
@@ -1012,12 +1018,10 @@ public class MainActivity extends DJIBaseActivity {
                     double P = Double.parseDouble(((EditText) findViewById(R.id.edit_control_p)).getText().toString());
                     double I = Double.parseDouble(((EditText) findViewById(R.id.edit_control_i)).getText().toString());
                     double D = Double.parseDouble(((EditText) findViewById(R.id.edit_control_d)).getText().toString());
-                    if (angularController != null) {
-                        angularController.P = P;
-                        angularController.I = I;
-                        angularController.D = D;
-                        MessageHandler.d("Parameters Saved Successfully");
-                    }
+                    AngularController.P = P;
+                    AngularController.I = I;
+                    AngularController.D = D;
+                    MessageHandler.d("Parameters Saved Successfully");
                 } catch (NumberFormatException e) {
                     MessageHandler.e("Invalid Parameters!");
                 }
@@ -1042,8 +1046,9 @@ public class MainActivity extends DJIBaseActivity {
             findViewById(R.id.button_special_camera).setOnClickListener(getDevButtonListener());
 
             //Dev stuff
-            findViewById(R.id.button_imgproc_1).setOnClickListener(getDevButtonListener());
-            findViewById(R.id.button_imgproc_2).setOnClickListener(getDevButtonListener());
+            findViewById(R.id.button_blob).setOnClickListener(getDevButtonListener());
+            findViewById(R.id.button_track).setOnClickListener(getDevButtonListener());
+            findViewById(R.id.button_control_loop).setOnClickListener(getDevButtonListener());
 
             findViewById(R.id.button_control_1).setOnClickListener(getControlButtonClickListener());
             findViewById(R.id.button_control_2).setOnClickListener(getControlButtonClickListener());

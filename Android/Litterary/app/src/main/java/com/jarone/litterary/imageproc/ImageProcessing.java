@@ -284,11 +284,11 @@ public class ImageProcessing {
         clearBorders(g);
         clearBorders(b);
 
-        double maxMean = 0;
+        double minMean = 0;
         int mindex = 0;
         for (int i = 0; i < 3; i++) {
-            if (means.get(i, 0)[0] < maxMean) {
-                maxMean = means.get(i, 0)[0];
+            if (means.get(i, 0)[0] < minMean) {
+                minMean = means.get(i, 0)[0];
                 mindex = i;
             }
         }
