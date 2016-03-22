@@ -83,6 +83,14 @@
                 android:textColorHint="#bbb"
                 android:hint="\? val"
                 android:textColor="#999" />
+            <Button
+                android:id="@+id/button_control_set"
+                android:layout_width="70dp"
+                android:layout_height="35dp"
+                android:fontFeatureSettings="smcp"
+                android:text="set"
+                android:textColor="#999" />
+
         </LinearLayout>
 
 

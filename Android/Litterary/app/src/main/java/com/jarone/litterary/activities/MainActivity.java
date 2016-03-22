@@ -94,7 +94,7 @@ public class MainActivity extends DJIBaseActivity {
     private ViewPager viewPager;
     private boolean canStartProcessing = false;
 
-    Grabber grabber;
+    public Grabber grabber;
 
     private CameraBridgeViewBase mOpenCvCameraView;
 

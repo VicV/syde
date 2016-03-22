@@ -49,6 +49,7 @@ public class Grabber {
         public static final String CLOSE = "close";
         public static final String RAISE = "raise";
         public static final String LOWER = "lower";
+        public static final String DEMO = "demo";
         public static final String HOLD = "hold";
         public static final String HEIGHT = "height";
 

@@ -6,6 +6,7 @@ import com.google.android.gms.maps.model.LatLng;
 import com.jarone.litterary.LitterApplication;
 import com.jarone.litterary.R;
 import com.jarone.litterary.drone.DroneState;
+import com.jarone.litterary.drone.Grabber;
 import com.jarone.litterary.drone.GroundStation;
 import com.jarone.litterary.handlers.MessageHandler;
 import com.jarone.litterary.helpers.ContextManager;
@@ -126,13 +127,14 @@ public class AngularController {
             }
             loopIterations++;
         }
+
         //GroundStation.setAngles(0,0,0,0);
 
         MessageHandler.log(action + " " + error + " " + activeAngle);
 
         //Switch active controlled angle every second
         //TODO switch more often if error is increasing past some threshold
-        if (loopIterations > 500 / SAMPLING_TIME || descendTimer > 200 / SAMPLING_TIME) {
+        if (loopIterations > 500 / SAMPLING_TIME || descendTimer > 100 / SAMPLING_TIME) {
 //            if (activeAngle == ActiveAngle.ROLL  && !descend) {
 //                if (doDescend && ImageProcessing.distanceFromTarget(ActiveAngle.PITCH, DroneState.getAltitude()) < 0.2 && ImageProcessing.distanceFromTarget(ActiveAngle.PITCH, DroneState.getAltitude()) < 0.2) {
 //                    descend = true;
@@ -150,6 +152,8 @@ public class AngularController {
 //            }
             if (pitchError < 0.1 && rollError < 0.1 && doDescend) {
                 descend = true;
+            } else if (pitchError < 0.1 && rollError < 0.1) {
+                ContextManager.getMainActivityInstance().grabber.sendCommand(Grabber.Commands.DEMO);
             } else if (Math.abs(pitchError * 1.2) > Math.abs(rollError)) {
                 activeAngle = ActiveAngle.PITCH;
             } else if (Math.abs(pitchError * 1.2) <= Math.abs(rollError)) {
