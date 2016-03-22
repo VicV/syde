@@ -18,8 +18,11 @@ import android.support.v4.app.ActivityCompat;
 import android.support.v4.view.ViewPager;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
+import android.text.Editable;
+import android.text.TextWatcher;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
@@ -536,8 +539,6 @@ public class MainActivity extends DJIBaseActivity {
 
         @Override
         protected Void doInBackground(Void... params) {
-
-
             LatLng[] points = GroundStation.initializeSurveyRoute(currentPolygon, getAltitudeValue());
 
             if (points != null) {
@@ -901,6 +902,100 @@ public class MainActivity extends DJIBaseActivity {
         };
     }
 
+    private View.OnClickListener getControlButtonClickListener() {
+        return new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                switch (v.getId()) {
+                    case R.id.button_control_1:
+                        break;
+                    case R.id.button_control_2:
+                        break;
+                    case R.id.button_control_3:
+                        break;
+                    case R.id.button_control_4:
+                        break;
+                }
+            }
+        };
+    }
+
+    private TextWatcher getControlTextWatcher1() {
+        return new TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+
+            }
+
+            @Override
+            public void onTextChanged(CharSequence s, int start, int before, int count) {
+
+            }
+
+            @Override
+            public void afterTextChanged(Editable s) {
+
+            }
+        };
+    }
+
+    private TextWatcher getControlTextWatcher2() {
+        return new TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+
+            }
+
+            @Override
+            public void onTextChanged(CharSequence s, int start, int before, int count) {
+
+            }
+
+            @Override
+            public void afterTextChanged(Editable s) {
+
+            }
+        };
+    }
+
+    private TextWatcher getControlTextWatcher3() {
+        return new TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+
+            }
+
+            @Override
+            public void onTextChanged(CharSequence s, int start, int before, int count) {
+
+            }
+
+            @Override
+            public void afterTextChanged(Editable s) {
+
+            }
+        };
+    }
+
+    private TextWatcher getControlTextWatcher4() {
+        return new TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+
+            }
+
+            @Override
+            public void onTextChanged(CharSequence s, int start, int before, int count) {
+
+            }
+
+            @Override
+            public void afterTextChanged(Editable s) {
+
+            }
+        };
+    }
+
 
     private void setOnClickListeners() {
         //Main page
@@ -925,7 +1020,19 @@ public class MainActivity extends DJIBaseActivity {
             findViewById(R.id.button_imgproc_1).setOnClickListener(getDevButtonListener());
             findViewById(R.id.button_imgproc_2).setOnClickListener(getDevButtonListener());
             findViewById(R.id.button_imgproc_3).setOnClickListener(getDevButtonListener());
+
+            findViewById(R.id.button_control_1).setOnClickListener(getControlButtonClickListener());
+            findViewById(R.id.button_control_2).setOnClickListener(getControlButtonClickListener());
+            findViewById(R.id.button_control_3).setOnClickListener(getControlButtonClickListener());
+            findViewById(R.id.button_control_4).setOnClickListener(getControlButtonClickListener());
+            ((EditText) findViewById(R.id.edit_control_1)).addTextChangedListener(getControlTextWatcher1());
+            ((EditText) findViewById(R.id.edit_control_2)).addTextChangedListener(getControlTextWatcher2());
+            ((EditText) findViewById(R.id.edit_control_3)).addTextChangedListener(getControlTextWatcher3());
+            ((EditText) findViewById(R.id.edit_control_3)).addTextChangedListener(getControlTextWatcher4());
+
         }
+
+
     }
 
     public void setCPreview() {
