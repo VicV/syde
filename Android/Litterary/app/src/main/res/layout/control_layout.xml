@@ -129,7 +129,6 @@
             android:orientation="horizontal"
             android:visibility="gone">
 
-
             <Button
                 android:id="@+id/button_control_1"
                 android:layout_width="70dp"
@@ -171,9 +170,7 @@
         android:layout_gravity="end"
         android:layout_marginEnd="5dp"
         android:gravity="end"
-        android:orientation="vertical">
-
-    </LinearLayout>
+        android:orientation="vertical"></LinearLayout>
 
     <RelativeLayout
         android:layout_width="match_parent"
@@ -188,44 +185,102 @@
             android:visibility="visible" />
 
         <TextView
+            android:id="@+id/pitch_forward_title"
+            style="@style/MyText"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_above="@+id/pitch_forward"
+            android:layout_centerHorizontal="true"
+            android:text="pitch forward" />
+
+        <TextView
             android:id="@+id/pitch_forward"
             style="@style/MyText"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_above="@+id/drone"
             android:layout_centerHorizontal="true"
-            android:padding="15dp"
-            android:text="pitch forward" />
+            android:padding="5dp"
+            android:text="101010" />
+
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignBottom="@id/drone"
+            android:layout_alignTop="@id/drone"
+            android:layout_marginEnd="15dp"
+            android:layout_toStartOf="@id/drone"
+            android:gravity="center"
+            android:orientation="vertical">
+
+            <TextView
+                android:id="@+id/roll_left_title"
+                style="@style/MyText"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_above="@+id/roll_left"
+                android:layout_toStartOf="@+id/pitch_back"
+                android:text="roll left" />
+
+            <TextView
+                android:id="@+id/roll_left"
+                style="@style/MyText"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_centerVertical="true"
+                android:layout_toStartOf="@+id/drone"
+                android:text="101001" />
+        </LinearLayout>
+
+
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignBottom="@id/drone"
+            android:layout_alignTop="@id/drone"
+            android:layout_marginStart="15dp"
+            android:layout_toEndOf="@id/drone"
+            android:gravity="center"
+            android:orientation="vertical">
+
+            <TextView
+                android:id="@+id/roll_right_title"
+                style="@style/MyText"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_above="@+id/roll_left"
+                android:layout_toStartOf="@+id/pitch_back"
+                android:text="roll right" />
+
+            <TextView
+                android:id="@+id/roll_right"
+                style="@style/MyText"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_centerVertical="true"
+                android:layout_toStartOf="@+id/drone"
+                android:text="101001" />
+        </LinearLayout>
+
 
         <TextView
-            android:id="@+id/roll_left"
+            android:id="@+id/pitch_back_title"
             style="@style/MyText"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_centerVertical="true"
-            android:layout_toStartOf="@+id/drone"
-            android:padding="15dp"
-            android:text="roll left" />
-
-        <TextView
-            android:id="@+id/roll_right"
-            style="@style/MyText"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_centerVertical="true"
-            android:layout_toEndOf="@+id/drone"
-            android:padding="15dp"
-            android:text="roll right" />
+            android:layout_below="@+id/drone"
+            android:layout_centerHorizontal="true"
+            android:layout_marginTop="10dp"
+            android:text="pitch back" />
 
         <TextView
             android:id="@+id/pitch_back"
             style="@style/MyText"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_below="@+id/drone"
+            android:layout_below="@+id/pitch_back_title"
             android:layout_centerHorizontal="true"
-            android:padding="15dp"
-            android:text="pitch back" />
+            android:text="1010101" />
     </RelativeLayout>
 
 
