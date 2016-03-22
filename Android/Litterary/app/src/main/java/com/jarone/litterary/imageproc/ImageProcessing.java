@@ -264,13 +264,13 @@ public class ImageProcessing {
         MatOfDouble stds = new MatOfDouble();
         Core.meanStdDev(processingMat, means, stds);
 
-        double minStd = 999999;
-        int mindex = 0;
-        for (int i = 0; i < 3; i++) {
-            if (stds.get(i, 0)[0] < minStd) {
-                mindex = i;
-            }
-        }
+//        double minStd = 999999;
+//        int mindex = 0;
+//        for (int i = 0; i < 3; i++) {
+//            if (stds.get(i, 0)[0] < minStd) {
+//                mindex = i;
+//            }
+//        }
         Imgproc.threshold(channels.get(0), r, means.get(0, 0)[0] + 50, 255, Imgproc.THRESH_BINARY);
         Imgproc.threshold(channels.get(1), b, means.get(1, 0)[0] + 50, 255, Imgproc.THRESH_BINARY);
         Imgproc.threshold(channels.get(2), g, means.get(2, 0)[0] + 50, 255, Imgproc.THRESH_BINARY);
@@ -280,26 +280,30 @@ public class ImageProcessing {
         cMeans.add(Core.mean(g).val[0]);
         cMeans.add(Core.mean(b).val[0]);
 
-        morphImage(r, Imgproc.MORPH_ERODE, 20);
-        morphImage(g, Imgproc.MORPH_ERODE, 20);
-        morphImage(b, Imgproc.MORPH_ERODE, 20);
+        morphImage(r, Imgproc.MORPH_OPEN, 60 / DroneState.getAltitude());
+        morphImage(g, Imgproc.MORPH_OPEN, 60 / DroneState.getAltitude());
+        morphImage(b, Imgproc.MORPH_OPEN, 60 / DroneState.getAltitude());
 
-        double minMean = 0;
-        mindex = 0;
+        clearBorders(r);
+        clearBorders(g);
+        clearBorders(b);
+
+        double maxMean = 0;
+        int mindex = 0;
         for (int i = 0; i < 3; i++) {
-            if (cMeans.get(i) > minMean) {
-                minMean = cMeans.get(i);
+            if (cMeans.get(i) > maxMean) {
+                maxMean = cMeans.get(i);
                 mindex = i;
             }
         }
 
-        // if (mindex == 0) {
-        r.copyTo(processingMat);
-        //} else if (mindex == 1) {
-        //    g.copyTo(processingMat);
-        //} else if (mindex == 2) {
-        //    b.copyTo(processingMat);
-        //}
+        if (mindex == 0) {
+            r.copyTo(processingMat);
+        } else if (mindex == 1) {
+            g.copyTo(processingMat);
+        } else if (mindex == 2) {
+            b.copyTo(processingMat);
+        }
 
 
 //        Imgproc.adaptiveThreshold(channels.get(0), r, 255, Imgproc.ADAPTIVE_THRESH_MEAN_C, Imgproc.THRESH_BINARY, 151, -30);
@@ -321,14 +325,13 @@ public class ImageProcessing {
         //   Imgproc.Canny(processingMat, processingMat, lowThreshold, highThreshold);
         //  morphImage(processingMat, Imgproc.MORPH_CLOSE, 30);
         //Imgproc.threshold(processingMat, processingMat, 0, 255, Imgproc.THRESH_BINARY);
-        clearBorders(processingMat);
         fillImage(processingMat);
         //   morphImage(processingMat, Imgproc.MORPH_CLOSE, 60);
 
 
 ////
 ////        //TODO determine below threshold parameter from the drone's altitude and FOV
-        eliminateSmallBlobs(processingMat, Math.pow(metresToPixels(0.05, DroneState.getAltitude()), 2));
+        //eliminateSmallBlobs(processingMat, Math.pow(metresToPixels(0.3, DroneState.getAltitude()), 2));
 
         blobCentres = findBlobCentres(processingMat);
 
@@ -350,7 +353,7 @@ public class ImageProcessing {
     /**
      * Perform closing operation on the image, first downscaling to speed up processing
      */
-    public static void morphImage(Mat mat, int operation, int size) {
+    public static void morphImage(Mat mat, int operation, double size) {
         int scaleFactor = 2;
         Mat element = Imgproc.getStructuringElement(Imgproc.MORPH_ELLIPSE, new Size(size / scaleFactor, size / scaleFactor));
         // Mat element2 = Imgproc.getStructuringElement(Imgproc.MORPH_ELLIPSE, new Size(3, 3));
@@ -428,14 +431,14 @@ public class ImageProcessing {
     public static void clearBorders(Mat mat) {
         Mat temp = mat.clone();
         ArrayList<MatOfPoint> contours = new ArrayList<>();
-        Imgproc.findContours(temp, contours, new Mat(), Imgproc.RETR_CCOMP, Imgproc.CHAIN_APPROX_SIMPLE);
+        Imgproc.findContours(temp, contours, new Mat(), Imgproc.RETR_EXTERNAL, Imgproc.CHAIN_APPROX_SIMPLE);
         int width = temp.width();
         int height = temp.height();
         temp.release();
         ArrayList<MatOfPoint> badContours = new ArrayList<>();
         for (MatOfPoint contour : contours) {
             for (Point p : contour.toArray()) {
-                if (p.x <= 5 || p.x >= width - 5 || p.y <= 5 || p.y >= height - 5) {
+                if (p.x <= 10 || p.x >= width - 10 || p.y <= 10 || p.y >= height - 10) {
                     badContours.add(contour);
                 }
             }
@@ -451,7 +454,7 @@ public class ImageProcessing {
     public static ArrayList<Point> findBlobCentres(Mat mat) {
         Mat temp = mat.clone();
         ArrayList<MatOfPoint> contours = new ArrayList<>();
-        Imgproc.findContours(temp, contours, temp, Imgproc.RETR_CCOMP, Imgproc.CHAIN_APPROX_SIMPLE);
+        Imgproc.findContours(temp, contours, temp, Imgproc.RETR_EXTERNAL, Imgproc.CHAIN_APPROX_SIMPLE);
         temp.release();
         currentBlobs = contours;
         ArrayList<Point> centres = new ArrayList<>();
@@ -536,7 +539,7 @@ public class ImageProcessing {
         calculatePixelDensity(altitude);
         if (angle == AngularController.ActiveAngle.PITCH) {
             //Forward is positive, backward is negative
-            return (originalMat.height() / 2 - trackedObject.getPosition().y) * py;
+            return (originalMat.height() / 2 + originalMat.height() * 0.1 - trackedObject.getPosition().y ) * py;
         } else {
             //To the left is negative, right is positive
             return (trackedObject.getPosition().x - originalMat.width() / 2) * py;

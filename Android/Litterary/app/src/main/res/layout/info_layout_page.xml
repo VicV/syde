@@ -170,10 +170,10 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_gravity="start"
-                android:text="message" />
+                android:text="altitude" />
 
             <TextView
-                android:id="@+id/message"
+                android:id="@+id/altitude"
                 style="@style/MyText.Status"
                 android:layout_width="fill_parent"
                 android:layout_height="wrap_content"
@@ -181,7 +181,7 @@
                 android:layout_marginLeft="0dp"
                 android:layout_weight="1"
                 android:padding="1dip"
-                android:text="none" />
+                android:text="0" />
         </LinearLayout>
     </LinearLayout>
 </LinearLayout>

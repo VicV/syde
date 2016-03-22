@@ -41,10 +41,11 @@
 
 
             <EditText
-                android:id="@+id/edit_control_1"
+                android:id="@+id/edit_control_p"
                 android:layout_width="wrap_content"
                 android:layout_height="40dp"
                 android:hint="P val"
+                android:text="14"
                 android:inputType="numberDecimal"
                 android:paddingLeft="10dp"
                 android:paddingRight="10dp"
@@ -52,11 +53,12 @@
                 android:textColorHint="#bbb" />
 
             <EditText
-                android:id="@+id/edit_control_2"
+                android:id="@+id/edit_control_i"
                 android:layout_width="wrap_content"
                 android:layout_height="40dp"
                 android:fontFeatureSettings="smcp"
                 android:hint="I val"
+                android:text="0"
                 android:inputType="numberDecimal"
                 android:paddingLeft="10dp"
                 android:paddingRight="10dp"
@@ -64,11 +66,12 @@
                 android:textColorHint="#bbb" />
 
             <EditText
-                android:id="@+id/edit_control_3"
+                android:id="@+id/edit_control_d"
                 android:layout_width="wrap_content"
                 android:layout_height="40dp"
                 android:fontFeatureSettings="smcp"
                 android:hint="D val"
+                android:text="10"
                 android:inputType="numberDecimal"
                 android:paddingLeft="10dp"
                 android:paddingRight="10dp"
@@ -80,12 +83,22 @@
                 android:layout_width="wrap_content"
                 android:layout_height="match_parent"
                 android:layout_gravity="center"
-                android:hint="\? val"
+                android:hint="P/R val"
+                android:text="1.2"
                 android:inputType="numberDecimal"
                 android:paddingLeft="10dp"
                 android:paddingRight="10dp"
+                android:textColorHint="#bbb"
                 android:textColor="#999"
-                android:textColorHint="#bbb" />
+                />
+            <Button
+                android:id="@+id/button_control_set"
+                android:layout_width="70dp"
+                android:layout_height="35dp"
+                android:fontFeatureSettings="smcp"
+                android:text="set"
+                android:textColor="#999" />
+
         </LinearLayout>
 
         <TextView

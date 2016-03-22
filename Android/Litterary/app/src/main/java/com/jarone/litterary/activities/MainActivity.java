@@ -92,7 +92,7 @@ public class MainActivity extends DJIBaseActivity {
     private ViewPager viewPager;
     private boolean canStartProcessing = false;
 
-    Grabber grabber;
+    public Grabber grabber;
 
     private CameraBridgeViewBase mOpenCvCameraView;
 
@@ -311,7 +311,7 @@ public class MainActivity extends DJIBaseActivity {
 
     private Runnable controlRunnable;
 
-    public void updateControlInterface(final float action, final float error, final AngularController.ActiveAngle activeAngle) {
+    public void updateControlInterface(final double action, final AngularController.ActiveAngle activeAngle) {
         if (controlRunnable == null) {
             controlRunnable = new Runnable() {
                 @Override
@@ -614,6 +614,7 @@ public class MainActivity extends DJIBaseActivity {
     private TextView batteryText;
     private TextView currentModeText;
     private TextView currentLocation;
+    private TextView altitudeText;
     private TextView targetLocation;
     private TextView droneConnectedText;
     private TextView pitchForward;
@@ -637,6 +638,7 @@ public class MainActivity extends DJIBaseActivity {
         switchModeText = ((TextView) findViewById(R.id.switch_mode_text));
         currentModeText = ((TextView) findViewById(R.id.currentMode));
         currentLocation = ((TextView) findViewById(R.id.currentLocation));
+        altitudeText = ((TextView) findViewById(R.id.altitude));
         targetLocation = ((TextView) findViewById(R.id.targetLocation));
         droneConnectedText = ((TextView) findViewById(R.id.droneConnected));
         modeButton = (ImageView) findViewById(R.id.switch_mode_icon);
@@ -678,6 +680,8 @@ public class MainActivity extends DJIBaseActivity {
                     currentModeText.setText(DroneState.flightMode.name());
                     lastMode = mode;
                 }
+
+                altitudeText.setText("" + DroneState.getAltitude());
 
                 double currentLat = DroneState.getLatitude();
                 double currentLong = DroneState.getLongitude();
@@ -878,7 +882,7 @@ public class MainActivity extends DJIBaseActivity {
 
     public void setupWifi() {
         if (wifiManager.getConnectionInfo().getSSID().contains("60e8dc")) {
-            MessageHandler.d("Drone already connected");
+            // MessageHandler.d("Drone already connected");
         } else {
             wantResults = true;
             wifiManager.startScan();

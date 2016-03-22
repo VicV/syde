@@ -3,6 +3,7 @@ package com.jarone.litterary.activities;
 import android.os.Bundle;
 import android.support.v4.app.FragmentActivity;
 
+import com.jarone.litterary.drone.Camera;
 import com.jarone.litterary.drone.DroneState;
 import com.jarone.litterary.drone.GroundStation;
 import com.jarone.litterary.handlers.MessageHandler;
@@ -26,7 +27,7 @@ public class DJIBaseActivity extends FragmentActivity {
         super.onResume();
         DroneState.updateDroneState();
         DJIDrone.getDjiMC().startUpdateTimer(1000);
-        DJIDrone.getDjiBattery().startUpdateTimer(2000);
+        DJIDrone.getDjiBattery().startUpdateTimer(10000);
         if (!OpenCVLoader.initDebug()) {
             MessageHandler.log("Internal OpenCV library not found. Using OpenCV Manager for initialization");
             OpenCVLoader.initAsync(OpenCVLoader.OPENCV_VERSION_3_1_0, this, ImageProcessing.loaderCallback);
@@ -36,12 +37,21 @@ public class DJIBaseActivity extends FragmentActivity {
         }
         DJIDrone.getDjiGroundStation().startUpdateTimer(1000);
         ServiceManager.getInstance().pauseService(false); // Resume the service
-        GroundStation.openGroundStation(new Runnable() {
+        GroundStation.closeGroundStation(new Runnable() {
             @Override
             public void run() {
+                GroundStation.openGroundStation(new Runnable() {
+                    @Override
+                    public void run() {
 
+                    }
+                });
             }
         });
+
+        //Try to fix stuck gimbal state by setting it to face forward first
+        Camera.setGimbalPitch(0);
+        Camera.setGimbalDown();
     }
 
     @Override

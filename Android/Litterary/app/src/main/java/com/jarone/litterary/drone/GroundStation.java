@@ -2,6 +2,7 @@ package com.jarone.litterary.drone;
 
 import com.google.android.gms.maps.model.LatLng;
 import com.jarone.litterary.control.AngularController;
+import com.jarone.litterary.helpers.ContextManager;
 import com.jarone.litterary.optimization.RouteOptimization;
 import com.jarone.litterary.SurveyRoute;
 import com.jarone.litterary.handlers.MessageHandler;
@@ -120,8 +121,18 @@ public class GroundStation {
                     MessageHandler.d("Open Ground Station: SUCCESS");
                 } else {
                     DroneState.groundStationConnected = false;
-                    MessageHandler.log("Open Ground Station: FAILURE");
+                    ContextManager.getMainActivityInstance().setupWifi();
+                    MessageHandler.d("Open Ground Station: FAILURE");
                 }
+            }
+        });
+    }
+
+    public static void closeGroundStation(final Runnable run) {
+        DJIDrone.getDjiGroundStation().closeGroundStation(new DJIGroundStationExecuteCallBack() {
+            @Override
+            public void onResult(DJIGroundStationTypeDef.GroundStationResult groundStationResult) {
+                run.run();
             }
         });
     }
