@@ -45,10 +45,10 @@
                 android:layout_width="wrap_content"
                 android:layout_height="40dp"
                 android:hint="P val"
-                android:text="14"
                 android:inputType="numberDecimal"
                 android:paddingLeft="10dp"
                 android:paddingRight="10dp"
+                android:text="14"
                 android:textColor="#999"
                 android:textColorHint="#bbb" />
 
@@ -58,10 +58,10 @@
                 android:layout_height="40dp"
                 android:fontFeatureSettings="smcp"
                 android:hint="I val"
-                android:text="0"
                 android:inputType="numberDecimal"
                 android:paddingLeft="10dp"
                 android:paddingRight="10dp"
+                android:text="0"
                 android:textColor="#999"
                 android:textColorHint="#bbb" />
 
@@ -71,10 +71,10 @@
                 android:layout_height="40dp"
                 android:fontFeatureSettings="smcp"
                 android:hint="D val"
-                android:text="10"
                 android:inputType="numberDecimal"
                 android:paddingLeft="10dp"
                 android:paddingRight="10dp"
+                android:text="10"
                 android:textColor="#999"
                 android:textColorHint="#bbb" />
 
@@ -84,13 +84,13 @@
                 android:layout_height="match_parent"
                 android:layout_gravity="center"
                 android:hint="P/R val"
-                android:text="1.2"
                 android:inputType="numberDecimal"
                 android:paddingLeft="10dp"
                 android:paddingRight="10dp"
-                android:textColorHint="#bbb"
+                android:text="1.2"
                 android:textColor="#999"
-                />
+                android:textColorHint="#bbb" />
+
             <Button
                 android:id="@+id/button_control_set"
                 android:layout_width="70dp"
@@ -109,14 +109,16 @@
             android:layout_marginTop="10dp"
             android:fontFeatureSettings="smcp"
             android:text="control"
-            android:textColor="#999" />
+            android:textColor="#999"
+            android:visibility="gone" />
 
         <View
             android:layout_width="match_parent"
             android:layout_height="1dp"
             android:layout_marginLeft="20dp"
             android:layout_marginRight="20dp"
-            android:background="@android:color/darker_gray" />
+            android:background="@android:color/darker_gray"
+            android:visibility="gone" />
 
         <LinearLayout
             android:layout_width="match_parent"
@@ -124,7 +126,8 @@
             android:layout_marginEnd="5dp"
             android:layout_marginStart="5dp"
             android:gravity="center_horizontal"
-            android:orientation="horizontal">
+            android:orientation="horizontal"
+            android:visibility="gone">
 
 
             <Button
@@ -178,8 +181,8 @@
 
         <ImageView
             android:id="@+id/drone"
-            android:layout_width="100dp"
-            android:layout_height="100dp"
+            android:layout_width="75dp"
+            android:layout_height="75dp"
             android:layout_centerInParent="true"
             android:src="@drawable/drone_grey"
             android:visibility="visible" />
