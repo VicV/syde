@@ -5,7 +5,6 @@ import android.graphics.BitmapFactory;
 
 import com.google.android.gms.maps.model.LatLng;
 import com.jarone.litterary.control.AngularController;
-import com.jarone.litterary.drone.DroneState;
 import com.jarone.litterary.handlers.MessageHandler;
 import com.jarone.litterary.helpers.ContextManager;
 
@@ -83,8 +82,8 @@ public class ImageProcessing {
     private static double px; //horizontal pixel density
     private static double py; //vertical pixel density
 
-    private static final double imageX = 4384;
-    private static final double imageY = 2466;
+    private static double imageX = 0;
+    private static double imageY = 0;
 
     //keeps track of submat error
     private static boolean createdTrackingObject = false;
@@ -252,12 +251,16 @@ public class ImageProcessing {
             b = new Mat();
         }
 
-//        Mat processing = new Mat();
+        if (imageX == 0) {
+            imageX = processingMat.width();
+        }
+        if (imageY == 0) {
+            imageY = processingMat.height();
+        }
+
         mat.copyTo(processingMat);
-//
+
         ArrayList<Mat> channels = new ArrayList<>();
-        //Imgproc.blur(processingMat, processingMat, new Size(50, 50));
-        //Imgproc.GaussianBlur(processingMat, processingMat, new Size(15, 15), 0);
         Core.split(processingMat, channels);
         if (channels.size() < 3) {
             return blobCentres;
@@ -267,13 +270,6 @@ public class ImageProcessing {
         MatOfDouble stds = new MatOfDouble();
         Core.meanStdDev(processingMat, means, stds);
 
-//        double minStd = 999999;
-//        int mindex = 0;
-//        for (int i = 0; i < 3; i++) {
-//            if (stds.get(i, 0)[0] < minStd) {
-//                mindex = i;
-//            }
-//        }
         Imgproc.threshold(channels.get(0), r, means.get(0, 0)[0] + 50, 255, Imgproc.THRESH_BINARY);
         Imgproc.threshold(channels.get(1), b, means.get(1, 0)[0] + 50, 255, Imgproc.THRESH_BINARY);
         Imgproc.threshold(channels.get(2), g, means.get(2, 0)[0] + 50, 255, Imgproc.THRESH_BINARY);
@@ -283,9 +279,9 @@ public class ImageProcessing {
         cMeans.add(Core.mean(g).val[0]);
         cMeans.add(Core.mean(b).val[0]);
 
-        morphImage(r, Imgproc.MORPH_OPEN, 60 / DroneState.getAltitude());
-        morphImage(g, Imgproc.MORPH_OPEN, 60 / DroneState.getAltitude());
-        morphImage(b, Imgproc.MORPH_OPEN, 60 / DroneState.getAltitude());
+        morphImage(r, Imgproc.MORPH_OPEN, 30);
+        morphImage(g, Imgproc.MORPH_OPEN, 30);
+        morphImage(b, Imgproc.MORPH_OPEN, 30);
 
         clearBorders(r);
         clearBorders(g);
@@ -294,8 +290,8 @@ public class ImageProcessing {
         double maxMean = 0;
         int mindex = 0;
         for (int i = 0; i < 3; i++) {
-            if (cMeans.get(i) > maxMean) {
-                maxMean = cMeans.get(i);
+            if (means.get(i, 0)[0] < maxMean) {
+                maxMean = means.get(i, 0)[0];
                 mindex = i;
             }
         }
@@ -308,32 +304,8 @@ public class ImageProcessing {
             b.copyTo(processingMat);
         }
 
-
-//        Imgproc.adaptiveThreshold(channels.get(0), r, 255, Imgproc.ADAPTIVE_THRESH_MEAN_C, Imgproc.THRESH_BINARY, 151, -30);
-//        Imgproc.adaptiveThreshold(channels.get(1), b, 255, Imgproc.ADAPTIVE_THRESH_MEAN_C, Imgproc.THRESH_BINARY, 151, -30);
-//        Imgproc.adaptiveThreshold(channels.get(2), g, 255, Imgproc.ADAPTIVE_THRESH_MEAN_C, Imgproc.THRESH_BINARY, 151, -30);
-
-//        double total = 1 / stds.get(0,0)[0] + 1 / stds.get(1,0)[0] + 1 / stds.get(2,0)[0];
-
-        //  Core.add(r, b, processingMat);
-        // Core.add(processingMat, g, processingMat);
-        //Core.addWeighted(r, 1/stds.get(0,0)[0], b, 1/stds.get(1,0)[0], 1, processingMat);
-        //Core.addWeighted(processingMat, 1, g,, 1/stds.get(2,0)[0], 1,  processingMat);
-
-
-        //Imgproc.cvtColor(processingMat, processingMat, Imgproc.COLOR_BGR2GRAY);
-//        Scalar mean = Core.mean(processing);
-//        Imgproc.threshold(processing, processing, mean.val[0] - 10, 255, Imgproc.THRESH_BINARY_INV);
-        //determineCannyThreshold(processingMat);
-        //   Imgproc.Canny(processingMat, processingMat, lowThreshold, highThreshold);
-        //  morphImage(processingMat, Imgproc.MORPH_CLOSE, 30);
-        //Imgproc.threshold(processingMat, processingMat, 0, 255, Imgproc.THRESH_BINARY);
         fillImage(processingMat);
-        //   morphImage(processingMat, Imgproc.MORPH_CLOSE, 60);
 
-
-////
-////        //TODO determine below threshold parameter from the drone's altitude and FOV
         //eliminateSmallBlobs(processingMat, Math.pow(metresToPixels(0.3, DroneState.getAltitude()), 2));
 
         blobCentres = findBlobCentres(processingMat);
@@ -344,11 +316,10 @@ public class ImageProcessing {
 
         processingMat.copyTo(mat);
 
-        //MEDIANBLUR NOT NECESSARY AND MAKES THINGS VERY SLOW --vic&adam
-        //Imgproc.medianBlur(processing, processing, 31);
         r.release();
         g.release();
         b.release();
+        //can't release processingMat otherwise other areas of the code will fail (like find closest to centre)
         //processingMat.release();
         return blobCentres;
     }
@@ -357,7 +328,7 @@ public class ImageProcessing {
      * Perform closing operation on the image, first downscaling to speed up processing
      */
     public static void morphImage(Mat mat, int operation, double size) {
-        int scaleFactor = 2;
+        int scaleFactor = 5;
         Mat element = Imgproc.getStructuringElement(Imgproc.MORPH_ELLIPSE, new Size(size / scaleFactor, size / scaleFactor));
         // Mat element2 = Imgproc.getStructuringElement(Imgproc.MORPH_ELLIPSE, new Size(3, 3));
 

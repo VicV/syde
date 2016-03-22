@@ -30,9 +30,9 @@ public class AngularController {
     double MAX_ANGLE = 400;
     private long SAMPLING_TIME = 50;
 
-    double P = 14;
-    double I = 0;
-    double D = 10;
+    public double P = 14;
+    public double I = 0;
+    public double D = 10;
 
     int loopIterations = 0;
     int descendIterations = 0;
