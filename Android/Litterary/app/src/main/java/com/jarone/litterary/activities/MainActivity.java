@@ -309,41 +309,53 @@ public class MainActivity extends DJIBaseActivity {
         }
     }
 
-    private Runnable controlRunnable;
+    private class ControlRunnable implements Runnable {
+
+        private double action;
+        private AngularController.ActiveAngle activeAngle;
+
+        public void updateValues(double a, AngularController.ActiveAngle activeAngle) {
+            this.action = a;
+            this.activeAngle = activeAngle;
+        }
+
+        @Override
+        public void run() {
+            if (activeAngle == AngularController.ActiveAngle.PITCH) {
+                if (action < 0) {
+                    pitchBackward.setText(String.valueOf(action));
+                    pitchForward.setText("");
+                    rollRight.setText("");
+                    rollLeft.setText("");
+                } else {
+                    pitchBackward.setText("");
+                    pitchForward.setText(String.valueOf(action));
+                    rollRight.setText("");
+                    rollLeft.setText("");
+                }
+            } else if (activeAngle == AngularController.ActiveAngle.ROLL) {
+                if (action < 0) {
+                    pitchBackward.setText("");
+                    pitchForward.setText("");
+                    rollRight.setText("");
+                    rollLeft.setText(String.valueOf(action));
+                } else {
+                    pitchBackward.setText("");
+                    pitchForward.setText("");
+                    rollRight.setText(String.valueOf(action));
+                    rollLeft.setText("");
+                }
+            }
+        }
+    }
+
+    private ControlRunnable controlRunnable;
 
     public void updateControlInterface(final double action, final AngularController.ActiveAngle activeAngle) {
         if (controlRunnable == null) {
-            controlRunnable = new Runnable() {
-                @Override
-                public void run() {
-                    if (activeAngle == AngularController.ActiveAngle.PITCH) {
-                        if (action < 0) {
-                            pitchBackward.setText(String.valueOf(action));
-                            pitchForward.setText("");
-                            rollRight.setText("");
-                            rollLeft.setText("");
-                        } else {
-                            pitchBackward.setText("");
-                            pitchForward.setText(String.valueOf(action));
-                            rollRight.setText("");
-                            rollLeft.setText("");
-                        }
-                    } else if (activeAngle == AngularController.ActiveAngle.ROLL) {
-                        if (action < 0) {
-                            pitchBackward.setText("");
-                            pitchForward.setText("");
-                            rollRight.setText("");
-                            rollLeft.setText(String.valueOf(action));
-                        } else {
-                            pitchBackward.setText("");
-                            pitchForward.setText("");
-                            rollRight.setText(String.valueOf(action));
-                            rollLeft.setText("");
-                        }
-                    }
-                }
-            };
+            controlRunnable = new ControlRunnable();
         }
+        controlRunnable.updateValues(action, activeAngle);
         runOnUiThread(controlRunnable);
     }
 
@@ -772,7 +784,6 @@ public class MainActivity extends DJIBaseActivity {
             viewPager.setCurrentItem(1);
         }
     }
-
 
     private void setupViewPager() {
         messageList = new ArrayList<>();

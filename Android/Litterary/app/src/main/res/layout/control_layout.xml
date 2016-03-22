@@ -201,7 +201,7 @@
             android:layout_above="@+id/drone"
             android:layout_centerHorizontal="true"
             android:padding="5dp"
-            android:text="101010" />
+            android:text="" />
 
         <LinearLayout
             android:layout_width="wrap_content"
@@ -229,7 +229,7 @@
                 android:layout_height="wrap_content"
                 android:layout_centerVertical="true"
                 android:layout_toStartOf="@+id/drone"
-                android:text="101001" />
+                android:text="" />
         </LinearLayout>
 
 
@@ -259,7 +259,7 @@
                 android:layout_height="wrap_content"
                 android:layout_centerVertical="true"
                 android:layout_toStartOf="@+id/drone"
-                android:text="101001" />
+                android:text="" />
         </LinearLayout>
 
 
@@ -280,7 +280,7 @@
             android:layout_height="wrap_content"
             android:layout_below="@+id/pitch_back_title"
             android:layout_centerHorizontal="true"
-            android:text="1010101" />
+            android:text="" />
     </RelativeLayout>
 
 
