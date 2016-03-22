@@ -627,7 +627,6 @@ public class MainActivity extends DJIBaseActivity {
         batteryIcon = (ImageView) findViewById(R.id.battery_icon);
         batteryText = ((TextView) findViewById(R.id.battery_text));
         interfaceSetup = true;
-
     }
 
     private void updateInterface() {
@@ -640,13 +639,13 @@ public class MainActivity extends DJIBaseActivity {
             public void run() {
                 String currentWifi = wifiManager.getConnectionInfo().getSSID();
                 if (currentWifi.equals(lastWifi) && currentWifi.contains("Phantom")) {
-                    lastWifi = wifiManager.getConnectionInfo().getSSID();
                     connectIcon.setImageDrawable(getDrawable(R.drawable.wifi_connected_small));
                     connectText.setText("connected");
                 } else if (!currentWifi.contains("Phantom")) {
                     connectText.setText("connect");
                     connectIcon.setImageDrawable(getDrawable(R.drawable.wifi_not_connected_small));
                 }
+                lastWifi = currentWifi;
                 int mode = DroneState.getMode();
                 if (mode != lastMode && mode == DroneState.DIRECT_MODE) {
                     modeButton.setImageDrawable(getDrawable(R.drawable.direct_small));
@@ -728,9 +727,6 @@ public class MainActivity extends DJIBaseActivity {
                             break;
                     }
                 }
-
-
-                //TODO: UPDATE BATTERY. NEED TO KNOW WTF REMAINPOWER IS FROM ADAM
             }
         });
     }
