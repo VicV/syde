@@ -26,7 +26,7 @@ public class WifiScanReceiver extends BroadcastReceiver {
             ArrayList<ScanResult> results = (ArrayList<ScanResult>) wifiManager.getScanResults();
             String phantomWifi = "";
             for (ScanResult result : results) {
-                if (result.SSID.contains("Phantom")) {
+                if (result.SSID.contains("60e8dc")) {
                     phantomWifi = result.SSID;
                     break;
                 }

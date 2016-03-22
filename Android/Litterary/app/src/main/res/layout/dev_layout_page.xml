@@ -41,12 +41,19 @@
             android:gravity="center_horizontal"
             android:orientation="horizontal">
 
+            <Button
+                android:id="@+id/button_special_camera"
+                android:layout_width="wrap_content"
+                android:layout_height="40dp"
+                android:fontFeatureSettings="smcp"
+                android:text="android cam"
+                android:textColor="#999" />
 
             <Button
                 android:id="@+id/button_imgproc_1"
                 android:layout_width="wrap_content"
                 android:layout_height="40dp"
-                android:text="Img Proc 1"
+                android:text="blob"
                 android:textColor="#999" />
 
             <Button
@@ -54,36 +61,20 @@
                 android:layout_width="wrap_content"
                 android:layout_height="40dp"
                 android:fontFeatureSettings="smcp"
-                android:text="Img Proc 2"
+                android:text="tracking"
 
                 android:textColor="#999" />
 
-            <Button
-                android:id="@+id/button_imgproc_3"
-                android:layout_width="wrap_content"
-                android:layout_height="40dp"
-                android:fontFeatureSettings="smcp"
-                android:text="Img Proc 3"
-                android:textColor="#999" />
-            <EditText
-                android:layout_width="wrap_content"
-                android:layout_height="match_parent"
-                android:id="@+id/data_input"
-                android:text="10"
-                android:layout_gravity="center"
-                />
         </LinearLayout>
-
 
         <TextView
             android:id="@+id/misc_title"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-
             android:layout_marginBottom="5dp"
             android:layout_marginTop="10dp"
             android:fontFeatureSettings="smcp"
-            android:text="Miscellaneous"
+            android:text="controls"
             android:textColor="#999" />
 
         <View
@@ -101,45 +92,33 @@
             android:gravity="center_horizontal"
             android:orientation="horizontal">
 
-
             <Button
                 android:id="@+id/button_special_1"
-                android:layout_width="70dp"
-                android:layout_height="35dp"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
                 android:fontFeatureSettings="smcp"
-                android:text="Spec1"
+                android:text="start control loop"
                 android:textColor="#999" />
 
-            <Button
-                android:id="@+id/button_special_2"
-                android:layout_width="70dp"
-                android:layout_height="35dp"
+
+            <TextView
+                android:id="@+id/control_title"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:layout_marginStart="10dp"
                 android:fontFeatureSettings="smcp"
-                android:text="Spec2"
+                android:text="Parameter: "
                 android:textColor="#999" />
 
-            <Button
-                android:id="@+id/button_special_3"
-                android:layout_width="70dp"
-                android:layout_height="35dp"
-                android:fontFeatureSettings="smcp"
-                android:text="Spec3"
-                android:textColor="#999" />
 
-            <Button
-                android:id="@+id/button_special_camera"
-                android:layout_width="70dp"
-                android:layout_height="35dp"
-                android:fontFeatureSettings="smcp"
-                android:text="Cam"
-                android:textColor="#999" />
-
-            <Button
-                android:id="@+id/button_special_camera_2"
-                android:layout_width="70dp"
-                android:layout_height="35dp"
-                android:fontFeatureSettings="smcp"
-                android:text="Cam2"
+            <EditText
+                android:id="@+id/data_input"
+                android:layout_width="wrap_content"
+                android:layout_height="match_parent"
+                android:layout_gravity="center"
+                android:inputType="numberDecimal"
+                android:text="10"
                 android:textColor="#999" />
 
         </LinearLayout>
