@@ -1,4 +1,4 @@
-# Flying Autonomous Litter Collection
+# Flying Autonomous Litter Collection (FALCN)
 
 ### In short
 
