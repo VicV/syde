@@ -25,3 +25,4 @@ Adam Wootton (ajwootto@uwaterloo.ca)
 Jacinta Ferrant
 Jordan Wyatt
 
+This project is licensed under the terms of the MIT license.
